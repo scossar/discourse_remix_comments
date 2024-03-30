@@ -9,6 +9,19 @@ import {
   discourseSessionStorage,
 } from "~/services/session.server";
 
+type DiscourseUserParamKeys =
+  | "name"
+  | "username"
+  | "email"
+  | "external_id"
+  | "admin"
+  | "moderator"
+  | "groups"
+  | "avatar_url"
+  | "profile_background_url"
+  | "card_background_url";
+type SessionParamSet = Set<DiscourseUserParamKeys>;
+
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   if (!process.env.DISCOURSE_SSO_SECRET || !process.env.DISCOURSE_BASE_URL) {
     return redirect("/"); // todo: this should be configurable
@@ -77,30 +90,17 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
     }
 
     const userSession = await discourseSessionStorage.getSession();
-    /**
-     * params that are always in the payload:
-     * name: string
-     * username: string
-     * email: string
-     * external_id: number (the Discourse user ID)
-     * admin: boolean
-     * moderator: boolean
-     * groups: string (comma separated list)
-     *
-     * params that may be in the payload:
-     * avatar_url: string
-     * profile_background_url: string
-     * card_background_url: string
-     */
-    const sessionParams = new Set([
-      "external_id", // the user's Discourse ID
+
+    const sessionParams: SessionParamSet = new Set([
+      "external_id",
       "username",
       "avatar_url",
-      "groups", // comma separated list of group names
+      "groups",
+      "admin",
     ]);
 
     for (const [key, value] of params) {
-      if (sessionParams.has(key)) {
+      if (sessionParams.has(key as DiscourseUserParamKeys)) {
         userSession.set(key, value);
       }
     }

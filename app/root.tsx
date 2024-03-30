@@ -9,13 +9,6 @@ import {
   useLoaderData,
 } from "@remix-run/react";
 
-export interface User {
-  user?: {
-    externalId?: number | null;
-    avatarUrl?: string | null;
-  };
-}
-
 import { discourseSessionStorage } from "~/services/session.server";
 
 import Header from "~/components/Header";

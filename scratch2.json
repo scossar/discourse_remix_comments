@@ -1,0 +1,38 @@
+{
+  "users": [
+    {
+      "id": -1,
+      "username": "system",
+      "avatar_template": "/images/discourse-logo-sketch-small.png"
+    }
+  ],
+  "topic_list": {
+    "more_topics_url": "/latest?no_definitions=true&page=1",
+    "topics": [
+      {
+        "id": 462,
+        "title": "Testing to see what happens",
+        "unicode_title": "Testing to see what happens 👋",
+        "slug": "testing-to-see-what-happens",
+        "posts_count": 31,
+        "created_at": "2023-11-04T09:31:36.753Z",
+        "last_posted_at": "2024-03-28T05:28:25.844Z",
+        "archetype": "regular",
+        "views": 4,
+        "like_count": 0,
+        "last_poster_username": "system",
+        "category_id": 4,
+        "posters": [
+          {
+            "description": "Original Poster",
+            "user_id": 1
+          },
+          {
+            "description": "Most Recent Poster",
+            "user_id": -1
+          }
+        ]
+      }
+    ]
+  }
+}
