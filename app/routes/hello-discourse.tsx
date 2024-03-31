@@ -176,16 +176,19 @@ export default function HelloDiscourse() {
         </article>
         <div>
           {topic.post_stream.posts.map((post) => (
-            <div key={post.id} className="border-2 border-slate-100 py-3 my-3">
-              <div>
+            <div
+              key={post.id}
+              className="border-2 border-slate-100 px-2 py-3 my-3"
+            >
+              <div className="flex flex-row items-center">
                 <img
                   className="rounded-full"
                   src={post.avatar_template}
                   alt={`avatar for ${post.username}`}
                 />
-                {post.username}
+                <span className="px-2">{post.username}</span>
               </div>
-              <div>
+              <div className="mt-3">
                 <div dangerouslySetInnerHTML={{ __html: post.cooked }} />
               </div>
             </div>
