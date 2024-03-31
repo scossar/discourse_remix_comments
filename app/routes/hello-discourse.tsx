@@ -1,8 +1,58 @@
-import type { LoaderFunctionArgs } from "@remix-run/node";
+import type { ActionFunctionArgs, LoaderFunctionArgs } from "@remix-run/node";
 import { json, redirect } from "@remix-run/node";
-import { Link, useLoaderData } from "@remix-run/react";
+import { Link, useFetcher, useLoaderData } from "@remix-run/react";
 
 import { discourseSessionStorage } from "~/services/session.server";
+
+export const action = async ({ request }: ActionFunctionArgs) => {
+  const formData = await request.formData();
+  const currentUsername = formData.get("currentUsername");
+  const topicId = Number(formData.get("topicId"));
+  const rawComment = formData.get("rawComment");
+  console.log(`rawComment: ${JSON.stringify(rawComment, null, 2)}`);
+  console.log(typeof rawComment);
+  console.log(typeof topicId);
+  console.log(typeof currentUsername);
+  if (
+    !currentUsername ||
+    typeof currentUsername !== "string" ||
+    !topicId ||
+    typeof topicId !== "number" ||
+    !rawComment ||
+    typeof rawComment !== "string"
+  ) {
+    return json({});
+  }
+
+  console.log("in the action!!!!!!!!!!!");
+
+  if (!process.env.DISCOURSE_BASE_URL || !process.env.DISCOURSE_API_KEY) {
+    return json({});
+  }
+  const discourseBaseUrl = process.env.DISCOURSE_BASE_URL;
+  const apiKey = process.env.DISCOURSE_API_KEY;
+
+  const data = {
+    raw: rawComment,
+    topic_id: topicId,
+  };
+
+  const headers = new Headers();
+  headers.append("Api-Key", apiKey);
+  headers.append("Api-Username", currentUsername);
+  headers.append("Content-Type", "application/json");
+  const postsUrl = `${process.env.DISCOURSE_BASE_URL}/posts.json`;
+  const response = await fetch(postsUrl, {
+    method: "Post",
+    headers: headers,
+    body: JSON.stringify(data),
+  });
+
+  const updatedTopic = await response.json();
+  console.log(`Updated Topic: ${JSON.stringify(updatedTopic, null, 2)}`);
+
+  return json({});
+};
 
 interface Post {
   id: number;
@@ -44,6 +94,13 @@ interface Topic {
   details: Details;
 }
 
+interface User {
+  externalId?: number;
+  avatarUrl?: string;
+  discourseAdmin?: boolean;
+  username?: string;
+}
+
 function isRegularReplyPost(post: Post) {
   return post.post_type === 1 && post.post_number > 1;
 }
@@ -64,7 +121,7 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
   const externalId = discourseUserSession.get("external_id");
   const avatarUrl = discourseUserSession.get("avatar_url");
   const discourseAdmin = discourseUserSession.get("admin");
-  const currentUserUsername = discourseUserSession.get("username");
+  const username = discourseUserSession.get("username") ?? null;
 
   if (!process.env.DISCOURSE_BASE_URL || !process.env.DISCOURSE_API_KEY) {
     return redirect("/");
@@ -81,10 +138,7 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
 
   const headers = new Headers();
   headers.append("Api-Key", apiKey);
-  headers.append(
-    "Api-Username",
-    currentUserUsername ? currentUserUsername : "system"
-  );
+  headers.append("Api-Username", username ? username : "system");
 
   const response = await fetch(topicUrl, { headers: headers });
 
@@ -137,8 +191,15 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
     },
   };
 
+  const user: User = {
+    externalId: externalId,
+    avatarUrl: avatarUrl,
+    discourseAdmin: discourseAdmin,
+    username: username,
+  };
+
   return json(
-    { topic, user: { externalId, avatarUrl, discourseAdmin } },
+    { topic, user },
     {
       headers: {
         "Set-Cookie": await discourseSessionStorage.commitSession(
@@ -151,6 +212,7 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
 
 export default function HelloDiscourse() {
   const { topic, user } = useLoaderData<typeof loader>();
+  const fetcher = useFetcher();
   return (
     <div className="pt-8">
       <div className="max-w-screen-lg mx-auto">
@@ -193,6 +255,23 @@ export default function HelloDiscourse() {
               </div>
             </div>
           ))}
+        </div>
+        <div>
+          <fetcher.Form method="post" action="?" className="text-slate-900">
+            <input
+              type="hidden"
+              name="currentUsername"
+              value={user?.username}
+            />
+            <input type="hidden" name="topicId" value={topic.id} />
+            <textarea
+              name="rawComment"
+              className="w-full h-28 p-2 my-4"
+            ></textarea>
+            <button className="bg-slate-50 px-3 py-2 rounded-sm" type="submit">
+              Reply
+            </button>
+          </fetcher.Form>
         </div>
       </div>
     </div>
