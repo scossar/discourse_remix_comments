@@ -7,6 +7,7 @@ import {
   Scripts,
   ScrollRestoration,
   useLoaderData,
+  useMatches,
 } from "@remix-run/react";
 
 import { discourseSessionStorage } from "~/services/session.server";
@@ -16,7 +17,7 @@ import Header from "~/components/Header";
 import styles from "./tailwind.css?url";
 export const links: LinksFunction = () => [{ rel: "stylesheet", href: styles }];
 
-export const loader = async ({ request }: LoaderFunctionArgs) => {
+/*export const loader = async ({ request }: LoaderFunctionArgs) => {
   const userSession = await discourseSessionStorage.getSession(
     request.headers.get("Cookie")
   );
@@ -31,7 +32,15 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
       },
     }
   );
-};
+};*/
+
+interface CurrentUser {
+  user?: {
+    externalId?: number;
+    avatarUrl?: string;
+    discourseAdmin?: boolean;
+  };
+}
 
 export function Layout({ children }: { children: React.ReactNode }) {
   return (
@@ -52,10 +61,15 @@ export function Layout({ children }: { children: React.ReactNode }) {
 }
 
 export default function App() {
-  const { user } = useLoaderData<typeof loader>();
+  const matchUserData = useMatches()
+    .slice(-1)
+    .map((match) => match.data)?.[0] as CurrentUser;
+
+  console.log(`matchUserData: ${JSON.stringify(matchUserData?.user)}`);
+
   return (
-    <div className="bg-cyan-900 h-screen text-slate-50">
-      <Header user={user} />
+    <div className="bg-cyan-950 min-h-screen text-white">
+      <Header />
       <Outlet />
     </div>
   );

@@ -22,6 +22,20 @@ type DiscourseUserParamKeys =
   | "card_background_url";
 type SessionParamSet = Set<DiscourseUserParamKeys>;
 
+function paramTypeConversions(key: string, value: string) {
+  let typedValue: string | number | boolean = value;
+  switch (key) {
+    case "external_id":
+      typedValue = parseInt(value, 10);
+      break;
+    case "admin":
+    case "moderator":
+      typedValue = value === "true";
+      break;
+  }
+  return typedValue;
+}
+
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   if (!process.env.DISCOURSE_SSO_SECRET || !process.env.DISCOURSE_BASE_URL) {
     return redirect("/"); // todo: this should be configurable
@@ -101,7 +115,8 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
 
     for (const [key, value] of params) {
       if (sessionParams.has(key as DiscourseUserParamKeys)) {
-        userSession.set(key, value);
+        const typedValue = paramTypeConversions(key, value);
+        userSession.set(key, typedValue);
       }
     }
     const headers = new Headers();
