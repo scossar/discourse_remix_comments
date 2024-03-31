@@ -6,33 +6,13 @@ import {
   Outlet,
   Scripts,
   ScrollRestoration,
-  useLoaderData,
   useMatches,
 } from "@remix-run/react";
-
-import { discourseSessionStorage } from "~/services/session.server";
 
 import Header from "~/components/Header";
 
 import styles from "./tailwind.css?url";
 export const links: LinksFunction = () => [{ rel: "stylesheet", href: styles }];
-
-/*export const loader = async ({ request }: LoaderFunctionArgs) => {
-  const userSession = await discourseSessionStorage.getSession(
-    request.headers.get("Cookie")
-  );
-  const externalId = userSession.get("external_id");
-  const avatarUrl = userSession.get("avatar_url");
-
-  return json(
-    { user: { externalId: externalId, avatarUrl: avatarUrl } },
-    {
-      headers: {
-        "Set-Cookie": await discourseSessionStorage.commitSession(userSession),
-      },
-    }
-  );
-};*/
 
 interface CurrentUser {
   user?: {
@@ -61,15 +41,14 @@ export function Layout({ children }: { children: React.ReactNode }) {
 }
 
 export default function App() {
-  const matchUserData = useMatches()
+  const matchesData = useMatches()
     .slice(-1)
     .map((match) => match.data)?.[0] as CurrentUser;
-
-  console.log(`matchUserData: ${JSON.stringify(matchUserData?.user)}`);
+  const currentUser = matchesData?.user;
 
   return (
     <div className="bg-cyan-950 min-h-screen text-white">
-      <Header />
+      <Header user={currentUser} />
       <Outlet />
     </div>
   );
