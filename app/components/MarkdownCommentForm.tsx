@@ -1,5 +1,5 @@
 import { Form, useFetcher } from "@remix-run/react";
-import { useState } from "react";
+import { useState, useRef } from "react";
 
 import debounce from "~/services/debounce";
 
@@ -27,6 +27,7 @@ export default function MarkdownCommentForm({ ...props }: CommentFormProps) {
 
   const [previewOpen, setPreviewOpen] = useState(false);
   let cookedPreview = "";
+  const [textareaValue, setTextareaValue] = useState("");
 
   if (commentPreviewFetcher && commentPreviewFetcher?.data) {
     cookedPreview = commentPreviewFetcher.data?.htmlPreview ?? "";
@@ -50,15 +51,51 @@ export default function MarkdownCommentForm({ ...props }: CommentFormProps) {
 
   function handleCommentChange(event: React.FormEvent<HTMLTextAreaElement>) {
     const raw = event.currentTarget.value;
+    setTextareaValue(raw);
     debouncedPreview(raw);
   }
 
-  function handleBoldButton(event: React.FormEvent<HTMLButtonElement>) {
-    // clicking the button should either insert `**|**` into the adjacent `textarea` (with `|` representing the position of the cursor)
-    // or it should capture any text that's been highlighted in the `textarea` and surround that text with `**{highlighted_text}**`
-    // some issues to be dealt with:
-    //  - how to maintain the cursor position in the `textarea` when the button (that's outside of the `textarea`) is clicked
-    //  - how to capture the `textarea` highlighted text in the `handleBoldButton` event handler
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  function handleBoldButton(event: React.MouseEvent<HTMLButtonElement>) {
+    event.preventDefault();
+    const selectionStart = textareaRef.current?.selectionStart;
+    const selectionEnd = textareaRef.current?.selectionEnd;
+    if (
+      typeof selectionStart === "number" &&
+      typeof selectionEnd === "number"
+    ) {
+      const beforeText = textareaValue.substring(0, selectionStart);
+      const selectedText = textareaValue.substring(
+        selectionStart,
+        selectionEnd
+      );
+      const afterText = textareaValue.substring(selectionEnd);
+
+      const newText = `${beforeText}**${
+        selectedText || "bold text"
+      }**${afterText}`;
+      setTextareaValue(newText);
+      // setTimeout is used to defer the execution of the code until the callstack is clear.
+      // directly manipulating the DOM during rendering can lead to inconsistencies between the VDOM and the actual DOM.
+      setTimeout(() => {
+        // restore the cursor's position
+        textareaRef.current?.focus();
+        // if no text was selected, place the cursor inside the bold syntax
+        if (!selectedText) {
+          textareaRef.current?.setSelectionRange(
+            selectionStart + 2,
+            selectionStart + 11
+          );
+        } else {
+          textareaRef.current?.setSelectionRange(
+            selectionStart,
+            selectionEnd + 4
+          );
+        }
+      }, 0);
+      // render new preview HTML
+      debouncedPreview(newText);
+    }
   }
 
   return (
@@ -94,6 +131,8 @@ export default function MarkdownCommentForm({ ...props }: CommentFormProps) {
           className="h-96 p-2 text-slate-950"
           name="rawComment"
           onChange={handleCommentChange}
+          ref={textareaRef}
+          value={textareaValue}
         ></textarea>
         <div>
           <button
