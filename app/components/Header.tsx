@@ -1,11 +1,7 @@
 import { Link } from "@remix-run/react";
-
-interface HeaderProps {
-  user?: {
-    externalId?: number | null;
-    avatarUrl?: string | null;
-    admin?: boolean | null;
-  };
+import type { DiscourseUser } from "~/services/getCurrentDiscourseUser.session";
+export interface HeaderProps {
+  user: DiscourseUser;
 }
 
 export default function Header({ user }: HeaderProps) {

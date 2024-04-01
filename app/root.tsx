@@ -1,5 +1,4 @@
-import type { LinksFunction, LoaderFunctionArgs } from "@remix-run/node";
-import { json } from "@remix-run/node";
+import type { LinksFunction } from "@remix-run/node";
 import {
   Links,
   Meta,
@@ -10,17 +9,10 @@ import {
 } from "@remix-run/react";
 
 import Header from "~/components/Header";
+import type { HeaderProps } from "~/components/Header";
 
 import styles from "./tailwind.css?url";
 export const links: LinksFunction = () => [{ rel: "stylesheet", href: styles }];
-
-interface CurrentUser {
-  user?: {
-    externalId?: number;
-    avatarUrl?: string;
-    discourseAdmin?: boolean;
-  };
-}
 
 export function Layout({ children }: { children: React.ReactNode }) {
   return (
@@ -43,7 +35,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
 export default function App() {
   const matchesData = useMatches()
     .slice(-1)
-    .map((match) => match.data)?.[0] as CurrentUser;
+    .map((match) => match.data)?.[0] as HeaderProps;
   const currentUser = matchesData?.user;
 
   return (

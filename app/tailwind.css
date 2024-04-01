@@ -1,3 +1,26 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer components {
+  .comment-preview {
+    h1 {
+      @apply text-3xl;
+    }
+    h2 {
+      @apply text-2xl;
+    }
+    h3 {
+      @apply text-lg;
+    }
+    p {
+      @apply my-2;
+    }
+    ul {
+      @apply list-inside list-disc;
+    }
+    img {
+      @apply max-w-md h-auto;
+    }
+  }
+}

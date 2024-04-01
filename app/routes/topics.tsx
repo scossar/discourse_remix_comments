@@ -137,7 +137,7 @@ export default function Topics() {
   const users = latestTopics.users;
   const topicList = latestTopics.topic_list;
   const topics = topicList.topics;
-  console.log(`latestTopics: ${JSON.stringify(latestTopics, null, 2)}`);
+
   return (
     <div>
       <h1>Latest Topics</h1>

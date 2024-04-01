@@ -3,16 +3,14 @@ import { json, redirect } from "@remix-run/node";
 import { Link, useFetcher, useLoaderData } from "@remix-run/react";
 
 import { discourseSessionStorage } from "~/services/session.server";
+import type { DiscourseUser } from "~/services/getCurrentDiscourseUser.session";
 
 export const action = async ({ request }: ActionFunctionArgs) => {
   const formData = await request.formData();
   const currentUsername = formData.get("currentUsername");
   const topicId = Number(formData.get("topicId"));
   const rawComment = formData.get("rawComment");
-  console.log(`rawComment: ${JSON.stringify(rawComment, null, 2)}`);
-  console.log(typeof rawComment);
-  console.log(typeof topicId);
-  console.log(typeof currentUsername);
+
   if (
     !currentUsername ||
     typeof currentUsername !== "string" ||
@@ -23,8 +21,6 @@ export const action = async ({ request }: ActionFunctionArgs) => {
   ) {
     return json({});
   }
-
-  console.log("in the action!!!!!!!!!!!");
 
   if (!process.env.DISCOURSE_BASE_URL || !process.env.DISCOURSE_API_KEY) {
     return json({});
@@ -49,7 +45,6 @@ export const action = async ({ request }: ActionFunctionArgs) => {
   });
 
   const updatedTopic = await response.json();
-  console.log(`Updated Topic: ${JSON.stringify(updatedTopic, null, 2)}`);
 
   return json({});
 };
@@ -94,13 +89,6 @@ interface Topic {
   details: Details;
 }
 
-interface User {
-  externalId?: number;
-  avatarUrl?: string;
-  discourseAdmin?: boolean;
-  username?: string;
-}
-
 function isRegularReplyPost(post: Post) {
   return post.post_type === 1 && post.post_number > 1;
 }
@@ -120,7 +108,7 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
   );
   const externalId = discourseUserSession.get("external_id");
   const avatarUrl = discourseUserSession.get("avatar_url");
-  const discourseAdmin = discourseUserSession.get("admin");
+  const admin = discourseUserSession.get("admin");
   const username = discourseUserSession.get("username") ?? null;
 
   if (!process.env.DISCOURSE_BASE_URL || !process.env.DISCOURSE_API_KEY) {
@@ -191,10 +179,10 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
     },
   };
 
-  const user: User = {
+  const user = {
     externalId: externalId,
     avatarUrl: avatarUrl,
-    discourseAdmin: discourseAdmin,
+    admin: admin,
     username: username,
   };
 
