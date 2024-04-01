@@ -22,5 +22,9 @@
     img {
       @apply max-w-md h-auto;
     }
+
+    pre code {
+      @apply bg-slate-200 block w-full my-2;
+    }
   }
 }

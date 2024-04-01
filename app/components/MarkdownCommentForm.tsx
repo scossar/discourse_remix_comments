@@ -1,44 +1,43 @@
-import { useFetcher } from "@remix-run/react";
+import { Form, useFetcher } from "@remix-run/react";
 import { useState } from "react";
 
-import type { DiscourseUser } from "~/services/getCurrentDiscourseUser.session";
 import debounce from "~/services/debounce";
 
 interface CommentFormProps {
   className?: string;
   formClassName?: string;
   submitText?: string;
-  user: DiscourseUser | null;
-  topicId: number;
+  topicId?: number;
   replyToPostNumber?: number | null;
+  hiddenFields?: Record<string, string | number | null>;
 }
 
 interface FormFetcher {
   htmlPreview?: string | null;
 }
 
-export default function CommentForm({ ...props }: CommentFormProps) {
-  const fetcher = useFetcher<FormFetcher>();
+export default function MarkdownCommentForm({ ...props }: CommentFormProps) {
+  const commentPreviewFetcher = useFetcher<FormFetcher>({
+    key: "comment-form-preview",
+  });
   const className = props?.className ?? "";
   const formClassName = props?.formClassName ?? "";
   const submitText = props?.submitText ?? "Reply";
-  const username = props.user?.username ?? "";
-  const topicId = props.topicId;
-  const replyToPostNumber = props?.replyToPostNumber;
+  const hiddenFields = props?.hiddenFields ?? null;
 
-  const [previewOpen, setPreviewOpen] = useState(true);
+  const [previewOpen, setPreviewOpen] = useState(false);
   let cookedPreview = "";
 
-  if (fetcher && fetcher?.data) {
-    cookedPreview = fetcher.data?.htmlPreview ?? "";
+  if (commentPreviewFetcher && commentPreviewFetcher?.data) {
+    cookedPreview = commentPreviewFetcher.data?.htmlPreview ?? "";
   }
 
   function handlePreviewClick(event: React.FormEvent<HTMLButtonElement>) {
-    // setPreviewOpen(!previewOpen);
+    setPreviewOpen(!previewOpen);
   }
 
   const debouncedPreview = debounce((raw: string) => {
-    fetcher.submit(
+    commentPreviewFetcher.submit(
       { raw: raw },
       {
         method: "post",
@@ -51,24 +50,32 @@ export default function CommentForm({ ...props }: CommentFormProps) {
 
   function handleCommentChange(event: React.FormEvent<HTMLTextAreaElement>) {
     const raw = event.currentTarget.value;
-    // console.log(`raw from handleCommentChange: ${raw}`);
     debouncedPreview(raw);
   }
 
   return (
     <div className={className}>
-      <fetcher.Form className={formClassName} method="post" action="?">
-        <input type="hidden" name="username" value={username} />
-        <input type="hidden" name="topicId" value={topicId} />
-        {replyToPostNumber && (
-          <input
-            type="hidden"
-            name="replyToPostNumber"
-            value={replyToPostNumber}
-          />
-        )}
+      <div
+        className={`comment-preview mb-8 p-2 h-96 bg-slate-50 text-slate-950 overflow-y-scroll ${
+          previewOpen ? "block" : "hidden"
+        }`}
+      >
+        <div dangerouslySetInnerHTML={{ __html: cookedPreview }} />
+      </div>
+      <Form className={formClassName} method="post" action="?">
+        <>
+          {hiddenFields &&
+            Object.entries(hiddenFields).map(([key, value]) => (
+              <input
+                key={key}
+                type="hidden"
+                name={key}
+                value={value === null ? "" : value}
+              />
+            ))}
+        </>
         <textarea
-          className="h-64 p-2 text-slate-950"
+          className="h-96 p-2 text-slate-950"
           name="rawComment"
           onChange={handleCommentChange}
         ></textarea>
@@ -86,14 +93,7 @@ export default function CommentForm({ ...props }: CommentFormProps) {
             Preview
           </button>
         </div>
-      </fetcher.Form>
-      <div
-        className={`comment-preview my-2 p-2 h-64 bg-slate-50 text-slate-950 overflow-y-scroll ${
-          previewOpen ? "block" : "hidden"
-        }`}
-      >
-        <div dangerouslySetInnerHTML={{ __html: cookedPreview }} />
-      </div>
+      </Form>
     </div>
   );
 }
