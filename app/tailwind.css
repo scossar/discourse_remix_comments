@@ -27,4 +27,16 @@
       @apply bg-slate-200 block w-full my-2;
     }
   }
+  li > p {
+    @apply inline-block;
+  }
+  ul {
+    @apply list-disc;
+  }
+  ol {
+    @apply list-decimal list-inside;
+  }
+  blockquote {
+    @apply p-3 border-l-4 border-slate-300 bg-slate-200;
+  }
 }
