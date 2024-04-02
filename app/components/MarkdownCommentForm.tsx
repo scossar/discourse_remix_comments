@@ -98,6 +98,103 @@ export default function MarkdownCommentForm({ ...props }: CommentFormProps) {
     }
   }
 
+  function handleMarkdownSyntax(
+    event: React.MouseEvent<HTMLButtonElement>,
+    style: string
+  ) {
+    event.preventDefault();
+    let syntax: string,
+      syntaxType = "prepend",
+      placeholder = "";
+    switch (style) {
+      case "bold":
+        syntax = "**";
+        syntaxType = "wrap";
+        placeholder = "bold text";
+        break;
+      case "italic":
+        syntax = "*";
+        syntaxType = "wrap";
+        placeholder = "italic text";
+        break;
+      case "h1":
+        syntax = "# ";
+        syntaxType = "prepend";
+        placeholder = "h1 heading";
+        break;
+      case "h2":
+        syntax = "## ";
+        syntaxType = "prepend";
+        placeholder = "h2 heading";
+        break;
+      case "ul":
+        syntax = "- ";
+        syntaxType = "prepend";
+        placeholder = "list item";
+        break;
+      default:
+        syntax = "";
+    }
+
+    const selectionStart = textareaRef.current?.selectionStart;
+    const selectionEnd = textareaRef.current?.selectionEnd;
+    if (
+      typeof selectionStart === "number" &&
+      typeof selectionEnd === "number"
+    ) {
+      const beforeText = textareaValue.substring(0, selectionStart);
+      const selectedText = textareaValue.substring(
+        selectionStart,
+        selectionEnd
+      );
+      const afterText = textareaValue.substring(selectionEnd);
+
+      let newText = "";
+      let styledText = "";
+
+      if (selectedText.length > 0) {
+        const selections = selectedText.split(/\n\n+/);
+        console.log(`selections: ${JSON.stringify(selections, null, 2)}`);
+        if (syntaxType === "wrap") {
+          styledText = selections
+            .map((selection) =>
+              selection ? `${syntax}${selection.trim()}${syntax}` : selection
+            )
+            .join("\n\n");
+        } else if (syntaxType === "prepend") {
+          styledText = selections
+            .map((selection) =>
+              selection ? `${syntax}${selection.trim()}` : selection
+            )
+            .join("\n\n");
+        }
+      } else {
+        if (syntaxType === "wrap") {
+          styledText = selectedText
+            ? `${syntax}${selectedText.trim()}${syntax}`
+            : `${syntax}${placeholder}${syntax}`;
+        } else if (syntaxType === "prepend") {
+          styledText = selectedText
+            ? `${syntax}${selectedText.trim()}`
+            : `${syntax}${placeholder}`;
+        }
+      }
+
+      newText = `${beforeText}${styledText}${afterText}`;
+
+      setTextareaValue(newText);
+      setTimeout(() => {
+        const syntaxOffset = syntaxType === "wrap" ? syntax.length : 0;
+        textareaRef.current?.focus();
+        textareaRef.current?.setSelectionRange(
+          selectionStart + syntax.length,
+          selectionStart + styledText.length - syntaxOffset
+        );
+      }, 0);
+      debouncedPreview(newText);
+    }
+  }
+
   return (
     <div className={className}>
       <div
@@ -122,9 +219,33 @@ export default function MarkdownCommentForm({ ...props }: CommentFormProps) {
         <div className="formatting-buttons flex w-full bg-slate-100">
           <button
             className="px-2 py-1 m-1 bg-slate-50 text-slate-900 border border-slate-900 rounded-md"
-            onClick={handleBoldButton}
+            onClick={(e) => handleMarkdownSyntax(e, "bold")}
           >
             Bold
+          </button>
+          <button
+            className="px-2 py-1 m-1 bg-slate-50 text-slate-900 border border-slate-900 rounded-md"
+            onClick={(e) => handleMarkdownSyntax(e, "italic")}
+          >
+            Italic
+          </button>
+          <button
+            className="px-2 py-1 m-1 bg-slate-50 text-slate-900 border border-slate-900 rounded-md"
+            onClick={(e) => handleMarkdownSyntax(e, "h1")}
+          >
+            H1
+          </button>
+          <button
+            className="px-2 py-1 m-1 bg-slate-50 text-slate-900 border border-slate-900 rounded-md"
+            onClick={(e) => handleMarkdownSyntax(e, "h2")}
+          >
+            H2
+          </button>
+          <button
+            className="px-2 py-1 m-1 bg-slate-50 text-slate-900 border border-slate-900 rounded-md"
+            onClick={(e) => handleMarkdownSyntax(e, "ul")}
+          >
+            Unordered List
           </button>
         </div>
         <textarea
