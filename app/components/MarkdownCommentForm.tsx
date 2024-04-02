@@ -139,7 +139,7 @@ export default function MarkdownCommentForm({ ...props }: CommentFormProps) {
         break;
       case "quote":
         syntax = ">";
-        syntaxType = "prepend";
+        syntaxType = "blockquote";
         placeholder = "quote";
         break;
       default:
@@ -175,13 +175,20 @@ export default function MarkdownCommentForm({ ...props }: CommentFormProps) {
           styledText = lines
             .map((line) => (line ? `${syntax}${line.trim()}` : line))
             .join("\n");
+        } else if ((syntaxType = "blockquote")) {
+          const selections = selectedText.split(/\n\n+/);
+          styledText = selections
+            .map((selection) =>
+              selection ? `${syntax}${selection.trim()}` : selection
+            )
+            .join("\n\n");
         }
       } else {
         if (syntaxType === "wrap") {
           styledText = selectedText
             ? `${syntax}${selectedText.trim()}${syntax}`
             : `${syntax}${placeholder}${syntax}`;
-        } else if (syntaxType === "prepend") {
+        } else if (syntaxType === "prepend" || syntaxType === "blockquote") {
           styledText = selectedText
             ? `${syntax}${selectedText.trim()}`
             : `${syntax}${placeholder}`;
