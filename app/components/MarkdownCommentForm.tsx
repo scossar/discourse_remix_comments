@@ -13,7 +13,7 @@ interface CommentFormProps {
 }
 
 interface FormFetcher {
-  htmlPreview?: string | null;
+  html?: string | null;
 }
 
 export default function MarkdownCommentForm({ ...props }: CommentFormProps) {
@@ -30,16 +30,16 @@ export default function MarkdownCommentForm({ ...props }: CommentFormProps) {
   const [textareaValue, setTextareaValue] = useState("");
 
   if (commentPreviewFetcher && commentPreviewFetcher?.data) {
-    cookedPreview = commentPreviewFetcher.data?.htmlPreview ?? "";
+    cookedPreview = commentPreviewFetcher.data?.html ?? "";
   }
 
   function handlePreviewClick(event: React.FormEvent<HTMLButtonElement>) {
     setPreviewOpen(!previewOpen);
   }
 
-  const debouncedPreview = debounce((raw: string) => {
+  const debouncedPreview = debounce((rawComment: string) => {
     commentPreviewFetcher.submit(
-      { raw: raw },
+      { rawComment: rawComment },
       {
         method: "post",
         action: "/api/markdownParser",
@@ -50,9 +50,9 @@ export default function MarkdownCommentForm({ ...props }: CommentFormProps) {
   }, 500);
 
   function handleCommentChange(event: React.FormEvent<HTMLTextAreaElement>) {
-    const raw = event.currentTarget.value;
-    setTextareaValue(raw);
-    debouncedPreview(raw);
+    const rawComment = event.currentTarget.value;
+    setTextareaValue(rawComment);
+    debouncedPreview(rawComment);
   }
 
   const textareaRef = useRef<HTMLTextAreaElement>(null);

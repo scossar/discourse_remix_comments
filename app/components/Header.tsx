@@ -11,7 +11,7 @@ export default function Header({ user }: HeaderProps) {
   const logInOutLink = activeSession ? "/logout" : "/login";
   return (
     <header className="h-14 w-full bg-cyan-700 text-slate-50 py-3">
-      <div className=" flex flex-row items-center justify-between max-w-screen-lg mx-auto">
+      <div className=" flex flex-row items-center justify-between max-w-screen-md mx-auto">
         <div>
           <h1 className="text-xl">Discourse Auth</h1>
         </div>
