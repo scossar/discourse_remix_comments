@@ -56,47 +56,6 @@ export default function MarkdownCommentForm({ ...props }: CommentFormProps) {
   }
 
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-  function handleBoldButton(event: React.MouseEvent<HTMLButtonElement>) {
-    event.preventDefault();
-    const selectionStart = textareaRef.current?.selectionStart;
-    const selectionEnd = textareaRef.current?.selectionEnd;
-    if (
-      typeof selectionStart === "number" &&
-      typeof selectionEnd === "number"
-    ) {
-      const beforeText = textareaValue.substring(0, selectionStart);
-      const selectedText = textareaValue.substring(
-        selectionStart,
-        selectionEnd
-      );
-      const afterText = textareaValue.substring(selectionEnd);
-
-      const newText = `${beforeText}**${
-        selectedText || "bold text"
-      }**${afterText}`;
-      setTextareaValue(newText);
-      // setTimeout is used to defer the execution of the code until the callstack is clear.
-      // directly manipulating the DOM during rendering can lead to inconsistencies between the VDOM and the actual DOM.
-      setTimeout(() => {
-        // restore the cursor's position
-        textareaRef.current?.focus();
-        // if no text was selected, place the cursor inside the bold syntax
-        if (!selectedText) {
-          textareaRef.current?.setSelectionRange(
-            selectionStart + 2,
-            selectionStart + 11
-          );
-        } else {
-          textareaRef.current?.setSelectionRange(
-            selectionStart,
-            selectionEnd + 4
-          );
-        }
-      }, 0);
-      // render new preview HTML
-      debouncedPreview(newText);
-    }
-  }
 
   function handleMarkdownSyntax(
     event: React.MouseEvent<HTMLButtonElement>,
