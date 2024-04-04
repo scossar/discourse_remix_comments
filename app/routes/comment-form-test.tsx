@@ -24,10 +24,6 @@ export async function action({ request }: ActionFunctionArgs) {
   const replyToPostNumber = Number(formData.get("replyToPostNumber")) ?? null;
   const cooked = await marked.parse(rawComment);
 
-  console.log(
-    `Parsed action formData. cooked: ${cooked}, discourseUsername: ${discourseUsername}, topicId: ${topicId}, replyToPostNumber: ${replyToPostNumber}`
-  );
-
   return json({});
 }
 

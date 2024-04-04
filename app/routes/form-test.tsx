@@ -25,7 +25,7 @@ export default function FormTest() {
   return (
     <div className="max-w-screen-md mx-auto">
       <h1 className="text-3xl">Comment Form Test</h1>
-      <CommentForm className="my-2 p-3 flex flex-row-reverse" />
+      <CommentForm className="my-2 p-3 flex" />
     </div>
   );
 }

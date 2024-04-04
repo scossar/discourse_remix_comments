@@ -189,69 +189,75 @@ export default function CommentForm({ className }: CommentFormProps) {
 
   return (
     <div {...(className ? { className } : {})}>
-      <div
-        className={`w-1/2 comment-preview mb-8 p-2 h-96 mt-12 bg-slate-50 text-slate-950 overflow-y-scroll my-2 border-l-4 border-slate-400 ${
-          previewOpen ? "block" : "hidden"
-        }`}
-      >
-        <div dangerouslySetInnerHTML={{ __html: htmlPreview }} />
-      </div>
-      <Form
-        className={`my-2 flex flex-col  ${previewOpen ? "w-1/2" : "w-full"}`}
-        method="post"
-      >
-        <div className="formatting-buttons flex w-full bg-slate-100 h-10">
-          <button
-            className="px-2 py-1 m-1 bg-slate-50 text-slate-900 border border-slate-900 rounded-md"
-            onClick={(e) => handleMarkdownSyntax(e, "bold")}
-          >
-            <strong>B</strong>
-          </button>
-          <button
-            className="px-2 py-1 m-1 bg-slate-50 text-slate-900 border border-slate-900 rounded-md"
-            onClick={(e) => handleMarkdownSyntax(e, "italic")}
-          >
-            <em>I</em>
-          </button>
-          <button
-            className="px-2 py-1 m-1 bg-slate-50 text-slate-900 border border-slate-900 rounded-md"
-            onClick={(e) => handleMarkdownSyntax(e, "h1")}
-          >
-            H1
-          </button>
-          <button
-            className="px-2 py-1 m-1 bg-slate-50 text-slate-900 border border-slate-900 rounded-md"
-            onClick={(e) => handleMarkdownSyntax(e, "h2")}
-          >
-            H2
-          </button>
-          <button
-            className="px-2 py-1 m-1 bg-slate-50 text-slate-900 border border-slate-900 rounded-md"
-            onClick={(e) => handleMarkdownSyntax(e, "ul")}
-          >
-            UL
-          </button>
-          <button
-            className="px-2 py-1 m-1 bg-slate-50 text-slate-900 border border-slate-900 rounded-md"
-            onClick={(e) => handleMarkdownSyntax(e, "ol")}
-          >
-            OL
-          </button>
-          <button
-            className="px-2 py-1 m-1 bg-slate-50 text-slate-900 border border-slate-900 rounded-md"
-            onClick={(e) => handleMarkdownSyntax(e, "blockquote")}
-          >
-            Q
-          </button>
+      <Form className={`my-2 flex flex-col w-full`} method="post">
+        <div className="formatting/editor/preview-container">
+          <div className="formatting/editor-container flex flex-row w-full h-full min-h-96">
+            <div
+              className={`flex flex-col ${previewOpen ? "w-1/2" : "w-full"}`}
+            >
+              <div className={`formatting-buttons flex bg-slate-100 h-10`}>
+                <button
+                  className="px-2 py-1 m-1 bg-slate-50 text-slate-900 border border-slate-900 rounded-md"
+                  onClick={(e) => handleMarkdownSyntax(e, "bold")}
+                >
+                  <strong>B</strong>
+                </button>
+                <button
+                  className="px-2 py-1 m-1 bg-slate-50 text-slate-900 border border-slate-900 rounded-md"
+                  onClick={(e) => handleMarkdownSyntax(e, "italic")}
+                >
+                  <em>I</em>
+                </button>
+                <button
+                  className="px-2 py-1 m-1 bg-slate-50 text-slate-900 border border-slate-900 rounded-md"
+                  onClick={(e) => handleMarkdownSyntax(e, "h1")}
+                >
+                  H1
+                </button>
+                <button
+                  className="px-2 py-1 m-1 bg-slate-50 text-slate-900 border border-slate-900 rounded-md"
+                  onClick={(e) => handleMarkdownSyntax(e, "h2")}
+                >
+                  H2
+                </button>
+                <button
+                  className="px-2 py-1 m-1 bg-slate-50 text-slate-900 border border-slate-900 rounded-md"
+                  onClick={(e) => handleMarkdownSyntax(e, "ul")}
+                >
+                  UL
+                </button>
+                <button
+                  className="px-2 py-1 m-1 bg-slate-50 text-slate-900 border border-slate-900 rounded-md"
+                  onClick={(e) => handleMarkdownSyntax(e, "ol")}
+                >
+                  OL
+                </button>
+                <button
+                  className="px-2 py-1 m-1 bg-slate-50 text-slate-900 border border-slate-900 rounded-md"
+                  onClick={(e) => handleMarkdownSyntax(e, "blockquote")}
+                >
+                  Q
+                </button>
+              </div>
+
+              <textarea
+                className="p-2 text-slate-950 h-full"
+                name="rawComment"
+                onChange={handleTextareaChange}
+                ref={textareaRef}
+                value={textareaValue}
+              ></textarea>
+            </div>
+            <div
+              className={`w-1/2 comment-preview p-2 h-full bg-slate-50 text-slate-950 overflow-y-scroll border-l-4 border-slate-400 ${
+                previewOpen ? "block" : "hidden"
+              }`}
+            >
+              <div dangerouslySetInnerHTML={{ __html: htmlPreview }} />
+            </div>
+          </div>
         </div>
-        <textarea
-          className="h-96 p-2 text-slate-950"
-          name="rawComment"
-          onChange={handleTextareaChange}
-          ref={textareaRef}
-          value={textareaValue}
-        ></textarea>
-        <div className="flex">
+        <div className="submit/preview-button-container">
           <button
             className="text-cyan-900 font-bold bg-slate-50 w-fit px-2 py-1 mt-3 rounded-sm"
             type="submit"
