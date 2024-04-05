@@ -1,0 +1,74 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+
+model DiscourseTopic {
+  id Int @id @default(autoincrement())
+  externalId Int @unique
+  userId Int
+  slug String
+  fancyTitle String
+  archetype String
+  categoryId Int
+  externalCreatedAt DateTime
+  posts DiscoursePost[]
+  category DiscourseCategory? @relation(fields: [categoryId], references: [externalId])
+  user DiscourseUser @relation(fields: [userId], references: [externalId])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model DiscoursePost {
+  id Int @id @default(autoincrement())
+  externalId Int @unique
+  topicId Int
+  userId Int
+  username String
+  avatarTemplate String
+  postNumber Int
+  postType Int
+  cooked String
+  externalCreatedAt DateTime
+  externalUpdatedAt DateTime
+  topic DiscourseTopic @relation(fields: [topicId], references: [id])
+  user DiscourseUser @relation(fields: [userId], references: [externalId])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model DiscourseCategory {
+  id Int @id @default(autoincrement()) // the primary key will be autoincremented by Prisma
+  externalId Int @unique// the Discourse category id
+  name String
+  color String
+  slug String
+  description String
+  hasChildren Boolean
+  readRestricted Boolean
+  parentCategoryId Int?
+  topics DiscourseTopic[]
+}
+
+model DiscourseUser {
+  id Int @id @default(autoincrement())
+  externalId Int @unique
+  username String // this is unique, but enforced on the Discourse end
+  avatarTemplate String
+  topic DiscourseTopic[]
+  post DiscoursePost[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
