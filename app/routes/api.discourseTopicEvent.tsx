@@ -8,16 +8,13 @@ import {
   discourseWehbookHeaders,
   verifyWebhookRequest,
 } from "~/services/discourseWebhooks";
-import { DiscoursePost, DiscourseTopic } from "@prisma/client";
 
 export const action = async ({ request }: ActionFunctionArgs) => {
   if (request.method !== "POST") {
     return null;
   }
 
-  // note that you could get the json payload, then call JSON.stringify on it: see Webhook section of resource route docs
-
-  const payload: string = await request.text();
+  const webhookJson: string = await request.json();
   const headers: Headers = request.headers;
   const discourseHeaders = discourseWehbookHeaders(headers);
 
@@ -29,11 +26,24 @@ export const action = async ({ request }: ActionFunctionArgs) => {
       `Webhook Error: route not configured to handle ${discourseHeaders["X-Discourse-Event-Type"]} ${discourseHeaders["X-Discourse-Event"]}`
     );
     // todo: a response should be returned to Discourse
-    return null;
+    return json(
+      {
+        message: `Payload URL not configured to handle ${discourseHeaders["X-Discourse-Event-Id"]} event.`,
+      },
+      403
+    );
   }
 
   const eventSignature = discourseHeaders["X-Discourse-Event-Signature"];
 
+  const validSig = eventSignature
+    ? verifyWebhookRequest(JSON.stringify(webhookJson), eventSignature)
+    : false;
+
+  console.log(`payload valid? ${validSig}`);
+
+  return null;
+  /*
   if (!eventSignature || !verifyWebhookRequest(payload, eventSignature)) {
     console.warn(
       `Webhook Error: invalid or missing event signature for event-id ${discourseHeaders["X-Discourse-Event-Id"]} `
@@ -181,5 +191,5 @@ export const action = async ({ request }: ActionFunctionArgs) => {
   // console.log(`topic: ${JSON.stringify(topic, null, 2)}`);
 
   //console.log(`post: ${JSON.stringify(post, null, 2)}`);
-  return json({ status: 200 });
+  return json({ status: 200 }); */
 };
