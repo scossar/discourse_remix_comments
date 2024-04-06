@@ -3,7 +3,7 @@ import { json, type ActionFunctionArgs } from "@remix-run/node";
 import { db } from "~/services/db.server";
 import { Prisma } from "@prisma/client";
 
-import type { WebHookTopic, Topic } from "~/types/discourse";
+import type { WebHookTopic, Category } from "~/types/discourse";
 import {
   discourseWehbookHeaders,
   verifyWebhookRequest,
@@ -41,7 +41,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     ? verifyWebhookRequest(JSON.stringify(webhookJson), eventSignature)
     : false;
 
-  if (validSig) {
+  if (!validSig) {
     console.warn(
       `Webhook Error: invalid or missing event signature for event-id ${discourseHeaders["X-Discourse-Event-Id"]} `
     );
@@ -57,16 +57,81 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     console.warn(
       "Webhook Error: DISCOURSE_BASE_URL environmental variable not set"
     );
-    return json({
-      message: "Webhook environmental variables not configured on client",
+    return json(
+      {
+        message: "Webhook environmental variables not configured on client",
+      },
+      500
+    );
+  }
+  const apiKey = process.env.DISCOURSE_API_KEY;
+  const baseUrl = process.env.DISCOURSE_BASE_URL;
+
+  const categoryId = webhookJson.topic.category_id;
+  let category = await db.discourseCategory.findUnique({
+    where: { externalId: categoryId },
+  });
+
+  if (!category) {
+    const categoryHeaders = new Headers();
+    categoryHeaders.append("Api-Key", apiKey);
+    categoryHeaders.append("Api-Username", "system");
+    const categoryUrl = `${baseUrl}/site.json`;
+    const categoryResponse = await fetch(categoryUrl, {
+      headers: categoryHeaders,
     });
+    if (!categoryResponse.ok) {
+      return json(
+        {
+          message: "Unable to retrieve topic category",
+        },
+        500
+      );
+    }
+
+    const categoryData = await categoryResponse.json();
+    const allCategories = categoryData?.categories;
+    const missingCategory: Category = allCategories?.find(
+      (category: Category) => category.id === categoryId
+    );
+    if (!missingCategory) {
+      return json(
+        {
+          message: "Unable to retrieve topic category",
+        },
+        500
+      );
+    }
+    let categoryFields: Prisma.DiscourseCategoryCreateInput = {
+      externalId: missingCategory.id,
+      parentCategoryId: missingCategory.parent_category_id,
+      name: missingCategory.name,
+      color: missingCategory.color,
+      slug: missingCategory.slug,
+      topicCount: missingCategory.topic_count,
+      descriptionText: missingCategory.description_text,
+      hasChildren: missingCategory.has_children,
+      uploadedLogo: missingCategory.uploaded_logo,
+      uploadedLogoDark: missingCategory.uploaded_logo_dark,
+    };
+
+    const newCategory = await db.discourseCategory.create({
+      data: categoryFields,
+    });
+
+    if (!newCategory) {
+      return json(
+        {
+          message: "Unable to retrieve topic category",
+        },
+        500
+      );
+    }
   }
 
   return null;
-  /*
 
-
-  const baseUrl = process.env.DISCOURSE_BASE_URL;
+  /*const baseUrl = process.env.DISCOURSE_BASE_URL;
   const apiKey = process.env.DISCOURSE_API_KEY;
   const topicId = jsonData?.topic?.id;
   const slug = jsonData?.topic?.slug;
@@ -187,9 +252,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
   };
 
   const post = await db.discoursePost.create({ data: postFields });
-
-  // console.log(`topic: ${JSON.stringify(topic, null, 2)}`);
-
-  //console.log(`post: ${JSON.stringify(post, null, 2)}`);
-  return json({ status: 200 }); */
+  
+  return json({ status: 200 });
+  */
 };
