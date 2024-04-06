@@ -10,20 +10,78 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+model DiscourseUser {
+  id Int @id @default(autoincrement())
+  externalId Int @unique
+  username String
+  avatarTemplate String
+  topics DiscourseTopic[]
+  posts DiscoursePost[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model DiscourseTag {
+  id Int @id @default(autoincrement())
+  externalId String @unique
+  text String
+  description String?
+  count Int
+  topics DiscourseTopicTag[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model DiscourseTopicTag {
+  tagId Int
+  topicId Int
+  tag DiscourseTag @relation(fields: [tagId], references: [id], onDelete: Cascade)
+  topic DiscourseTopic @relation(fields: [topicId], references: [id], onDelete: Cascade)
+
+  @@id([tagId, topicId])
+}
+
+model DiscourseCategory {
+  id Int @id @default(autoincrement())
+  externalId Int @unique
+  parentCategoryId Int?
+  name String
+  color String
+  slug String
+  topicCount Int
+  descriptionText String?
+  hasChildren Boolean
+  uploadedLogo String?
+  uploadedLogoDark String?
+  topics DiscourseTopic[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
 
 model DiscourseTopic {
   id Int @id @default(autoincrement())
   externalId Int @unique
   userId Int
-  slug String
+  categoryId Int? 
+  title String
   fancyTitle String
-  archetype String
-  categoryId Int
+  postsCount Int
   externalCreatedAt DateTime
+  likeCount Int
+  lastPostedAt DateTime
+  visible Boolean
+  closed Boolean
+  archetype String
+  slug String
+  wordCount Int
+  tags DiscourseTopicTag[]
+  user DiscourseUser @relation(fields: [userId], references: [id], onDelete: Cascade)
+  category DiscourseCategory? @relation(fields: [categoryId], references: [id])
   posts DiscoursePost[]
-  category DiscourseCategory? @relation(fields: [categoryId], references: [externalId])
-  user DiscourseUser @relation(fields: [userId], references: [externalId])
-
+ 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
@@ -31,44 +89,24 @@ model DiscourseTopic {
 model DiscoursePost {
   id Int @id @default(autoincrement())
   externalId Int @unique
-  topicId Int
-  userId Int
   username String
   avatarTemplate String
+  externalCreatedAt DateTime
+  cooked String
   postNumber Int
   postType Int
-  cooked String
-  externalCreatedAt DateTime
   externalUpdatedAt DateTime
-  topic DiscourseTopic @relation(fields: [topicId], references: [id])
-  user DiscourseUser @relation(fields: [userId], references: [externalId])
+  replyCount Int
+  replyToPostNumber Int?
+  topicId Int
+  topicSlug String
+  topicTitle String? // in the webhook payload, but not returned from API request, maybe remove later
+  categoryId Int
+  raw String? // in the webhook payload and posts/id.json API data, but not topicList posts data, maybe remove later
+  userId Int
+  topic DiscourseTopic @relation(fields: [topicId], references: [id], onDelete: Cascade)
+  user DiscourseUser @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
-
-model DiscourseCategory {
-  id Int @id @default(autoincrement()) // the primary key will be autoincremented by Prisma
-  externalId Int @unique// the Discourse category id
-  name String
-  color String
-  slug String
-  description String
-  hasChildren Boolean
-  readRestricted Boolean
-  parentCategoryId Int?
-  topics DiscourseTopic[]
-}
-
-model DiscourseUser {
-  id Int @id @default(autoincrement())
-  externalId Int @unique
-  username String // this is unique, but enforced on the Discourse end
-  avatarTemplate String
-  topic DiscourseTopic[]
-  post DiscoursePost[]
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-}
-

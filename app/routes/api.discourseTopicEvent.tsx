@@ -3,7 +3,7 @@ import { json, type ActionFunctionArgs } from "@remix-run/node";
 import { db } from "~/services/db.server";
 import { Prisma } from "@prisma/client";
 
-import type { DiscourseWebhookNewTopicData, Topic } from "~/types/discourse";
+import type { WebHookTopic, Topic } from "~/types/discourse";
 import {
   discourseWehbookHeaders,
   verifyWebhookRequest,
@@ -11,28 +11,29 @@ import {
 
 export const action = async ({ request }: ActionFunctionArgs) => {
   if (request.method !== "POST") {
-    return null;
+    return json({ message: "Invalid request method" });
   }
 
-  const webhookJson: string = await request.json();
-  const headers: Headers = request.headers;
-  const discourseHeaders = discourseWehbookHeaders(headers);
+  const receivedHeaders: Headers = request.headers;
+  const discourseHeaders = discourseWehbookHeaders(receivedHeaders);
 
   if (
     discourseHeaders["X-Discourse-Event-Type"] !== "topic" ||
-    discourseHeaders["X-Discourse-Event"] !== "topic_created"
+    (discourseHeaders["X-Discourse-Event"] !== "topic_created" &&
+      discourseHeaders["X-Discourse-Event"] !== "topic_edited")
   ) {
     console.warn(
       `Webhook Error: route not configured to handle ${discourseHeaders["X-Discourse-Event-Type"]} ${discourseHeaders["X-Discourse-Event"]}`
     );
-    // todo: a response should be returned to Discourse
     return json(
       {
-        message: `Payload URL not configured to handle ${discourseHeaders["X-Discourse-Event-Id"]} event.`,
+        message: `Payload URL not configured to handle ${discourseHeaders["X-Discourse-Event-Id"]} event`,
       },
       403
     );
   }
+
+  const webhookJson: WebHookTopic = await request.json();
 
   const eventSignature = discourseHeaders["X-Discourse-Event-Signature"];
 
@@ -40,31 +41,30 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     ? verifyWebhookRequest(JSON.stringify(webhookJson), eventSignature)
     : false;
 
-  console.log(`payload valid? ${validSig}`);
-
-  return null;
-  /*
-  if (!eventSignature || !verifyWebhookRequest(payload, eventSignature)) {
+  if (validSig) {
     console.warn(
       `Webhook Error: invalid or missing event signature for event-id ${discourseHeaders["X-Discourse-Event-Id"]} `
     );
-    return null;
-  }
-
-  let jsonData: DiscourseWebhookNewTopicData;
-  try {
-    jsonData = JSON.parse(payload);
-  } catch (e) {
-    console.warn("Webhook Error: payload could not be parsed as JSON");
-    return null;
+    return json(
+      {
+        message: `Payload Signature mismatch`,
+      },
+      403
+    );
   }
 
   if (!process.env.DISCOURSE_BASE_URL || !process.env.DISCOURSE_API_KEY) {
     console.warn(
       "Webhook Error: DISCOURSE_BASE_URL environmental variable not set"
     );
-    return null;
+    return json({
+      message: "Webhook environmental variables not configured on client",
+    });
   }
+
+  return null;
+  /*
+
 
   const baseUrl = process.env.DISCOURSE_BASE_URL;
   const apiKey = process.env.DISCOURSE_API_KEY;
