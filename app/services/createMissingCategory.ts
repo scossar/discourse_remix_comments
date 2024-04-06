@@ -9,15 +9,15 @@ export default async function createMissingCategory(id: number) {
 
   const apiKey = process.env.DISCOURSE_API_KEY;
   const baseUrl = process.env.DISCOURSE_BASE_URL;
-
   const headers = new Headers();
   headers.append("Api-Key", apiKey);
   headers.append("Api-Username", "system");
   const url = `${baseUrl}/site.json`;
+  console.log(`url: ${url}`);
   const response = await fetch(url, {
     headers: headers,
   });
-  if (response.ok) {
+  if (!response.ok) {
     return 0;
   }
 

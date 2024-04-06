@@ -1,13 +1,14 @@
 import { json, type ActionFunctionArgs } from "@remix-run/node";
 
 import { db } from "~/services/db.server";
-import { Prisma } from "@prisma/client";
+import type { Prisma } from "@prisma/client";
 
 import type { WebHookTopic, Category } from "~/types/discourse";
 import {
   discourseWehbookHeaders,
   verifyWebhookRequest,
 } from "~/services/discourseWebhooks";
+import createMissingCategory from "~/services/createMissingCategory";
 
 export const action = async ({ request }: ActionFunctionArgs) => {
   if (request.method !== "POST") {
@@ -64,8 +65,6 @@ export const action = async ({ request }: ActionFunctionArgs) => {
       500
     );
   }
-  const apiKey = process.env.DISCOURSE_API_KEY;
-  const baseUrl = process.env.DISCOURSE_BASE_URL;
 
   const categoryId = webhookJson.topic.category_id;
   let category = await db.discourseCategory.findUnique({
@@ -73,127 +72,21 @@ export const action = async ({ request }: ActionFunctionArgs) => {
   });
 
   if (!category) {
-    const categoryHeaders = new Headers();
-    categoryHeaders.append("Api-Key", apiKey);
-    categoryHeaders.append("Api-Username", "system");
-    const categoryUrl = `${baseUrl}/site.json`;
-    const categoryResponse = await fetch(categoryUrl, {
-      headers: categoryHeaders,
-    });
-    if (!categoryResponse.ok) {
+    const newCategory = await createMissingCategory(categoryId);
+    if (newCategory === 0) {
       return json(
         {
-          message: "Unable to retrieve topic category",
+          message: "Unable to create category",
         },
         500
       );
     }
-
-    const categoryData = await categoryResponse.json();
-    const allCategories = categoryData?.categories;
-    const missingCategory: Category = allCategories?.find(
-      (category: Category) => category.id === categoryId
-    );
-    if (!missingCategory) {
-      return json(
-        {
-          message: "Unable to retrieve topic category",
-        },
-        500
-      );
-    }
-    let categoryFields: Prisma.DiscourseCategoryCreateInput = {
-      externalId: missingCategory.id,
-      parentCategoryId: missingCategory.parent_category_id,
-      name: missingCategory.name,
-      color: missingCategory.color,
-      slug: missingCategory.slug,
-      topicCount: missingCategory.topic_count,
-      descriptionText: missingCategory.description_text,
-      hasChildren: missingCategory.has_children,
-      uploadedLogo: missingCategory.uploaded_logo,
-      uploadedLogoDark: missingCategory.uploaded_logo_dark,
-    };
-
-    const newCategory = await db.discourseCategory.create({
-      data: categoryFields,
-    });
-
-    if (!newCategory) {
-      return json(
-        {
-          message: "Unable to retrieve topic category",
-        },
-        500
-      );
-    }
+    console.log(`new cat: ${JSON.stringify(newCategory, null, 2)}`);
   }
 
   return null;
 
-  /*const baseUrl = process.env.DISCOURSE_BASE_URL;
-  const apiKey = process.env.DISCOURSE_API_KEY;
-  const topicId = jsonData?.topic?.id;
-  const slug = jsonData?.topic?.slug;
-
-  const requestHeaders = new Headers();
-  requestHeaders.append("Api-Key", apiKey);
-  requestHeaders.append("Api-Username", "system");
-  const topicUrl = `${baseUrl}/t/${slug}/${topicId}.json`;
-  const response = await fetch(topicUrl, { headers: requestHeaders });
-
-  if (!response.ok) {
-    throw new Response("Failed to fetch topic", {
-      status: response.status,
-      statusText: response.statusText,
-    });
-  }
-
-  const topicData = await response.json();
-
-  const categoryId = topicData.category_id;
-
-  const category = await db.discourseCategory.findUnique({
-    where: { externalId: categoryId },
-  });
-
-  if (!category) {
-    const categoriesUrl = `${baseUrl}/categories.json?include_subcategories=true`;
-    const categoriesResponse = await fetch(categoriesUrl, {
-      headers: requestHeaders,
-    });
-    if (!categoriesResponse.ok) {
-      throw new Response("Failed to fetch categories", {
-        status: categoriesResponse.status,
-        statusText: categoriesResponse.statusText,
-      });
-    }
-    const categoryData = await categoriesResponse.json();
-    const categories = categoryData.category_list.categories;
-    // note this isn't looking for subcategories
-    const missingCategory = categories.find(
-      (cat: any) => cat.id === categoryId
-    );
-
-    let categoryFields: Prisma.DiscourseCategoryCreateInput = {
-      externalId: Number(missingCategory.id),
-      name: missingCategory.name,
-      color: missingCategory.color,
-      slug: missingCategory.slug,
-      description: missingCategory.description,
-      hasChildren: Boolean(missingCategory.hasChildren),
-      readRestricted: Boolean(missingCategory.read_restricted),
-      parentCategoryId:
-        missingCategory.parent_category_id !== null
-          ? Number(missingCategory.parent_category_id)
-          : null,
-    };
-
-    const newCategory = await db.discourseCategory.create({
-      data: categoryFields,
-    });
-  }
-
+  /*
   const topicPost = topicData.post_stream.posts[0];
 
   const topicFields: Prisma.DiscourseTopicCreateInput = {

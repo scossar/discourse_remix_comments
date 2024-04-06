@@ -12,7 +12,7 @@ export interface DiscourseWebhookHeaders {
   "X-Discourse-Event-Signature"?: string | null;
 }
 
-export interface WebHookPostorTopicUser {
+export interface WebHookPostOrTopicUser {
   id: number;
   username: string;
   avatar_template: string;
@@ -36,8 +36,8 @@ export interface WebHookTopic {
     category_id: number;
     word_count: number;
     user_id: number;
-    created_by: WebHookPostorTopicUser;
-    last_poster: WebHookPostorTopicUser;
+    created_by: WebHookPostOrTopicUser;
+    last_poster: WebHookPostOrTopicUser;
   };
 }
 
@@ -88,7 +88,7 @@ export interface Tag {
   id: string;
   text: string;
   description?: string;
-  count: number;
+  count?: number; // probably don't use this field, all other fields are available in webhook topic payload
 }
 
 // Here and below can probably be deleted
