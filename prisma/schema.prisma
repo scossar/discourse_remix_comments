@@ -27,7 +27,7 @@ model DiscourseTag {
   externalId String @unique
   text String
   description String?
-  count Int // remove this field so that tags can be created from webhook data
+  count Int? // optional so that tag can be created from topic webhook payload
   topics DiscourseTopicTag[]
 
   createdAt DateTime @default(now())

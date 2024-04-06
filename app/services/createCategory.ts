@@ -1,10 +1,14 @@
 import { db } from "~/services/db.server";
 import { Category } from "~/types/discourse";
+import CategoryCreationError from "./errors/categoryCreationError";
 import type { Prisma } from "@prisma/client";
 
-export default async function createMissingCategory(id: number) {
+export default async function createCategory(id: number) {
   if (!process.env.DISCOURSE_BASE_URL || !process.env.DISCOURSE_API_KEY) {
-    return 0;
+    throw new CategoryCreationError(
+      "DISCOURSE_BASE_URL and DISCOURSE_API_KEY environment variables not configured on client",
+      500
+    );
   }
 
   const apiKey = process.env.DISCOURSE_API_KEY;
@@ -13,25 +17,33 @@ export default async function createMissingCategory(id: number) {
   headers.append("Api-Key", apiKey);
   headers.append("Api-Username", "system");
   const url = `${baseUrl}/site.json`;
-  console.log(`url: ${url}`);
   const response = await fetch(url, {
     headers: headers,
   });
   if (!response.ok) {
-    return 0;
+    throw new CategoryCreationError(
+      "Bad response retured from Discourse when fetching Topic's category",
+      response.status
+    );
   }
 
   const data = await response.json();
   const categories = data?.categories;
   if (!categories) {
-    return 0;
+    throw new CategoryCreationError(
+      "API request to Discourse failed to return Topic's category data",
+      404
+    );
   }
 
   const discourseCategory: Category = categories.find(
     (category: Category) => category.id === id
   );
   if (!discourseCategory) {
-    return 0;
+    throw new CategoryCreationError(
+      "API request to Discourse failed to return Topic's category data",
+      404
+    );
   }
 
   const categoryFields: Prisma.DiscourseCategoryCreateInput = {
@@ -52,7 +64,10 @@ export default async function createMissingCategory(id: number) {
   });
 
   if (!missingCategory) {
-    return 0;
+    throw new CategoryCreationError(
+      "Unable to create Topic's category on client",
+      500
+    );
   }
 
   return missingCategory;

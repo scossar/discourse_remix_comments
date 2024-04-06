@@ -8,7 +8,8 @@ import {
   discourseWehbookHeaders,
   verifyWebhookRequest,
 } from "~/services/discourseWebhooks";
-import createMissingCategory from "~/services/createMissingCategory";
+import createCategory from "~/services/createCategory";
+import CategoryCreationError from "~/services/errors/categoryCreationError";
 
 export const action = async ({ request }: ActionFunctionArgs) => {
   if (request.method !== "POST") {
@@ -65,23 +66,21 @@ export const action = async ({ request }: ActionFunctionArgs) => {
       500
     );
   }
+  // todo: validate webhookJson before getting to here:
 
   const categoryId = webhookJson.topic.category_id;
   let category = await db.discourseCategory.findUnique({
     where: { externalId: categoryId },
   });
-
   if (!category) {
-    const newCategory = await createMissingCategory(categoryId);
-    if (newCategory === 0) {
-      return json(
-        {
-          message: "Unable to create category",
-        },
-        500
-      );
+    try {
+      category = await createCategory(categoryId);
+    } catch (error) {
+      if (error instanceof CategoryCreationError) {
+        return json({ message: error.message }, error.statusCode);
+      }
+      return json({ message: "An unexpected error occurred" }, 500);
     }
-    console.log(`new cat: ${JSON.stringify(newCategory, null, 2)}`);
   }
 
   return null;
