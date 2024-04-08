@@ -1,8 +1,8 @@
-export default class TopicCreationError extends Error {
+export default class PostCreationError extends Error {
   statusCode: number;
   constructor(message: string, statusCode = 500) {
     super(message);
-    this.name = "TopicCreationError";
+    this.name = "PostCreationError";
     this.statusCode = statusCode;
     Object.setPrototypeOf(this, new.target.prototype);
   }

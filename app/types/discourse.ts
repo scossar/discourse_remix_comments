@@ -113,9 +113,17 @@ export interface Post {
   created_at: string;
   cooked: string;
   post_number: number;
-  post_type: 1 | 2 | 3 | 4; // :regular=>1, :moderator_action=>2, :small_action=>3, :whisper=>4
+  post_type: PostType;
   updated_at: string;
+  reply_count: number;
+  reply_to_post_number?: number;
+  topic_id: number;
+  topic_title: string;
+  category_id: number;
+  raw: string;
   user_id: number;
+  topic_archetype: "regular" | "private_message";
+  category_slug?: string;
 }
 
 export interface Participant {

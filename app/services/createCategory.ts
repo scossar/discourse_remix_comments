@@ -22,7 +22,7 @@ export default async function createCategory(id: number) {
   });
   if (!response.ok) {
     throw new CategoryCreationError(
-      "Bad response retured from Discourse when fetching Topic's category",
+      "Bad response returned from Discourse when fetching Topic's category",
       response.status
     );
   }

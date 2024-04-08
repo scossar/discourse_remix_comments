@@ -16,10 +16,10 @@ import TagCreationError from "~/services/errors/tagCreationError";
 import TopicCreationError from "~/services/errors/topicCreationError";
 // todo: improve or remove
 function isValidTopicWebHookData(data: WebHookTopic): data is WebHookTopic {
-  return typeof data.topic.id === "number";
+  return typeof data?.topic?.id === "number";
 }
 
-// todo: add upsert handling for topic_edited
+// todo: add upsert handling for topic_edited; move to services directory
 async function createTopicWithTags(
   topicData: Prisma.DiscourseTopicCreateInput,
   foundOrCreatedTagIds?: number[]
@@ -63,7 +63,7 @@ async function createTopicWithTags(
 
 export const action = async ({ request }: ActionFunctionArgs) => {
   if (request.method !== "POST") {
-    return json({ message: "Invalid request method" });
+    return json({ message: "Invalid request method" }, 403);
   }
 
   const receivedHeaders: Headers = request.headers;
@@ -95,8 +95,6 @@ export const action = async ({ request }: ActionFunctionArgs) => {
       400
     );
   }
-  // todo: feels a little awkward
-  const topicJson = webhookJson.topic;
 
   const eventSignature = discourseHeaders["X-Discourse-Event-Signature"];
 
@@ -128,6 +126,9 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     );
   }
 
+  const topicJson = webhookJson.topic;
+
+  // "personal_message" archetypes don't have a category, so confirm before trying to get the topic's category:
   const categoryId = topicJson?.category_id;
   if (categoryId) {
     let category = await db.discourseCategory.findUnique({
@@ -176,17 +177,17 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     user: {
       connectOrCreate: {
         where: {
-          externalId: Number(topicJson.user_id),
+          externalId: topicJson.user_id,
         },
         create: {
-          externalId: Number(topicJson.user_id),
+          externalId: topicJson.user_id,
           username: topicJson.created_by.username,
           avatarTemplate: topicJson.created_by.avatar_template,
         },
       },
     },
     category: {
-      connect: { externalId: Number(topicJson.category_id) },
+      connect: { externalId: topicJson.category_id },
     },
   };
 

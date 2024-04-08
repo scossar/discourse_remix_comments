@@ -99,8 +99,6 @@ model DiscoursePost {
   replyCount Int
   replyToPostNumber Int?
   topicId Int
-  topicSlug String
-  topicTitle String? // in the webhook payload, but not returned from API request, maybe remove later
   categoryId Int
   raw String? // in the webhook payload and posts/id.json API data, but not topicList posts data, maybe remove later
   userId Int
