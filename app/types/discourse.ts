@@ -105,3 +105,10 @@ export interface Details {
   can_create_post: boolean;
   participants: Participant[];
 }
+
+export interface SiteUser {
+  externalId?: number | null;
+  avatarUrl?: string | null;
+  admin?: boolean | null;
+  username?: string | null;
+}

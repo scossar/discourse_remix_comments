@@ -3,6 +3,9 @@ import { json } from "@remix-run/node";
 import { Link, useLoaderData } from "@remix-run/react";
 
 import { discourseSessionStorage } from "~/services/session.server";
+import type { SiteUser } from "~/types/discourse";
+import { db } from "~/services/db.server";
+import type { DiscourseTopic } from "@prisma/client";
 
 export interface TopicListTopic {
   id: number;
@@ -17,39 +20,40 @@ export interface TopicListTopic {
 
 export const meta: MetaFunction = () => {
   return [
-    { title: "Discourse Comments" },
-    { name: "description", content: "Discourse Comments" },
+    { title: "Discourse Topics" },
+    { name: "description", content: "Discourse Topics" },
   ];
 };
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
-  if (!process.env.DISCOURSE_BASE_URL) {
-    return json({});
-  }
-  const discourseBaseUrl = process.env.DISCOURSE_BASE_URL;
-
   const userSession = await discourseSessionStorage.getSession(
     request.headers.get("Cookie")
   );
   const externalId = userSession.get("external_id");
+  const avatarUrl = userSession.get("avatar_url");
   const admin: boolean = userSession.get("admin");
+  const username = userSession.get("username");
 
-  const apiKey = process.env.DISCOURSE_API_KEY;
-  const headers = new Headers();
-  if (apiKey) {
-    headers.append("Api-Key", apiKey);
-    headers.append("Api-Username", "system");
-  }
+  const user: SiteUser = {
+    externalId: externalId,
+    avatarUrl: avatarUrl,
+    admin: admin,
+    username: username,
+  };
 
-  const response = await fetch(`${discourseBaseUrl}/latest.json`, {
-    headers: headers,
+  const topics: DiscourseTopic[] = await db.discourseTopic.findMany({
+    include: {
+      tags: true,
+      user: true,
+      category: true,
+    },
   });
-  const latestTopics = await response.json();
+  console.log(JSON.stringify(topics, null, 2));
 
   return json(
     {
-      user: { externalId: externalId, admin: admin },
-      latestTopics: latestTopics,
+      user,
+      topics,
     },
     {
       headers: {
@@ -60,22 +64,15 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
 };
 
 export default function Index() {
-  const { user, latestTopics }: any = useLoaderData<typeof loader>();
+  const { user, topics } = useLoaderData<typeof loader>();
   const isAdmin = Boolean(user?.admin);
 
   return (
     <div className="max-w-screen-md mx-auto">
       <h1 className="text-3xl">Latest Topics</h1>
-      <ul>
-        {latestTopics?.topic_list?.topics?.map((topic: any) => (
-          <li key={topic.id}>
-            <Link
-              className="hover:text-slate-400"
-              to={`/t/${topic.slug}/${topic.id}`}
-            >
-              {topic?.unicode_title ? topic.unicode_title : topic.title}
-            </Link>
-          </li>
+      <ul className="list-none">
+        {topics?.map((topic) => (
+          <li key={topic.id}>{topic.fancyTitle}</li>
         ))}
       </ul>
     </div>
