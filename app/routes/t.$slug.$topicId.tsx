@@ -2,6 +2,7 @@ import type { LoaderFunctionArgs, MetaFunction } from "@remix-run/node";
 import { json } from "@remix-run/node";
 import {
   isRouteErrorResponse,
+  useFetcher,
   useLoaderData,
   useRouteError,
 } from "@remix-run/react";
@@ -21,8 +22,6 @@ export const meta: MetaFunction = () => {
 export async function loader({ request, params }: LoaderFunctionArgs) {
   const slug = params?.slug;
   const topicId = Number(params?.topicId);
-
-  console.log(`slug: ${slug}, topicId: ${topicId}`);
 
   if (!slug || !topicId) {
     throw new Response("The route's required params were not set", {
@@ -59,8 +58,6 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
     });
   }
 
-  console.log(`topic: ${JSON.stringify(topic, null, 2)}`);
-
   const userSession = await discourseSessionStorage.getSession(
     request.headers.get("Cookie")
   );
@@ -70,6 +67,25 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
     admin: userSession.get("admin"),
     username: userSession.get("username"),
   };
+
+  // handle the case of the Comments button being clicked
+  // how could this be approached differently? Could the code that handles
+  // the API request be extracted to a separate function?
+  const url = new URL(request.url);
+  const apiEnvConfigured =
+    process.env.DISCOURSE_BASE_URL && process.env.DISCOURSE_API_KEY;
+  if (url.searchParams.get("show_comments") && apiEnvConfigured) {
+    const baseUrl = process.env.DISCOURSE_BASE_URL as string;
+    const apiKey = process.env.DISCOURSE_API_KEY as string;
+    const headers = new Headers();
+    headers.append("Api-Username", "system");
+    headers.append("Api-Key", apiKey);
+    const topicUrl = `${baseUrl}/t/${topic.slug}/${topic.externalId}.json`;
+    const response = await fetch(topicUrl, { headers });
+
+    console.log("start getting the comments");
+  }
+
   return json(
     {
       topic,
@@ -85,9 +101,14 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
 
 export default function TopicForSlugAndId() {
   const { topic } = useLoaderData<typeof loader>();
+  const commentFetcher = useFetcher({ key: "comment-fetcher" });
   const categoryColor = topic?.category?.color
     ? `#${topic.category.color}`
     : "#ffffff";
+
+  function handleCommentButtonClick() {
+    commentFetcher.submit({ show_comments: true });
+  }
 
   return (
     <div className="max-w-screen-md mx-auto pt-6 divide-y divide-red-700">
@@ -108,6 +129,9 @@ export default function TopicForSlugAndId() {
         <div className="ml-1">
           <div dangerouslySetInnerHTML={{ __html: topic.posts[0].cooked }} />
         </div>
+      </div>
+      <div>
+        <button onClick={handleCommentButtonClick}>Comments</button>
       </div>
     </div>
   );
