@@ -5,6 +5,7 @@ export interface HeaderProps {
 }
 
 export default function Header({ user }: HeaderProps) {
+  console.log(`user in site header: ${JSON.stringify(user, null, 2)}`);
   const externalId = user?.externalId;
   const avatarUrl = user?.avatarUrl;
   const activeSession = externalId ? true : false;

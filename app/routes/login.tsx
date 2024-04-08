@@ -32,6 +32,8 @@ function paramTypeConversions(key: string, value: string) {
     case "moderator":
       typedValue = value === "true";
       break;
+    default:
+      typedValue = value;
   }
   return typedValue;
 }

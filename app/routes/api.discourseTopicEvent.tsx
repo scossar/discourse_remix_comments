@@ -1,9 +1,6 @@
 import { json, type ActionFunctionArgs } from "@remix-run/node";
 
 import { db } from "~/services/db.server";
-import { Prisma } from "@prisma/client";
-import type { DiscourseTopic } from "@prisma/client";
-
 import type { WebHookTopic } from "~/types/discourse";
 import {
   discourseWehbookHeaders,
@@ -16,51 +13,10 @@ import createTagTopics from "~/services/createTagTopics";
 import CategoryCreationError from "~/services/errors/categoryCreationError";
 import TagCreationError from "~/services/errors/tagCreationError";
 import TopicCreationError from "~/services/errors/topicCreationError";
+
 // todo: improve or remove
 function isValidTopicWebHookData(data: WebHookTopic): data is WebHookTopic {
   return typeof data?.topic?.id === "number";
-}
-
-// todo: add upsert handling for topic_edited; move to services directory
-async function createTopicWithTags(
-  topicData: Prisma.DiscourseTopicCreateInput,
-  foundOrCreatedTagIds?: number[]
-) {
-  let topic: DiscourseTopic;
-  try {
-    topic = await db.discourseTopic.create({
-      data: topicData,
-    });
-  } catch (error) {
-    if (error instanceof Prisma.PrismaClientKnownRequestError) {
-      console.error("Topic already exists");
-      throw new TopicCreationError(
-        "Topic creation failed due to unique key violation",
-        500
-      );
-    } else {
-      console.error("An unexpected error occurred:", error);
-      throw new TopicCreationError(
-        "An unexpected error occurred during topic creation",
-        500
-      );
-    }
-  }
-
-  if (topic && foundOrCreatedTagIds) {
-    const topicTagCreations = foundOrCreatedTagIds.map((tagId) =>
-      db.discourseTopicTag.create({
-        data: {
-          tagId: tagId,
-          topicId: topic.id,
-        },
-      })
-    );
-
-    await Promise.all(topicTagCreations);
-  }
-
-  return topic;
 }
 
 export const action = async ({ request }: ActionFunctionArgs) => {
@@ -178,10 +134,9 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     }
   }
 
-  let tagTopics;
   if (topicTagIds) {
     try {
-      tagTopics = await createTagTopics(topicTagIds, topic.id);
+      await createTagTopics(topicTagIds, topic.id);
     } catch (error) {
       if (error instanceof TagCreationError) {
         return json({ message: error.message }, error.statusCode);
@@ -189,5 +144,6 @@ export const action = async ({ request }: ActionFunctionArgs) => {
       return json({ message: "An unexpected error occurred" }, 500);
     }
   }
+
   return json({ message: "success" }, 200);
 };
