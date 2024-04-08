@@ -18,27 +18,29 @@ export interface WebHookPostOrTopicUser {
   avatar_template: string;
 }
 
+export interface Topic {
+  tags: string[];
+  tags_descriptions: Record<string, string>;
+  id: number;
+  title: string;
+  fancy_title: string;
+  posts_count: number;
+  created_at: string;
+  like_count: number;
+  last_posted_at: string;
+  visible: boolean;
+  closed: boolean;
+  archetype: "regular" | "private_message";
+  slug: string;
+  category_id: number;
+  word_count: number;
+  user_id: number;
+  created_by: WebHookPostOrTopicUser;
+  last_poster: WebHookPostOrTopicUser;
+}
+
 export interface WebHookTopic {
-  topic: {
-    tags: string[];
-    tags_descriptions: Record<string, string>;
-    id: number;
-    title: string;
-    fancy_title: string;
-    posts_count: number;
-    created_at: string;
-    like_count: number;
-    last_posted_at: string;
-    visible: boolean;
-    closed: boolean;
-    archetype: "regular" | "private_message";
-    slug: string;
-    category_id: number;
-    word_count: number;
-    user_id: number;
-    created_by: WebHookPostOrTopicUser;
-    last_poster: WebHookPostOrTopicUser;
-  };
+  topic: Topic;
 }
 
 enum PostType {
@@ -48,27 +50,28 @@ enum PostType {
   Whisper = 4,
 }
 
+export interface Post {
+  id: number;
+  username: string;
+  avatar_template: string;
+  created_at: string;
+  cooked: string;
+  post_number: number;
+  post_type: PostType;
+  updated_at: string;
+  reply_count: number;
+  reply_to_post_number?: number;
+  topic_id: number;
+  topic_title: string;
+  category_id: number;
+  raw: string;
+  user_id: number;
+  topic_archetype: "regular" | "private_message";
+  category_slug?: string;
+}
+
 export interface WebHookPost {
-  post: {
-    id: number;
-    username: string;
-    avatar_template: string;
-    created_at: string;
-    cooked: string;
-    post_number: number;
-    post_type: PostType;
-    updated_at: string;
-    reply_count: number;
-    reply_to_post_number?: number;
-    topic_id: number;
-    topic_slug: string;
-    topic_title: string;
-    category_id: number;
-    raw: string;
-    user_id: number;
-    topic_archetype: "regular" | "private_message";
-    category_slug?: string;
-  };
+  post: Post;
 }
 
 export interface Category {
@@ -91,41 +94,6 @@ export interface Tag {
   count?: number; // probably don't use this field, all other fields are available in webhook topic payload
 }
 
-// Here and below can probably be deleted
-
-/*export interface DiscourseWebhookNewTopicData {
-  topic: {
-    title: string;
-    fancy_title: string;
-    id: number;
-    archetype: "regular" | "private_message";
-    slug: string;
-    category_id: number;
-    word_count: number;
-    created_by: WebHookPostUser;
-  };
-}*/
-
-export interface Post {
-  id: number;
-  username: string;
-  avatar_template: string;
-  created_at: string;
-  cooked: string;
-  post_number: number;
-  post_type: PostType;
-  updated_at: string;
-  reply_count: number;
-  reply_to_post_number?: number;
-  topic_id: number;
-  topic_title: string;
-  category_id: number;
-  raw: string;
-  user_id: number;
-  topic_archetype: "regular" | "private_message";
-  category_slug?: string;
-}
-
 export interface Participant {
   id: number;
   username: string;
@@ -136,21 +104,4 @@ export interface Participant {
 export interface Details {
   can_create_post: boolean;
   participants: Participant[];
-}
-
-export interface Topic {
-  post_stream: {
-    posts: Post[];
-    stream: number[];
-  };
-  id: number;
-  fancy_title: string;
-  posts_count: number;
-  like_count: number;
-  archetype: "regular" | "personal_message";
-  slug: string;
-  category_id: number;
-  user_id: number;
-  details: Details;
-  created_at: string;
 }

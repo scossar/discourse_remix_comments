@@ -6,7 +6,7 @@ import {
   discourseWehbookHeaders,
   verifyWebhookRequest,
 } from "~/services/discourseWebhooks";
-import createPost from "~/services/createPost";
+import createOrUpdatePost from "~/services/createOrUpdatePost";
 import PostCreationError from "~/services/errors/postCreationError";
 
 function isValidPostWebhookData(data: WebHookPost): data is WebHookPost {
@@ -100,7 +100,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
 
   if (!post || discourseHeaders["X-Discourse-Event"] !== "post_edited") {
     try {
-      post = await createPost(postJson);
+      post = await createOrUpdatePost(postJson);
     } catch (error) {
       if (error instanceof PostCreationError) {
         return json({ message: error.message }, error.statusCode);

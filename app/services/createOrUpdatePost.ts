@@ -3,7 +3,7 @@ import type { Post } from "~/types/discourse";
 import PostCreationError from "./errors/postCreationError";
 import { Prisma } from "@prisma/client";
 
-export default async function createPost(postJson: Post) {
+export default async function createOrUpdatePost(postJson: Post) {
   const postFields: Prisma.DiscoursePostCreateInput = {
     externalId: postJson.id,
     username: postJson.username,

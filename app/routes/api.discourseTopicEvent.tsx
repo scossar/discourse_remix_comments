@@ -4,13 +4,15 @@ import { db } from "~/services/db.server";
 import { Prisma } from "@prisma/client";
 import type { DiscourseTopic } from "@prisma/client";
 
-import type { WebHookTopic, Category } from "~/types/discourse";
+import type { WebHookTopic } from "~/types/discourse";
 import {
   discourseWehbookHeaders,
   verifyWebhookRequest,
 } from "~/services/discourseWebhooks";
 import createCategory from "~/services/createCategory";
-import checkAndCreateTags from "~/services/checkAndCreateTags";
+import createOrUpdateTopic from "~/services/createOrUpdateTopic";
+import findOrCreateTags from "~/services/findOrCreateTags";
+import createTagTopics from "~/services/createTagTopics";
 import CategoryCreationError from "~/services/errors/categoryCreationError";
 import TagCreationError from "~/services/errors/tagCreationError";
 import TopicCreationError from "~/services/errors/topicCreationError";
@@ -146,13 +148,28 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     }
   }
 
+  let topic = await db.discourseTopic.findUnique({
+    where: { externalId: topicJson.id },
+  });
+
+  if (!topic || discourseHeaders["X-Discourse-Event"] !== "topic_edited") {
+    try {
+      topic = await createOrUpdateTopic(topicJson);
+    } catch (error) {
+      if (error instanceof TopicCreationError) {
+        return json({ message: error.message }, error.statusCode);
+      }
+      return json({ message: "An unexpected error occurred" }, 500);
+    }
+  }
+
   const tagsArray = topicJson?.tags;
   const tagDescriptionsObj = topicJson?.tags_descriptions;
 
   let topicTagIds;
   if (tagsArray) {
     try {
-      topicTagIds = await checkAndCreateTags(tagsArray, tagDescriptionsObj);
+      topicTagIds = await findOrCreateTags(tagsArray, tagDescriptionsObj);
     } catch (error) {
       if (error instanceof TagCreationError) {
         return json({ message: error.message }, error.statusCode);
@@ -161,45 +178,16 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     }
   }
 
-  const topicFields: Prisma.DiscourseTopicCreateInput = {
-    externalId: topicJson.id,
-    title: topicJson.title,
-    fancyTitle: topicJson.fancy_title,
-    postsCount: topicJson.posts_count,
-    externalCreatedAt: new Date(topicJson.created_at),
-    likeCount: topicJson.like_count,
-    lastPostedAt: new Date(topicJson.last_posted_at),
-    visible: topicJson.visible,
-    closed: topicJson.closed,
-    archetype: topicJson.archetype,
-    slug: topicJson.slug,
-    wordCount: topicJson.word_count,
-    user: {
-      connectOrCreate: {
-        where: {
-          externalId: topicJson.user_id,
-        },
-        create: {
-          externalId: topicJson.user_id,
-          username: topicJson.created_by.username,
-          avatarTemplate: topicJson.created_by.avatar_template,
-        },
-      },
-    },
-    category: {
-      connect: { externalId: topicJson.category_id },
-    },
-  };
-
-  let topic: DiscourseTopic;
-  try {
-    topic = await createTopicWithTags(topicFields, topicTagIds);
-  } catch (error) {
-    if (error instanceof TopicCreationError) {
-      return json({ message: error.message }, error.statusCode);
+  let tagTopics;
+  if (topicTagIds) {
+    try {
+      tagTopics = await createTagTopics(topicTagIds, topic.id);
+    } catch (error) {
+      if (error instanceof TagCreationError) {
+        return json({ message: error.message }, error.statusCode);
+      }
+      return json({ message: "An unexpected error occurred" }, 500);
     }
-    return json({ message: "An unexpected error occurred" }, 500);
   }
-
   return json({ message: "success" }, 200);
 };
