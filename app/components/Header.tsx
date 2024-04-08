@@ -1,11 +1,10 @@
 import { Link } from "@remix-run/react";
-import type { DiscourseUser } from "~/services/getCurrentDiscourseUser.session";
+import type { SiteUser } from "~/types/discourse";
 export interface HeaderProps {
-  user: DiscourseUser;
+  user: SiteUser;
 }
 
 export default function Header({ user }: HeaderProps) {
-  console.log(`user in site header: ${JSON.stringify(user, null, 2)}`);
   const externalId = user?.externalId;
   const avatarUrl = user?.avatarUrl;
   const activeSession = externalId ? true : false;
@@ -14,7 +13,9 @@ export default function Header({ user }: HeaderProps) {
     <header className="h-14 w-full bg-cyan-700 text-slate-50 py-3">
       <div className=" flex flex-row items-center justify-between max-w-screen-md mx-auto">
         <div>
-          <h1 className="text-xl">Discourse Auth</h1>
+          <Link to="/">
+            <h1 className="text-xl">Recourse</h1>
+          </Link>
         </div>
         <div className="flex flex-row w-fit">
           <Link

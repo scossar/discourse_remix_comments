@@ -1,15 +1,9 @@
 import type { Session } from "@remix-run/node";
-
-export interface DiscourseUser {
-  externalId?: number | undefined;
-  username?: string | undefined;
-  admin?: boolean;
-  avatarUrl?: string | undefined;
-}
+import type { SiteUser } from "~/types/discourse";
 
 export default function getCurrentDiscourseUser(
   currentUserSession: Session
-): DiscourseUser {
+): SiteUser {
   const externalId =
     currentUserSession.get("external_id") &&
     typeof currentUserSession.get("external_id") === "number"

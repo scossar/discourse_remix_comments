@@ -3,7 +3,6 @@ import { json, redirect } from "@remix-run/node";
 import { Link, useFetcher, useLoaderData } from "@remix-run/react";
 
 import { discourseSessionStorage } from "~/services/session.server";
-import type { DiscourseUser } from "~/services/getCurrentDiscourseUser.session";
 
 export const action = async ({ request }: ActionFunctionArgs) => {
   const formData = await request.formData();

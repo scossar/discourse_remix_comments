@@ -86,6 +86,9 @@ model DiscourseTopic {
   updatedAt DateTime @updatedAt
 }
 
+// Note: this model could probably be renamed to DiscourseOp and be used for storing a topic's OP
+// a DiscourseComment table could then be added to store a topic's posts where postNumber > 1
+
 model DiscoursePost {
   id Int @id @default(autoincrement())
   externalId Int @unique

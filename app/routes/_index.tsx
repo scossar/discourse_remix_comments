@@ -2,21 +2,18 @@ import type { LoaderFunctionArgs, MetaFunction } from "@remix-run/node";
 import { json } from "@remix-run/node";
 import { Link, useLoaderData } from "@remix-run/react";
 
+import { Prisma } from "@prisma/client";
+
+import Avatar from "~/components/Avatar";
 import { discourseSessionStorage } from "~/services/session.server";
 import type { SiteUser } from "~/types/discourse";
 import { db } from "~/services/db.server";
-import type { DiscourseTopic } from "@prisma/client";
-
-export interface TopicListTopic {
-  id: number;
-  title: string;
-  fancy_title: string;
-  unicode_title?: string;
-  slug: string;
-  posts_count: number;
-  created_at: Date;
-  excerpt?: string;
-}
+import type {
+  DiscourseTopic,
+  DiscourseUser,
+  DiscourseCategory,
+  DiscourseTag,
+} from "@prisma/client";
 
 export const meta: MetaFunction = () => {
   return [
@@ -41,14 +38,13 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
     username: username,
   };
 
-  const topics: DiscourseTopic[] = await db.discourseTopic.findMany({
+  const topics = await db.discourseTopic.findMany({
     include: {
       tags: true,
       user: true,
       category: true,
     },
   });
-  console.log(JSON.stringify(topics, null, 2));
 
   return json(
     {
@@ -64,15 +60,21 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
 };
 
 export default function Index() {
-  const { user, topics } = useLoaderData<typeof loader>();
-  const isAdmin = Boolean(user?.admin);
+  const { topics } = useLoaderData<typeof loader>();
 
   return (
-    <div className="max-w-screen-md mx-auto">
+    <div className="max-w-screen-md mx-auto pt-6">
       <h1 className="text-3xl">Latest Topics</h1>
-      <ul className="list-none">
+      <ul className="list-none divide-y divide-red-600">
         {topics?.map((topic) => (
-          <li key={topic.id}>{topic.fancyTitle}</li>
+          <li key={topic.id} className="flex items-center my-2 py-2">
+            <Link
+              className="hover:underline"
+              to={`/t/${topic.slug}/${topic.externalId}`}
+            >
+              {topic.fancyTitle}
+            </Link>
+          </li>
         ))}
       </ul>
     </div>
