@@ -66,7 +66,7 @@ interface TopicPostStreamDetails {
   participants: TopicPostStreamParticipant[];
 }
 
-interface PostStreamForTopic {
+export interface PostStreamForTopic {
   id: number;
   slug: string;
   postStream: {
@@ -77,9 +77,7 @@ interface PostStreamForTopic {
 }
 
 function isRegularReplyPost(post: Post) {
-  const regularReply = post.post_type === 1 && post.post_number > 1;
-  console.log(`isRegularReplyPost: ${regularReply}`);
-  return regularReply;
+  return post.post_type === 1 && post.post_number > 1;
 }
 
 function generateAvatarUrl(
@@ -107,6 +105,7 @@ export async function fetchCommentsForUser(
     headers.append("Api-Username", currentUsername);
   }
   const topicUrl = `${baseUrl}/t/${slug}/${topicId}.json`;
+  console.log(`topicUrl: ${topicUrl}`);
 
   const response = await fetch(topicUrl, { headers });
   if (!response.ok) {
@@ -148,5 +147,5 @@ export async function fetchCommentsForUser(
     },
   };
 
-  return json({ postStreamForUser });
+  return postStreamForUser;
 }

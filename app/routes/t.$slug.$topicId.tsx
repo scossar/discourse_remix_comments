@@ -5,12 +5,14 @@ import {
   useFetcher,
   useLoaderData,
   useRouteError,
+  useSearchParams,
 } from "@remix-run/react";
 
 import { db } from "~/services/db.server";
 import { discourseSessionStorage } from "~/services/session.server";
 import type { SiteUser } from "~/types/discourse";
 import { fetchCommentsForUser } from "~/services/fetchCommentsForUser";
+import type { PostStreamForTopic } from "~/services/fetchCommentsForUser";
 import Avatar from "~/components/Avatar";
 
 export const meta: MetaFunction = () => {
@@ -21,6 +23,16 @@ export const meta: MetaFunction = () => {
 };
 
 export async function loader({ request, params }: LoaderFunctionArgs) {
+  const userSession = await discourseSessionStorage.getSession(
+    request.headers.get("Cookie")
+  );
+  const user: SiteUser = {
+    externalId: userSession.get("external_id"),
+    avatarUrl: userSession.get("avatar_url"),
+    admin: userSession.get("admin"),
+    username: userSession.get("username"),
+  };
+
   const slug = params?.slug;
   const topicId = Number(params?.topicId);
 
@@ -58,43 +70,34 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
       statusText: "Not Found",
     });
   }
+  console.log(JSON.stringify(topic, null, 2));
 
-  const userSession = await discourseSessionStorage.getSession(
-    request.headers.get("Cookie")
-  );
-  const user: SiteUser = {
-    externalId: userSession.get("external_id"),
-    avatarUrl: userSession.get("avatar_url"),
-    admin: userSession.get("admin"),
-    username: userSession.get("username"),
-  };
-
-  let postStream;
+  let comments;
   let errorMessage = null;
-  const url = new URL(request.url);
-  if (url.searchParams.get("show_comments")) {
+  let { searchParams } = new URL(request.url);
+  let showComments = searchParams.get("showComments");
+
+  if (showComments) {
     // currentUsername is used in the request header so that the comments that are returned are specific to the user
     // if currentUsername is set to `null`, an unauthenticated request will be made for the comments
     // this limits users to viewing comments that they have permission to view on the site.
     const currentUsername = user?.["username"] ?? null;
     try {
-      postStream = await fetchCommentsForUser(
-        topic.id,
+      comments = await fetchCommentsForUser(
+        topic.externalId,
         topic.slug,
         currentUsername
       );
     } catch {
       errorMessage = "Comments could not be loaded";
     }
-    console.log(`postStream: ${JSON.stringify(postStream, null, 2)}`);
-    return json({ postStream });
   }
 
   return json(
     {
       topic,
       user,
-      postStream,
+      comments,
       errorMessage,
     },
     {
@@ -104,32 +107,37 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
     }
   );
 }
+interface CommentFetcher {
+  data: {
+    comments?: PostStreamForTopic | undefined;
+  };
+  comments?: PostStreamForTopic | undefined;
+}
 
 export default function TopicForSlugAndId() {
   const { topic } = useLoaderData<typeof loader>();
-  const commentFetcher = useFetcher({ key: "comment-fetcher" });
   const categoryColor = topic?.category?.color
-    ? `#${topic.category.color}`
+    ? `bg-[#${topic.category.color}]`
     : "#ffffff";
 
-  function handleCommentButtonClick() {
-    commentFetcher.submit({ show_comments: true });
-  }
+  const commentFetcher = useFetcher({
+    key: "comment-fetcher",
+  });
+  const commentFetcherData = commentFetcher.data as CommentFetcher;
 
-  if (commentFetcher && commentFetcher.data.postStream) {
-    console.log(
-      `commentFetcher.data: ${JSON.stringify(commentFetcher.data.postStream)}`
-    );
+  let comments;
+  if (commentFetcherData && commentFetcherData?.comments) {
+    comments = commentFetcherData?.comments;
   }
 
   return (
     <div className="max-w-screen-md mx-auto pt-6 divide-y divide-red-700">
       <header className="pb-3">
-        <h1 className="text-3xl">{topic.fancyTitle}</h1>
+        <h1 className="text-3xl">{topic.title}</h1>
         <div>
-          <div className={`inline-block bg-[${categoryColor}] p-2 mr-1`}></div>
+          <div className={`inline-block ${categoryColor} p-2 mr-1`}></div>
           {topic.category?.name}
-          {topic?.tags.map((tag) => tag.tagId)}
+          {topic?.tags.map((topicTag) => topicTag.tag.text)}
         </div>
       </header>
       <div className="discourse-op flex pt-2">
@@ -143,7 +151,17 @@ export default function TopicForSlugAndId() {
         </div>
       </div>
       <div>
-        <button onClick={handleCommentButtonClick}>Comments</button>
+        <commentFetcher.Form action="?">
+          <input type="hidden" name="showComments" value="true" />
+          <button type="submit">Comments</button>
+        </commentFetcher.Form>
+      </div>
+      <div>
+        {comments?.postStream?.posts?.map((post) => (
+          <div key={post.id}>
+            <div dangerouslySetInnerHTML={{ __html: post.cooked }} />
+          </div>
+        ))}
       </div>
     </div>
   );
