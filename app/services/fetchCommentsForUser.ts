@@ -77,7 +77,9 @@ interface PostStreamForTopic {
 }
 
 function isRegularReplyPost(post: Post) {
-  return post.post_type === 1 && post.post_number > 1;
+  const regularReply = post.post_type === 1 && post.post_number > 1;
+  console.log(`isRegularReplyPost: ${regularReply}`);
+  return regularReply;
 }
 
 function generateAvatarUrl(
@@ -89,7 +91,7 @@ function generateAvatarUrl(
   return `${discourseBaseUrl}${sized}`;
 }
 
-export async function fetchDiscourseCommentsFor(
+export async function fetchCommentsForUser(
   topicId: number,
   slug: string,
   currentUsername: string | null

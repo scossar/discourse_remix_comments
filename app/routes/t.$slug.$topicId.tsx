@@ -10,7 +10,7 @@ import {
 import { db } from "~/services/db.server";
 import { discourseSessionStorage } from "~/services/session.server";
 import type { SiteUser } from "~/types/discourse";
-import { fetchDiscourseCommentsFor } from "~/services/fetchDiscourseCommentsFor";
+import { fetchCommentsForUser } from "~/services/fetchCommentsForUser";
 import Avatar from "~/components/Avatar";
 
 export const meta: MetaFunction = () => {
@@ -69,26 +69,33 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
     username: userSession.get("username"),
   };
 
+  let postStream;
+  let errorMessage = null;
   const url = new URL(request.url);
   if (url.searchParams.get("show_comments")) {
     // currentUsername is used in the request header so that the comments that are returned are specific to the user
     // if currentUsername is set to `null`, an unauthenticated request will be made for the comments
     // this limits users to viewing comments that they have permission to view on the site.
     const currentUsername = user?.["username"] ?? null;
-    let postStream;
     try {
-      postStream = await fetchDiscourseCommentsFor(
+      postStream = await fetchCommentsForUser(
         topic.id,
         topic.slug,
         currentUsername
       );
-    } catch {}
+    } catch {
+      errorMessage = "Comments could not be loaded";
+    }
+    console.log(`postStream: ${JSON.stringify(postStream, null, 2)}`);
+    return json({ postStream });
   }
 
   return json(
     {
       topic,
       user,
+      postStream,
+      errorMessage,
     },
     {
       headers: {
@@ -107,6 +114,12 @@ export default function TopicForSlugAndId() {
 
   function handleCommentButtonClick() {
     commentFetcher.submit({ show_comments: true });
+  }
+
+  if (commentFetcher && commentFetcher.data.postStream) {
+    console.log(
+      `commentFetcher.data: ${JSON.stringify(commentFetcher.data.postStream)}`
+    );
   }
 
   return (
