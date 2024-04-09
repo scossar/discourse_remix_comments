@@ -10,6 +10,7 @@ import {
 import { db } from "~/services/db.server";
 import { discourseSessionStorage } from "~/services/session.server";
 import type { SiteUser } from "~/types/discourse";
+import { fetchDiscourseCommentsFor } from "~/services/fetchDiscourseCommentsFor";
 import Avatar from "~/components/Avatar";
 
 export const meta: MetaFunction = () => {
@@ -68,22 +69,20 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
     username: userSession.get("username"),
   };
 
-  // handle the case of the Comments button being clicked
-  // how could this be approached differently? Could the code that handles
-  // the API request be extracted to a separate function?
   const url = new URL(request.url);
-  const apiEnvConfigured =
-    process.env.DISCOURSE_BASE_URL && process.env.DISCOURSE_API_KEY;
-  if (url.searchParams.get("show_comments") && apiEnvConfigured) {
-    const baseUrl = process.env.DISCOURSE_BASE_URL as string;
-    const apiKey = process.env.DISCOURSE_API_KEY as string;
-    const headers = new Headers();
-    headers.append("Api-Username", "system");
-    headers.append("Api-Key", apiKey);
-    const topicUrl = `${baseUrl}/t/${topic.slug}/${topic.externalId}.json`;
-    const response = await fetch(topicUrl, { headers });
-
-    console.log("start getting the comments");
+  if (url.searchParams.get("show_comments")) {
+    // currentUsername is used in the request header so that the comments that are returned are specific to the user
+    // if currentUsername is set to `null`, an unauthenticated request will be made for the comments
+    // this limits users to viewing comments that they have permission to view on the site.
+    const currentUsername = user?.["username"] ?? null;
+    let postStream;
+    try {
+      postStream = await fetchDiscourseCommentsFor(
+        topic.id,
+        topic.slug,
+        currentUsername
+      );
+    } catch {}
   }
 
   return json(
