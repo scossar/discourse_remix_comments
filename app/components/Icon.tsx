@@ -1,5 +1,5 @@
 interface IconProps {
-  id: "hamburger" | "arrow-left" | "arrow-right";
+  id: "hamburger" | "arrow-left" | "arrow-right" | "empty-heart" | "full-heart";
   className?: string;
   x?: number;
   y?: number;

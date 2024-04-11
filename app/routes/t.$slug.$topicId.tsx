@@ -110,6 +110,7 @@ interface CommentFetcher {
 
 export default function TopicForSlugAndId() {
   const { topic } = useLoaderData<typeof loader>();
+  console.log(JSON.stringify(topic, null, 2));
   const categoryColor = topic?.category?.color
     ? `#${topic.category.color}`
     : "#ffffff";
@@ -125,8 +126,8 @@ export default function TopicForSlugAndId() {
   }
 
   return (
-    <div className="max-w-screen-md mx-auto pt-6 divide-y divide-red-700">
-      <header className="pb-3">
+    <div className="max-w-screen-md mx-auto pt-6 pb-12">
+      <header className="pb-3 border-b-cyan-800 border-b">
         <h1 className="text-3xl">{topic.title}</h1>
         <div className="flex items-center text-sm">
           <div
@@ -134,10 +135,16 @@ export default function TopicForSlugAndId() {
             className={`inline-block p-2 mr-1`}
           ></div>
           <span className="pr-1">{topic.category?.name}</span>
-          <span>{topic?.tags.map((topicTag) => topicTag.tag.text)}</span>
+          <span>
+            {topic?.tags.map((topicTag) => (
+              <span key={topicTag.tagId} className="px-1">
+                {topicTag.tag.text}
+              </span>
+            ))}
+          </span>
         </div>
       </header>
-      <div className="discourse-op flex pt-2">
+      <div className="discourse-op flex py-3 border-b border-cyan-800">
         <Avatar
           user={topic.user}
           size="48"
@@ -149,25 +156,33 @@ export default function TopicForSlugAndId() {
           )}
         </div>
       </div>
-      <div>
+      <div className="pt-3">
         <commentFetcher.Form action="?">
           <input type="hidden" name="showComments" value="true" />
-          <button type="submit">Comments</button>
+          <button type="submit">Comments:</button>
         </commentFetcher.Form>
       </div>
-      <div>
+      <div className="divide-y divide-cyan-800">
         {comments?.postStream?.posts?.map((post) => (
-          <div key={post.id} className="my-10 discourse-comment flex">
+          <div key={post.id} className="my-6 discourse-comment flex">
             <Avatar
               user={{
                 username: post.username,
                 avatarTemplate: post.avatarUrl,
               }}
               absoluteUrl={true}
-              className="rounded-full w-6 h-6 object-contain"
+              className="rounded-full w-8 h-8 object-contain mt-2"
             />
-
-            <div dangerouslySetInnerHTML={{ __html: post.cooked }} />
+            <div className="ml-2 w-full">
+              <div className="w-full my-3">
+                <div dangerouslySetInnerHTML={{ __html: post.cooked }} />
+              </div>
+              <div className="flex justify-end w-full items-center">
+                <button className="mr-2 px-2 py-1 bg-slate-50 hover:bg-slate-200 text-cyan-950 rounded-sm">
+                  Reply
+                </button>
+              </div>
+            </div>
           </div>
         ))}
       </div>

@@ -47,5 +47,17 @@
     p {
       @apply my-2;
     }
+    aside {
+      @apply flex flex-col w-full border-l-4 border-cyan-700;
+    }
+    aside .title {
+      @apply flex w-full pl-6;
+    }
+    aside .title img {
+      @apply rounded-full w-6 h-6 object-contain mr-2;
+    }
+    aside blockquote {
+      @apply w-full pl-6;
+    }
   }
 }
