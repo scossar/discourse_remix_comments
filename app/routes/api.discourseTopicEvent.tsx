@@ -111,7 +111,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     where: { externalId: topicJson.id },
   });
 
-  if (!topic || discourseHeaders["X-Discourse-Event"] !== "topic_edited") {
+  if (!topic || discourseHeaders["X-Discourse-Event"] === "topic_edited") {
     try {
       topic = await createOrUpdateTopic(topicJson);
     } catch (error) {

@@ -110,7 +110,6 @@ interface CommentFetcher {
 
 export default function TopicForSlugAndId() {
   const { topic } = useLoaderData<typeof loader>();
-  console.log(JSON.stringify(topic, null, 2));
   const categoryColor = topic?.category?.color
     ? `#${topic.category.color}`
     : "#ffffff";
