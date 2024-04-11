@@ -176,6 +176,9 @@ export default function TopicForSlugAndId() {
             />
             <div className="ml-2 w-full">
               <div className="w-full my-3">
+                <span className="bg-slate-50 text-slate-900 inline-block p-4">
+                  {post.postNumber}
+                </span>
                 <div dangerouslySetInnerHTML={{ __html: post.cooked }} />
               </div>
               <div className="flex justify-end w-full items-center">

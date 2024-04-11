@@ -19,8 +19,8 @@ export async function loader() {
 
   try {
     await client.rPush("topicStream", stringifiedStream);
-    await client.lRem("topicStream", 0, String(1470139));
-    let page = 1,
+    //  await client.lRem("topicStream", 0, String(1470139));
+    let page = 10,
       chunkSize = 8;
     let start = page * chunkSize;
     let end = start + chunkSize - 1;

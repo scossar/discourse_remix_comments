@@ -131,7 +131,6 @@ export async function fetchCommentsForUser(
     const lastId = Number(nextPostIds[nextPostIds.length - 1]);
     const queryString = "?post_ids[]=" + nextPostIds.join("&post_ids[]=");
     const postsUrl = `${baseUrl}/t/${topicId}/posts.json${queryString}`;
-    console.log(`postsUrl: ${postsUrl}`);
     const postsResponse = await fetch(postsUrl, { headers });
     if (!postsResponse.ok) {
       throw new FetchCommentsError(
