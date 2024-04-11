@@ -66,7 +66,6 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
       statusText: "Not Found",
     });
   }
-  console.log(JSON.stringify(topic, null, 2));
 
   let comments;
   let errorMessage = null;
@@ -84,6 +83,8 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
     } catch {
       errorMessage = "Comments could not be loaded";
     }
+
+    console.log(`comments: ${JSON.stringify(comments, null, 2)}`);
   }
 
   return json(
@@ -156,7 +157,16 @@ export default function TopicForSlugAndId() {
       </div>
       <div>
         {comments?.postStream?.posts?.map((post) => (
-          <div key={post.id} className="my-10 discourse-comment">
+          <div key={post.id} className="my-10 discourse-comment flex">
+            <Avatar
+              user={{
+                username: post.username,
+                avatarTemplate: post.avatarUrl,
+              }}
+              absoluteUrl={true}
+              className="rounded-full w-6 h-6 object-contain"
+            />
+
             <div dangerouslySetInnerHTML={{ __html: post.cooked }} />
           </div>
         ))}

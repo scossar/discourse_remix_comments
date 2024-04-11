@@ -9,6 +9,7 @@ interface AvatarProps {
   user: JsonifiedUser;
   size?: string;
   className?: string;
+  absoluteUrl?: boolean;
 }
 
 interface DiscourseData {
@@ -24,14 +25,22 @@ function generateAvatarUrl(
   return `${baseUrl}${sized}`;
 }
 
-export default function Avatar({ user, size, className }: AvatarProps) {
+export default function Avatar({
+  user,
+  size,
+  className,
+  absoluteUrl = false,
+}: AvatarProps) {
   const discourseData: DiscourseData = useOutletContext();
   const baseUrl = discourseData.baseUrl;
+  const avatarUrl = absoluteUrl
+    ? user.avatarTemplate
+    : generateAvatarUrl(user.avatarTemplate, baseUrl, size);
 
   return (
     <img
       className={className || ""}
-      src={generateAvatarUrl(user.avatarTemplate, baseUrl, size)}
+      src={avatarUrl}
       alt={`Avatar for ${user.username}`}
     />
   );
