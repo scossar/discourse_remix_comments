@@ -65,7 +65,7 @@ export default function Index() {
   return (
     <div className="max-w-screen-md mx-auto pt-6">
       <h1 className="text-3xl">Latest Topics</h1>
-      <ul className="list-none divide-y divide-red-600">
+      <ul className="list-none divide-y divide-cyan-600">
         {topics?.map((topic) => (
           <li key={topic.id} className="flex items-center my-2 py-2">
             <Link

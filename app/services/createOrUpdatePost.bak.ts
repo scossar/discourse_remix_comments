@@ -15,7 +15,6 @@ export default async function createOrUpdatePost(postJson: Post) {
     externalUpdatedAt: postJson.updated_at,
     replyCount: postJson.reply_count,
     replyToPostNumber: postJson.reply_to_post_number,
-    categoryId: postJson?.category_id,
     raw: postJson.raw,
     user: {
       connectOrCreate: {

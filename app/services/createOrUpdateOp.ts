@@ -52,7 +52,6 @@ export default async function createOrUpdateOp(topicId: number) {
     topic: {
       connect: { externalId: post.topic_id },
     },
-    categoryId: post.category_id,
     user: {
       connectOrCreate: {
         where: {
