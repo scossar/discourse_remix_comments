@@ -1,5 +1,5 @@
 import FetchCommentsError from "./errors/fetchCommentsError";
-import { json } from "@remix-run/node";
+import { getRedisClient } from "./redisClient.server";
 
 // data received from Discourse:
 interface Post {
@@ -42,6 +42,13 @@ interface Topic {
   details: Details;
 }
 
+interface PostsRequest {
+  post_stream: {
+    posts: Post[];
+  };
+  id: number;
+}
+
 // data for the client:
 interface TopicPostStreamPost {
   id: number;
@@ -68,12 +75,14 @@ interface TopicPostStreamDetails {
 
 export interface PostStreamForTopic {
   id: number;
-  slug: string;
+  slug?: string;
   postStream: {
     posts: TopicPostStreamPost[];
-    stream: number[];
+    stream?: number[];
   };
-  details: TopicPostStreamDetails;
+  details?: TopicPostStreamDetails;
+  lastPostId?: number;
+  page: number;
 }
 
 function isRegularReplyPost(post: Post) {
@@ -92,11 +101,14 @@ function generateAvatarUrl(
 export async function fetchCommentsForUser(
   topicId: number,
   slug: string,
-  currentUsername: string | null
+  currentUsername: string | null,
+  currentPage = 0,
+  lastSeenPost: number | null = null
 ) {
   if (!process.env.DISCOURSE_BASE_URL || !process.env.DISCOURSE_API_KEY) {
     throw new FetchCommentsError("Env variables not configured", 403);
   }
+  const streamKey = `postStream:${topicId}`;
   const apiKey = process.env.DISCOURSE_API_KEY;
   const baseUrl = process.env.DISCOURSE_BASE_URL;
   const headers = new Headers();
@@ -104,8 +116,56 @@ export async function fetchCommentsForUser(
     headers.append("Api-Key", apiKey);
     headers.append("Api-Username", currentUsername);
   }
+  if (lastSeenPost) {
+    let nextPostIds;
+    try {
+      const chunkSize = 5; // start with a small number
+      const client = await getRedisClient();
+      const nextPage = currentPage + 1;
+      const start = nextPage * chunkSize;
+      const end = start + chunkSize - 1;
+      nextPostIds = await client.lRange(streamKey, start, end);
+    } catch (error) {
+      throw new FetchCommentsError("Redis error", 500);
+    }
+    const lastId = Number(nextPostIds[nextPostIds.length - 1]);
+    const queryString = "?post_ids[]=" + nextPostIds.join("&post_ids[]=");
+    const postsUrl = `${baseUrl}/t/${topicId}/posts.json${queryString}`;
+    console.log(`postsUrl: ${postsUrl}`);
+    const postsResponse = await fetch(postsUrl, { headers });
+    if (!postsResponse.ok) {
+      throw new FetchCommentsError(
+        "A bad response was returned from Discourse",
+        postsResponse.status
+      );
+    }
+
+    // todo: validate data
+    const postsData: PostsRequest = await postsResponse.json();
+    const postsRequestStreamForUser: PostStreamForTopic = {
+      id: postsData.id,
+      postStream: {
+        posts: postsData.post_stream.posts
+          .filter(isRegularReplyPost)
+          .map((post: Post) => ({
+            id: post.id,
+            username: post.username,
+            avatarUrl: generateAvatarUrl(post.avatar_template, baseUrl),
+            createdAt: post.created_at,
+            cooked: post.cooked,
+            postNumber: post.post_number,
+            updatedAt: post.updated_at,
+            userId: post.user_id,
+          })),
+      },
+      lastPostId: lastId,
+      page: Number(currentPage) + 1,
+    };
+
+    return postsRequestStreamForUser;
+  }
+
   const topicUrl = `${baseUrl}/t/${slug}/${topicId}.json`;
-  console.log(`topicUrl: ${topicUrl}`);
 
   const response = await fetch(topicUrl, { headers });
   if (!response.ok) {
@@ -116,11 +176,14 @@ export async function fetchCommentsForUser(
   }
 
   const data: Topic = await response.json();
+  // todo: since you've got the stream and the topic id, maybe update
+  const stream = data.post_stream.stream;
+  const lastPostId = stream[stream.length - 1];
   const postStreamForUser: PostStreamForTopic = {
     id: data.id,
     slug: data.slug,
     postStream: {
-      stream: data.post_stream.stream,
+      stream: stream,
       posts: data.post_stream.posts
         .filter(isRegularReplyPost)
         .map((post: Post) => ({
@@ -145,6 +208,8 @@ export async function fetchCommentsForUser(
         })
       ),
     },
+    lastPostId: lastPostId,
+    page: currentPage,
   };
 
   return postStreamForUser;

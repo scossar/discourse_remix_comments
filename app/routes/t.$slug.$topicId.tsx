@@ -69,22 +69,24 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
 
   let comments;
   let errorMessage = null;
-  let { searchParams } = new URL(request.url);
-  let showComments = searchParams.get("showComments");
+  const { searchParams } = new URL(request.url);
+  const showComments = searchParams.get("showComments");
 
   if (showComments) {
+    const lastPostId = Number(searchParams?.get("lastPostId")) ?? null;
+    const page = Number(searchParams?.get("page")) ?? 0;
     const currentUsername = user?.["username"] ?? null;
     try {
       comments = await fetchCommentsForUser(
         topic.externalId,
         topic.slug,
-        currentUsername
+        currentUsername,
+        page,
+        lastPostId
       );
     } catch {
       errorMessage = "Comments could not be loaded";
     }
-
-    console.log(`comments: ${JSON.stringify(comments, null, 2)}`);
   }
 
   return json(
@@ -185,6 +187,14 @@ export default function TopicForSlugAndId() {
           </div>
         ))}
       </div>
+      {comments && comments?.lastPostId && (
+        <commentFetcher.Form action="?">
+          <input type="hidden" name="showComments" value="true" />
+          <input type="hidden" name="lastPostId" value={comments?.lastPostId} />
+          <input type="hidden" name="page" value={comments.page} />
+          <button type="submit">Load more comments</button>
+        </commentFetcher.Form>
+      )}
     </div>
   );
 }
