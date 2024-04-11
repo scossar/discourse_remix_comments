@@ -5,7 +5,6 @@ import {
   useFetcher,
   useLoaderData,
   useRouteError,
-  useSearchParams,
 } from "@remix-run/react";
 
 import { db } from "~/services/db.server";
@@ -42,15 +41,12 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
     });
   }
 
-  // Probably the schema should be adjusted to change the DiscoursePost table to DiscourseOp. A
-  // topic would then have 1 DiscourseOp. If comments need to be saved, they should be saved to a separate table.
-  // that change would improve indexing.
   const topic = await db.discourseTopic.findUnique({
     where: { externalId: topicId },
     include: {
       user: true,
       category: true,
-      posts: {
+      post: {
         where: {
           postNumber: 1,
         },
@@ -78,9 +74,6 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
   let showComments = searchParams.get("showComments");
 
   if (showComments) {
-    // currentUsername is used in the request header so that the comments that are returned are specific to the user
-    // if currentUsername is set to `null`, an unauthenticated request will be made for the comments
-    // this limits users to viewing comments that they have permission to view on the site.
     const currentUsername = user?.["username"] ?? null;
     try {
       comments = await fetchCommentsForUser(
@@ -117,7 +110,7 @@ interface CommentFetcher {
 export default function TopicForSlugAndId() {
   const { topic } = useLoaderData<typeof loader>();
   const categoryColor = topic?.category?.color
-    ? `bg-[#${topic.category.color}]`
+    ? `#${topic.category.color}`
     : "#ffffff";
 
   const commentFetcher = useFetcher({
@@ -134,20 +127,25 @@ export default function TopicForSlugAndId() {
     <div className="max-w-screen-md mx-auto pt-6 divide-y divide-red-700">
       <header className="pb-3">
         <h1 className="text-3xl">{topic.title}</h1>
-        <div>
-          <div className={`inline-block ${categoryColor} p-2 mr-1`}></div>
-          {topic.category?.name}
-          {topic?.tags.map((topicTag) => topicTag.tag.text)}
+        <div className="flex items-center text-sm">
+          <div
+            style={{ backgroundColor: `${categoryColor}` }}
+            className={`inline-block p-2 mr-1`}
+          ></div>
+          <span className="pr-1">{topic.category?.name}</span>
+          <span>{topic?.tags.map((topicTag) => topicTag.tag.text)}</span>
         </div>
       </header>
       <div className="discourse-op flex pt-2">
         <Avatar
           user={topic.user}
           size="48"
-          className="rounded-full object-contain w-12 h-12 mt-3"
+          className="rounded-full object-contain w-10 h-10 mt-3"
         />
-        <div className="ml-1">
-          <div dangerouslySetInnerHTML={{ __html: topic.posts[0].cooked }} />
+        <div className="ml-2">
+          {topic?.post?.cooked && (
+            <div dangerouslySetInnerHTML={{ __html: topic.post.cooked }} />
+          )}
         </div>
       </div>
       <div>
@@ -158,7 +156,7 @@ export default function TopicForSlugAndId() {
       </div>
       <div>
         {comments?.postStream?.posts?.map((post) => (
-          <div key={post.id}>
+          <div key={post.id} className="my-10 discourse-comment">
             <div dangerouslySetInnerHTML={{ __html: post.cooked }} />
           </div>
         ))}

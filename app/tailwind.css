@@ -43,4 +43,9 @@
       @apply my-2;
     }
   }
+  .discourse-comment {
+    p {
+      @apply my-2;
+    }
+  }
 }
