@@ -80,14 +80,11 @@ model DiscourseTopic {
   tags DiscourseTopicTag[]
   user DiscourseUser @relation(fields: [userId], references: [id], onDelete: Cascade)
   category DiscourseCategory? @relation(fields: [categoryId], references: [id])
-  posts DiscoursePost[]
+  post DiscoursePost?
  
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
-
-// Note: this model could probably be renamed to DiscourseOp and be used for storing a topic's OP
-// a DiscourseComment table could then be added to store a topic's posts where postNumber > 1
 
 model DiscoursePost {
   id Int @id @default(autoincrement())
@@ -101,11 +98,10 @@ model DiscoursePost {
   externalUpdatedAt DateTime
   replyCount Int
   replyToPostNumber Int?
-  topicId Int
-  categoryId Int
+  topicId Int @unique
   raw String? // in the webhook payload and posts/id.json API data, but not topicList posts data, maybe remove later
   userId Int
-  topic DiscourseTopic @relation(fields: [topicId], references: [id], onDelete: Cascade)
+  topic DiscourseTopic? @relation(fields: [topicId], references: [id], onDelete: Cascade)
   user DiscourseUser @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   createdAt DateTime @default(now())

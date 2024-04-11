@@ -106,9 +106,44 @@ export interface Details {
   participants: Participant[];
 }
 
+export interface DiscourseUser {
+  id: number;
+  username: string;
+  avatar_template: string;
+}
+
 export interface SiteUser {
   externalId?: number | null;
   avatarUrl?: string | null;
   admin?: boolean | null;
   username?: string | null;
+}
+
+export interface TopicPayload {
+  post_stream: {
+    posts: Post[];
+    stream: number[];
+  };
+  tags: string[];
+  tags_descriptions: Record<string, string>;
+  id: number;
+  title: string;
+  fancy_title: string;
+  posts_count: number;
+  created_at: string;
+  like_count: number;
+  last_posted_at: string;
+  visible: boolean;
+  closed: boolean;
+  archetype: "regular" | "private_message";
+  slug: string;
+  category_id: number;
+  word_count: number;
+  user_id: number;
+  details: {
+    can_create_post: boolean;
+    participants: Participant[];
+    created_by: DiscourseUser;
+    last_poster: DiscourseUser;
+  };
 }

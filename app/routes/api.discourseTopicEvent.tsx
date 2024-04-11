@@ -8,9 +8,11 @@ import {
 } from "~/services/discourseWebhooks";
 import createCategory from "~/services/createCategory";
 import createOrUpdateTopic from "~/services/createOrUpdateTopic";
+import createOrUpdateOp from "~/services/createOrUpdateOp";
 import findOrCreateTags from "~/services/findOrCreateTags";
 import createTagTopics from "~/services/createTagTopics";
 import CategoryCreationError from "~/services/errors/categoryCreationError";
+import PostCreationError from "~/services/errors/postCreationError";
 import TagCreationError from "~/services/errors/tagCreationError";
 import TopicCreationError from "~/services/errors/topicCreationError";
 
@@ -87,6 +89,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
   const topicJson = webhookJson.topic;
 
   // "personal_message" archetypes don't have a category, so confirm before trying to get the topic's category:
+  // the app shouldn't be creating topics for PMs though, so handle that case
   const categoryId = topicJson?.category_id;
   if (categoryId) {
     let category = await db.discourseCategory.findUnique({
@@ -139,6 +142,23 @@ export const action = async ({ request }: ActionFunctionArgs) => {
       await createTagTopics(topicTagIds, topic.id);
     } catch (error) {
       if (error instanceof TagCreationError) {
+        return json({ message: error.message }, error.statusCode);
+      }
+      return json({ message: "An unexpected error occurred" }, 500);
+    }
+  }
+
+  //let post;
+
+  let post = await db.discoursePost.findUnique({
+    where: { topicId: topic.externalId },
+  });
+
+  if (!post) {
+    try {
+      post = await createOrUpdateOp(topic.externalId);
+    } catch (error) {
+      if (error instanceof PostCreationError) {
         return json({ message: error.message }, error.statusCode);
       }
       return json({ message: "An unexpected error occurred" }, 500);
