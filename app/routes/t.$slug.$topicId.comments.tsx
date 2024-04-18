@@ -1,33 +1,33 @@
-import type { LoaderFunctionArgs, MetaFunction } from "@remix-run/node";
-import { json } from "@remix-run/node";
+import type {LoaderFunctionArgs, MetaFunction} from "@remix-run/node";
+import {json, redirect} from "@remix-run/node";
 import {
   isRouteErrorResponse,
   useFetcher,
   useLoaderData,
   useRouteError,
 } from "@remix-run/react";
-import { useEffect, useState } from "react";
+import {useEffect, useState} from "react";
 
-import { db } from "~/services/db.server";
-import { discourseSessionStorage } from "~/services/session.server";
-import type { ApiDiscourseConnectUser } from "~/types/apiDiscourse";
+import {db} from "~/services/db.server";
+import {discourseSessionStorage} from "~/services/session.server";
+import type {ApiDiscourseConnectUser} from "~/types/apiDiscourse";
 import type {
   ParsedDiscourseTopic,
   ParsedPagedDiscourseTopic,
 } from "~/types/parsedDiscourse";
-import { fetchCommentsForUser } from "~/services/fetchCommentsForUser.server";
+import {fetchCommentsForUser} from "~/services/fetchCommentsForUser.server";
 import Avatar from "~/components/Avatar";
 
 export const meta: MetaFunction = () => {
   return [
-    { title: "Comments" },
-    { name: "description", content: "comments for..." },
+    {title: "Comments"},
+    {name: "description", content: "comments for..."},
   ];
 };
 
-export async function loader({ request, params }: LoaderFunctionArgs) {
+export async function loader({request, params}: LoaderFunctionArgs) {
   const userSession = await discourseSessionStorage.getSession(
-    request.headers.get("Cookie")
+    request.headers.get("Cookie"),
   );
   const user: ApiDiscourseConnectUser = {
     externalId: userSession.get("external_id"),
@@ -44,50 +44,57 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
     });
   }
 
-  const { searchParams } = new URL(request.url);
+  const {searchParams} = new URL(request.url);
   const page = Number(searchParams.get("page")) || 0;
   const lastPostId = Number(searchParams.get("lastPostId")) ?? null;
   const currentUsername = user?.username ?? null;
 
-  let pagedComments;
+  let postStreamForUser;
   let errorMessage;
   try {
-    pagedComments = await fetchCommentsForUser(
+    postStreamForUser = await fetchCommentsForUser(
       topicId,
       slug,
       currentUsername,
       page,
-      lastPostId
+      lastPostId,
     );
   } catch {
     errorMessage = "Comments could not be loaded";
   }
 
+  // tmp workaround
+  if (!postStreamForUser) {
+    return redirect("/")
+  }
+
   return json(
-    { pagedComments, errorMessage, user },
+    {postStreamForUser, errorMessage, user},
     {
       headers: {
         "Set-Cookie": await discourseSessionStorage.commitSession(userSession),
       },
-    }
+    },
   );
 }
 
-interface CommentFetcher {
-  pagedComments?: ParsedPagedDiscourseTopic | undefined;
-}
+//interface CommentFetcher {
+//  pagedComments?: ParsedPagedDiscourseTopic | undefined;
+//}
 
 export default function DiscourseComments() {
-  const { pagedComments } = useLoaderData<typeof loader>();
-  const commentFetcher = useFetcher<CommentFetcher>();
-  const [pages, setPages] = useState(pagedComments);
+  const {postStreamForUser} = useLoaderData<typeof loader>();
+  // const commentFetcher = useFetcher<CommentFetcher>();
+  const [pages, setPages] = useState(postStreamForUser);
+
+  console.log(JSON.stringify(pages, null, 2))
 
   return (
     <div className="divide-y divide-cyan-800">
-      <div className="divide-y divide-cyan-800">
-        {Object.entries(pages).map(([page, comments]) => (
-          <div key={page}>
-            {comments?.postStream?.posts?.map((post) => (
+      <div className="divide-y divide-cyan-500">
+        {Object.entries(pages).map(([currentPage, topicData]) => (
+          <div key={currentPage}>
+            {topicData?.postStream?.posts?.map((post) => (
               <div key={post.id} className="my-6 discourse-comment flex">
                 <Avatar
                   user={{
@@ -102,10 +109,11 @@ export default function DiscourseComments() {
                     <span className="bg-slate-50 text-slate-900 inline-block p-1">
                       {post.postNumber}
                     </span>
-                    <div dangerouslySetInnerHTML={{ __html: post.cooked }} />
+                    <div dangerouslySetInnerHTML={{__html: post.cooked}}/>
                   </div>
                   <div className="flex justify-end w-full items-center">
-                    <button className="mr-2 px-2 py-1 bg-slate-50 hover:bg-slate-200 text-cyan-950 rounded-sm">
+                    <button
+                      className="mr-2 px-2 py-1 bg-slate-50 hover:bg-slate-200 text-cyan-950 rounded-sm">
                       Reply
                     </button>
                   </div>

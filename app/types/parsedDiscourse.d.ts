@@ -33,8 +33,7 @@ export interface ParsedDiscourseTopic {
   page: number;
 }
 
-export interface ParsedPagedDiscourseTopic {
-  [number]: {
-    comments: ParsedDiscourseTopic;
-  };
+export type ParsedPagedDiscourseTopic = {
+  [currentPage: number]: ParsedDiscourseTopic;
 }
+
