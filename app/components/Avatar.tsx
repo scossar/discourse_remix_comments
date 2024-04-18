@@ -33,6 +33,7 @@ export default function Avatar({
 }: AvatarProps) {
   const discourseData: DiscourseData = useOutletContext();
   const baseUrl = discourseData.baseUrl;
+
   const avatarUrl = absoluteUrl
     ? user.avatarTemplate
     : generateAvatarUrl(user.avatarTemplate, baseUrl, size);

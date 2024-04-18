@@ -1,13 +1,9 @@
 import type { LoaderFunctionArgs, MetaFunction } from "@remix-run/node";
 import { json } from "@remix-run/node";
 import {
-  Link,
   isRouteErrorResponse,
-  Outlet,
   useFetcher,
   useLoaderData,
-  useMatches,
-  useOutletContext,
   useRouteError,
 } from "@remix-run/react";
 
@@ -20,8 +16,8 @@ import Avatar from "~/components/Avatar";
 
 export const meta: MetaFunction = () => {
   return [
-    { title: "Discourse Topic" },
-    { name: "description", content: "Discourse Topic Route" },
+    { title: "Comments" },
+    { name: "description", content: "comments for..." },
   ];
 };
 
@@ -36,70 +32,35 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
     username: userSession.get("username"),
   };
 
-  const slug = params?.slug;
   const topicId = Number(params?.topicId);
-
+  const slug = params?.slug;
   if (!slug || !topicId) {
-    throw new Response("The route's required params were not set", {
+    throw new Response("Required 'slug' and 'topicId' params not set", {
       status: 500,
     });
   }
 
-  const topic = await db.discourseTopic.findUnique({
-    where: { externalId: topicId },
-    include: {
-      user: true,
-      category: true,
-      post: {
-        where: {
-          postNumber: 1,
-        },
-      },
-      tags: {
-        include: {
-          tag: true,
-        },
-      },
-    },
-  });
-
-  // todo: improve the error boundary
-  if (!topic) {
-    throw new Response(null, {
-      status: 404,
-      statusText: "Not Found",
-    });
-  }
+  const { searchParams } = new URL(request.url);
+  const page = Number(searchParams.get("page")) || 0;
+  const lastPostId = Number(searchParams.get("lastPostId")) ?? null;
+  const currentUsername = user?.username ?? null;
 
   let comments;
-  let errorMessage = null;
-  const { searchParams } = new URL(request.url);
-  const showComments = searchParams.get("showComments");
-
-  if (showComments) {
-    const lastPostId = Number(searchParams?.get("lastPostId")) ?? null;
-    const page = Number(searchParams?.get("page")) ?? 0;
-    const currentUsername = user?.["username"] ?? null;
-    try {
-      comments = await fetchCommentsForUser(
-        topic.externalId,
-        topic.slug,
-        currentUsername,
-        page,
-        lastPostId
-      );
-    } catch {
-      errorMessage = "Comments could not be loaded";
-    }
+  let errorMessage;
+  try {
+    comments = await fetchCommentsForUser(
+      topicId,
+      slug,
+      currentUsername,
+      page,
+      lastPostId
+    );
+  } catch {
+    errorMessage = "Comments could not be loaded";
   }
 
   return json(
-    {
-      topic,
-      user,
-      comments,
-      errorMessage,
-    },
+    { comments, errorMessage, user },
     {
       headers: {
         "Set-Cookie": await discourseSessionStorage.commitSession(userSession),
@@ -112,70 +73,13 @@ interface CommentFetcher {
   comments?: ParsedDiscourseTopic | undefined;
 }
 
-interface DiscourseData {
-  baseUrl: string;
-}
-
-export default function TopicForSlugAndId() {
-  const { topic } = useLoaderData<typeof loader>();
-  const matches = useMatches();
-  const pathEnd: string =
-    matches.slice(-1)?.[0].pathname.split("/").slice(-1).toString() || "";
-  const onCommentRoot = pathEnd === "comments";
-  const discourseData: DiscourseData = useOutletContext();
-
-  const categoryColor = topic?.category?.color
-    ? `#${topic.category.color}`
-    : "#ffffff";
-
-  const commentFetcher = useFetcher<CommentFetcher>({
-    key: "comment-fetcher",
-  });
-  const commentFetcherData = commentFetcher.data;
-
-  let comments;
-  if (commentFetcherData && commentFetcherData?.comments) {
-    comments = commentFetcherData?.comments;
-  }
-
+export default function DiscourseComments() {
+  const { comments } = useLoaderData<typeof loader>();
+  const commentFetcher = useFetcher<CommentFetcher>();
+  console.log(JSON.stringify(comments, null, 2));
   return (
-    <div className="max-w-screen-md mx-auto pt-6 pb-12">
-      <header className="pb-3 border-b-cyan-800 border-b">
-        <h1 className="text-3xl">{topic.title}</h1>
-        <div className="flex items-center text-sm">
-          <div
-            style={{ backgroundColor: `${categoryColor}` }}
-            className={`inline-block p-2 mr-1`}
-          ></div>
-          <span className="pr-1">{topic.category?.name}</span>
-          <span>
-            {topic?.tags.map((topicTag) => (
-              <span key={topicTag.tagId} className="px-1">
-                {topicTag.tag.text}
-              </span>
-            ))}
-          </span>
-        </div>
-      </header>
-      <div className="discourse-op flex py-3 border-b border-cyan-800">
-        <Avatar
-          user={topic.user}
-          size="48"
-          className="rounded-full object-contain w-10 h-10 mt-3"
-        />
-        <div className="ml-2">
-          {topic?.post?.cooked && (
-            <div dangerouslySetInnerHTML={{ __html: topic.post.cooked }} />
-          )}
-        </div>
-      </div>
-
-      <Link className={`${onCommentRoot ? "hidden" : "block"}`} to={`comments`}>
-        Comments
-      </Link>
-
-      <Outlet context={discourseData} />
-      {/*}  <div className="divide-y divide-cyan-800">
+    <div className="divide-y divide-cyan-800">
+      <div className="divide-y divide-cyan-800">
         {comments?.postStream?.posts?.map((post) => (
           <div key={post.id} className="my-6 discourse-comment flex">
             <Avatar
@@ -209,7 +113,7 @@ export default function TopicForSlugAndId() {
           <input type="hidden" name="page" value={comments.page} />
           <button type="submit">Load more comments</button>
         </commentFetcher.Form>
-      )} */}
+      )}
     </div>
   );
 }
