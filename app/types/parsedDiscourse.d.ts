@@ -32,3 +32,9 @@ export interface ParsedDiscourseTopic {
   lastPostId?: number;
   page: number;
 }
+
+export interface ParsedPagedDiscourseTopic {
+  [number]: {
+    comments: ParsedDiscourseTopic;
+  };
+}

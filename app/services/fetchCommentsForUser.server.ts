@@ -7,7 +7,12 @@ import type {
   ApiDiscourseTopicWithPostStream,
 } from "~/types/apiDiscourse";
 
-import type { ParsedDiscourseTopic } from "~/types/parsedDiscourse";
+import type {
+  ParsedDiscourseTopic,
+  ParsedPagedDiscourseTopic,
+} from "~/types/parsedDiscourse";
+
+const CHUNK_SIZE = 20;
 
 function isRegularReplyPost(post: ApiDiscoursePost) {
   return post.post_type === 1 && post.post_number > 1;
@@ -33,6 +38,7 @@ export async function fetchCommentsForUser(
     throw new FetchCommentsError("Env variables not configured", 403);
   }
   const streamKey = `postStream:${topicId}`;
+  console.log(`streamKey: ${streamKey}`);
   const apiKey = process.env.DISCOURSE_API_KEY;
   const baseUrl = process.env.DISCOURSE_BASE_URL;
   const headers = new Headers();
@@ -43,7 +49,8 @@ export async function fetchCommentsForUser(
   if (lastSeenPost) {
     let nextPostIds;
     try {
-      const chunkSize = 5; // start with a small number
+      console.log("there was a last seen poast");
+      const chunkSize = CHUNK_SIZE;
       const client = await getRedisClient();
       const nextPage = currentPage + 1;
       const start = nextPage * chunkSize;
@@ -88,6 +95,7 @@ export async function fetchCommentsForUser(
 
     return postsRequestStreamForUser;
   }
+  console.log("there wasn't a last seen post");
 
   const topicUrl = `${baseUrl}/t/${slug}/${topicId}.json`;
 
@@ -136,5 +144,9 @@ export async function fetchCommentsForUser(
     page: currentPage,
   };
 
-  return postStreamForUser;
+  const comments: ParsedPagedDiscourseTopic = {
+    [currentPage]: postStreamForUser,
+  };
+
+  return comments;
 }

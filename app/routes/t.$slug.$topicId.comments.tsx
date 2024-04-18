@@ -6,11 +6,15 @@ import {
   useLoaderData,
   useRouteError,
 } from "@remix-run/react";
+import { useEffect, useState } from "react";
 
 import { db } from "~/services/db.server";
 import { discourseSessionStorage } from "~/services/session.server";
 import type { ApiDiscourseConnectUser } from "~/types/apiDiscourse";
-import type { ParsedDiscourseTopic } from "~/types/parsedDiscourse";
+import type {
+  ParsedDiscourseTopic,
+  ParsedPagedDiscourseTopic,
+} from "~/types/parsedDiscourse";
 import { fetchCommentsForUser } from "~/services/fetchCommentsForUser.server";
 import Avatar from "~/components/Avatar";
 
@@ -45,10 +49,10 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
   const lastPostId = Number(searchParams.get("lastPostId")) ?? null;
   const currentUsername = user?.username ?? null;
 
-  let comments;
+  let pagedComments;
   let errorMessage;
   try {
-    comments = await fetchCommentsForUser(
+    pagedComments = await fetchCommentsForUser(
       topicId,
       slug,
       currentUsername,
@@ -60,7 +64,7 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
   }
 
   return json(
-    { comments, errorMessage, user },
+    { pagedComments, errorMessage, user },
     {
       headers: {
         "Set-Cookie": await discourseSessionStorage.commitSession(userSession),
@@ -70,50 +74,47 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
 }
 
 interface CommentFetcher {
-  comments?: ParsedDiscourseTopic | undefined;
+  pagedComments?: ParsedPagedDiscourseTopic | undefined;
 }
 
 export default function DiscourseComments() {
-  const { comments } = useLoaderData<typeof loader>();
+  const { pagedComments } = useLoaderData<typeof loader>();
   const commentFetcher = useFetcher<CommentFetcher>();
-  console.log(JSON.stringify(comments, null, 2));
+  const [pages, setPages] = useState(pagedComments);
+
   return (
     <div className="divide-y divide-cyan-800">
       <div className="divide-y divide-cyan-800">
-        {comments?.postStream?.posts?.map((post) => (
-          <div key={post.id} className="my-6 discourse-comment flex">
-            <Avatar
-              user={{
-                username: post.username,
-                avatarTemplate: post.avatarUrl,
-              }}
-              absoluteUrl={true}
-              className="rounded-full w-8 h-8 object-contain mt-2"
-            />
-            <div className="ml-2 w-full">
-              <div className="w-full my-3">
-                <span className="bg-slate-50 text-slate-900 inline-block p-4">
-                  {post.postNumber}
-                </span>
-                <div dangerouslySetInnerHTML={{ __html: post.cooked }} />
+        {Object.entries(pages).map(([page, comments]) => (
+          <div key={page}>
+            {comments?.postStream?.posts?.map((post) => (
+              <div key={post.id} className="my-6 discourse-comment flex">
+                <Avatar
+                  user={{
+                    username: post.username,
+                    avatarTemplate: post.avatarUrl,
+                  }}
+                  absoluteUrl={true}
+                  className="rounded-full w-8 h-8 object-contain mt-2"
+                />
+                <div className="ml-2 w-full">
+                  <div className="w-full my-3">
+                    <span className="bg-slate-50 text-slate-900 inline-block p-1">
+                      {post.postNumber}
+                    </span>
+                    <div dangerouslySetInnerHTML={{ __html: post.cooked }} />
+                  </div>
+                  <div className="flex justify-end w-full items-center">
+                    <button className="mr-2 px-2 py-1 bg-slate-50 hover:bg-slate-200 text-cyan-950 rounded-sm">
+                      Reply
+                    </button>
+                  </div>
+                </div>
               </div>
-              <div className="flex justify-end w-full items-center">
-                <button className="mr-2 px-2 py-1 bg-slate-50 hover:bg-slate-200 text-cyan-950 rounded-sm">
-                  Reply
-                </button>
-              </div>
-            </div>
+            ))}
           </div>
         ))}
       </div>
-      {comments && comments?.lastPostId && (
-        <commentFetcher.Form action="?">
-          <input type="hidden" name="showComments" value="true" />
-          <input type="hidden" name="lastPostId" value={comments?.lastPostId} />
-          <input type="hidden" name="page" value={comments.page} />
-          <button type="submit">Load more comments</button>
-        </commentFetcher.Form>
-      )}
     </div>
   );
 }

@@ -47,6 +47,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
 export default function App() {
   const { discourseBaseUrl } = useLoaderData<typeof loader>();
+  // this is kind of awkward, but allows the baseUrl env variable to be passed to components
   const discourseData = {
     baseUrl: discourseBaseUrl,
   };

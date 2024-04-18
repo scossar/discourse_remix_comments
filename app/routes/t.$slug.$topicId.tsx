@@ -71,34 +71,10 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
     });
   }
 
-  let comments;
-  let errorMessage = null;
-  const { searchParams } = new URL(request.url);
-  const showComments = searchParams.get("showComments");
-
-  if (showComments) {
-    const lastPostId = Number(searchParams?.get("lastPostId")) ?? null;
-    const page = Number(searchParams?.get("page")) ?? 0;
-    const currentUsername = user?.["username"] ?? null;
-    try {
-      comments = await fetchCommentsForUser(
-        topic.externalId,
-        topic.slug,
-        currentUsername,
-        page,
-        lastPostId
-      );
-    } catch {
-      errorMessage = "Comments could not be loaded";
-    }
-  }
-
   return json(
     {
       topic,
       user,
-      comments,
-      errorMessage,
     },
     {
       headers: {
@@ -106,10 +82,6 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
       },
     }
   );
-}
-
-interface CommentFetcher {
-  comments?: ParsedDiscourseTopic | undefined;
 }
 
 interface DiscourseData {
@@ -127,16 +99,6 @@ export default function TopicForSlugAndId() {
   const categoryColor = topic?.category?.color
     ? `#${topic.category.color}`
     : "#ffffff";
-
-  const commentFetcher = useFetcher<CommentFetcher>({
-    key: "comment-fetcher",
-  });
-  const commentFetcherData = commentFetcher.data;
-
-  let comments;
-  if (commentFetcherData && commentFetcherData?.comments) {
-    comments = commentFetcherData?.comments;
-  }
 
   return (
     <div className="max-w-screen-md mx-auto pt-6 pb-12">
@@ -175,41 +137,6 @@ export default function TopicForSlugAndId() {
       </Link>
 
       <Outlet context={discourseData} />
-      {/*}  <div className="divide-y divide-cyan-800">
-        {comments?.postStream?.posts?.map((post) => (
-          <div key={post.id} className="my-6 discourse-comment flex">
-            <Avatar
-              user={{
-                username: post.username,
-                avatarTemplate: post.avatarUrl,
-              }}
-              absoluteUrl={true}
-              className="rounded-full w-8 h-8 object-contain mt-2"
-            />
-            <div className="ml-2 w-full">
-              <div className="w-full my-3">
-                <span className="bg-slate-50 text-slate-900 inline-block p-4">
-                  {post.postNumber}
-                </span>
-                <div dangerouslySetInnerHTML={{ __html: post.cooked }} />
-              </div>
-              <div className="flex justify-end w-full items-center">
-                <button className="mr-2 px-2 py-1 bg-slate-50 hover:bg-slate-200 text-cyan-950 rounded-sm">
-                  Reply
-                </button>
-              </div>
-            </div>
-          </div>
-        ))}
-      </div>
-      {comments && comments?.lastPostId && (
-        <commentFetcher.Form action="?">
-          <input type="hidden" name="showComments" value="true" />
-          <input type="hidden" name="lastPostId" value={comments?.lastPostId} />
-          <input type="hidden" name="page" value={comments.page} />
-          <button type="submit">Load more comments</button>
-        </commentFetcher.Form>
-      )} */}
     </div>
   );
 }
