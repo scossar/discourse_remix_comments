@@ -1,5 +1,5 @@
 import { db } from "~/services/db.server";
-import TagCreationError from "./errors/tagCreationError";
+import TagCreationError from "./errors/tagCreationError.server";
 
 export default async function createTagTopics(
   tagIds: number[],

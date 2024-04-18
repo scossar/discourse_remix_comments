@@ -9,9 +9,9 @@ import {
 
 import { db } from "~/services/db.server";
 import { discourseSessionStorage } from "~/services/session.server";
-import type { SiteUser } from "~/types/discourse";
-import { fetchCommentsForUser } from "~/services/fetchCommentsForUser";
-import type { PostStreamForTopic } from "~/services/fetchCommentsForUser";
+import type { DiscourseConnectUser } from "~/types/discourse";
+import { fetchCommentsForUser } from "~/services/fetchCommentsForUser.server";
+import type { PostStreamForTopic } from "~/services/fetchCommentsForUser.server";
 import Avatar from "~/components/Avatar";
 
 export const meta: MetaFunction = () => {
@@ -25,7 +25,7 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
   const userSession = await discourseSessionStorage.getSession(
     request.headers.get("Cookie")
   );
-  const user: SiteUser = {
+  const user: DiscourseConnectUser = {
     externalId: userSession.get("external_id"),
     avatarUrl: userSession.get("avatar_url"),
     admin: userSession.get("admin"),

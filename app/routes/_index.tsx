@@ -2,18 +2,9 @@ import type { LoaderFunctionArgs, MetaFunction } from "@remix-run/node";
 import { json } from "@remix-run/node";
 import { Link, useLoaderData } from "@remix-run/react";
 
-import { Prisma } from "@prisma/client";
-
-import Avatar from "~/components/Avatar";
 import { discourseSessionStorage } from "~/services/session.server";
-import type { SiteUser } from "~/types/discourse";
+import type { ApiDiscourseConnectUser } from "~/types/apiDiscourse";
 import { db } from "~/services/db.server";
-import type {
-  DiscourseTopic,
-  DiscourseUser,
-  DiscourseCategory,
-  DiscourseTag,
-} from "@prisma/client";
 
 export const meta: MetaFunction = () => {
   return [
@@ -31,7 +22,7 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
   const admin: boolean = userSession.get("admin");
   const username = userSession.get("username");
 
-  const user: SiteUser = {
+  const user: ApiDiscourseConnectUser = {
     externalId: externalId,
     avatarUrl: avatarUrl,
     admin: admin,

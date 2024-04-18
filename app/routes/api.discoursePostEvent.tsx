@@ -1,15 +1,20 @@
 import { json, type ActionFunctionArgs } from "@remix-run/node";
 
 import { db } from "~/services/db.server";
-import type { Post, WebHookPost } from "~/types/discourse";
+import type {
+  ApiDiscoursePost,
+  ApiDiscourseWebHookPost,
+} from "~/types/apiDiscourse";
 import {
   discourseWehbookHeaders,
   verifyWebhookRequest,
-} from "~/services/discourseWebhooks";
+} from "~/services/discourseWebhooks.server";
 //import createOrUpdatePost from "~/services/createOrUpdatePost";
-import PostCreationError from "~/services/errors/postCreationError";
+import PostCreationError from "~/services/errors/postCreationError.server";
 
-function isValidPostWebhookData(data: WebHookPost): data is WebHookPost {
+function isValidPostWebhookData(
+  data: ApiDiscourseWebHookPost
+): data is ApiDiscourseWebHookPost {
   return (
     typeof data.post.id === "number" &&
     typeof data.post.cooked === "string" &&
@@ -41,7 +46,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     );
   }
 
-  const webhookJson: WebHookPost = await request.json();
+  const webhookJson: ApiDiscourseWebHookPost = await request.json();
   if (!isValidPostWebhookData(webhookJson)) {
     return json(
       {
@@ -51,7 +56,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     );
   }
 
-  const postJson: Post = webhookJson.post;
+  const postJson: ApiDiscoursePost = webhookJson.post;
 
   // return now if it's not the OP
   if (postJson.post_number !== 1) {

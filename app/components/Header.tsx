@@ -1,7 +1,7 @@
 import { Link } from "@remix-run/react";
-import type { SiteUser } from "~/types/discourse";
+import type { DiscourseConnectUser } from "~/types/discourse";
 export interface HeaderProps {
-  user: SiteUser;
+  user: DiscourseConnectUser;
 }
 
 export default function Header({ user }: HeaderProps) {

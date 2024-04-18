@@ -1,7 +1,7 @@
 import { db } from "./db.server";
-import PostCreationError from "./errors/postCreationError";
+import PostCreationError from "./errors/postCreationError.server";
 import type { DiscoursePost, Prisma } from "@prisma/client";
-import type { Post, TopicPayload } from "~/types/discourse";
+import type { Post, TopicWithPostStream } from "~/types/discourse";
 import { getRedisClient } from "./redisClient.server";
 
 export default async function createOrUpdateOp(topicId: number) {
@@ -34,7 +34,7 @@ export default async function createOrUpdateOp(topicId: number) {
     );
   }
 
-  const data: TopicPayload = await response.json();
+  const data: TopicWithPostStream = await response.json();
   const post: Post = data.post_stream.posts[0];
   // make sure there are no errors creating the post before saving the stream to redis
   const stream: number[] = data.post_stream.stream;

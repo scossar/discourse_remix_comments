@@ -1,53 +1,11 @@
-import FetchCommentsError from "./errors/fetchCommentsError";
+import FetchCommentsError from "./errors/fetchCommentsError.server";
 import { getRedisClient } from "./redisClient.server";
 
-// data received from Discourse:
-interface Post {
-  id: number;
-  username: string;
-  avatar_template: string;
-  created_at: string;
-  cooked: string;
-  post_number: number;
-  post_type: 1 | 2 | 3 | 4; // :regular=>1, :moderator_action=>2, :small_action=>3, :whisper=>4
-  updated_at: string;
-  user_id: number;
-}
-
-interface Participant {
-  id: number;
-  username: string;
-  post_count: number;
-  avatar_template: string;
-}
-
-interface Details {
-  can_create_post: boolean;
-  participants: Participant[];
-}
-
-interface Topic {
-  post_stream: {
-    posts: Post[];
-    stream: number[];
-  };
-  id: number;
-  fancy_title?: string;
-  posts_count: number;
-  like_count: number;
-  archetype: "regular" | "personal_message";
-  slug: string;
-  category_id?: number;
-  user_id: number;
-  details: Details;
-}
-
-interface PostsRequest {
-  post_stream: {
-    posts: Post[];
-  };
-  id: number;
-}
+import type {
+  ApiDiscourseParticipant,
+  ApiDiscoursePost,
+  ApiDiscourseTopicWithPostStream,
+} from "~/types/apiDiscourse";
 
 // data for the client:
 interface TopicPostStreamPost {
@@ -85,7 +43,7 @@ export interface PostStreamForTopic {
   page: number;
 }
 
-function isRegularReplyPost(post: Post) {
+function isRegularReplyPost(post: ApiDiscoursePost) {
   return post.post_type === 1 && post.post_number > 1;
 }
 
@@ -140,13 +98,14 @@ export async function fetchCommentsForUser(
     }
 
     // todo: validate data
-    const postsData: PostsRequest = await postsResponse.json();
+    const postsData: ApiDiscourseTopicWithPostStream =
+      await postsResponse.json();
     const postsRequestStreamForUser: PostStreamForTopic = {
       id: postsData.id,
       postStream: {
         posts: postsData.post_stream.posts
           .filter(isRegularReplyPost)
-          .map((post: Post) => ({
+          .map((post: ApiDiscoursePost) => ({
             id: post.id,
             username: post.username,
             avatarUrl: generateAvatarUrl(post.avatar_template, baseUrl),
@@ -174,7 +133,7 @@ export async function fetchCommentsForUser(
     );
   }
 
-  const data: Topic = await response.json();
+  const data: ApiDiscourseTopicWithPostStream = await response.json();
   // todo: since you've got the stream and the topic id, maybe update
   const stream = data.post_stream.stream;
   const lastPostId = stream[stream.length - 1];
@@ -185,7 +144,7 @@ export async function fetchCommentsForUser(
       stream: stream,
       posts: data.post_stream.posts
         .filter(isRegularReplyPost)
-        .map((post: Post) => ({
+        .map((post: ApiDiscoursePost) => ({
           id: post.id,
           username: post.username,
           avatarUrl: generateAvatarUrl(post.avatar_template, baseUrl),
@@ -199,7 +158,7 @@ export async function fetchCommentsForUser(
     details: {
       canCreatePost: data.details.can_create_post,
       participants: data.details.participants.map(
-        (participant: Participant) => ({
+        (participant: ApiDiscourseParticipant) => ({
           id: participant.id,
           username: participant.username,
           postCount: participant.post_count,

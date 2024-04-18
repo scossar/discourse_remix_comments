@@ -1,6 +1,6 @@
 import { db } from "~/services/db.server";
-import { Category } from "~/types/discourse";
-import CategoryCreationError from "./errors/categoryCreationError";
+import { ApiDiscourseCategory } from "~/types/apiDiscourse";
+import CategoryCreationError from "./errors/categoryCreationError.server";
 import type { Prisma } from "@prisma/client";
 
 export default async function createCategory(id: number) {
@@ -36,8 +36,8 @@ export default async function createCategory(id: number) {
     );
   }
 
-  const discourseCategory: Category = categories.find(
-    (category: Category) => category.id === id
+  const discourseCategory: ApiDiscourseCategory = categories.find(
+    (category: ApiDiscourseCategory) => category.id === id
   );
   if (!discourseCategory) {
     throw new CategoryCreationError(

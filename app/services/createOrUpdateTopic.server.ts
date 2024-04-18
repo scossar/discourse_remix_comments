@@ -1,9 +1,11 @@
 import { db } from "./db.server";
-import type { Topic } from "~/types/discourse";
-import TopicCreationError from "./errors/topicCreationError";
+import type { ApiDiscourseBasicTopic } from "~/types/apiDiscourse";
+import TopicCreationError from "./errors/topicCreationError.server";
 import { DiscourseTopic, Prisma } from "@prisma/client";
 
-export default async function createOrUpdateTopic(topicJson: Topic) {
+export default async function createOrUpdateTopic(
+  topicJson: ApiDiscourseBasicTopic
+) {
   const topicFields: Prisma.DiscourseTopicCreateInput = {
     externalId: topicJson.id,
     title: topicJson.title,

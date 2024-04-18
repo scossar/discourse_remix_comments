@@ -1,23 +1,25 @@
 import { json, type ActionFunctionArgs } from "@remix-run/node";
 
 import { db } from "~/services/db.server";
-import type { WebHookTopic } from "~/types/discourse";
+import type { ApiDiscourseWebHookTopic } from "~/types/apiDiscourse";
 import {
   discourseWehbookHeaders,
   verifyWebhookRequest,
-} from "~/services/discourseWebhooks";
-import createCategory from "~/services/createCategory";
-import createOrUpdateTopic from "~/services/createOrUpdateTopic";
-import createOrUpdateOp from "~/services/createOrUpdateOp";
-import findOrCreateTags from "~/services/findOrCreateTags";
-import createTagTopics from "~/services/createTagTopics";
-import CategoryCreationError from "~/services/errors/categoryCreationError";
-import PostCreationError from "~/services/errors/postCreationError";
-import TagCreationError from "~/services/errors/tagCreationError";
-import TopicCreationError from "~/services/errors/topicCreationError";
+} from "~/services/discourseWebhooks.server";
+import createCategory from "~/services/createCategory.server";
+import createOrUpdateTopic from "~/services/createOrUpdateTopic.server";
+import createOrUpdateOp from "~/services/createOrUpdateOp.server";
+import findOrCreateTags from "~/services/findOrCreateTags.server";
+import createTagTopics from "~/services/createTagTopics.server";
+import CategoryCreationError from "~/services/errors/categoryCreationError.server";
+import PostCreationError from "~/services/errors/postCreationError.server";
+import TagCreationError from "~/services/errors/tagCreationError.server";
+import TopicCreationError from "~/services/errors/topicCreationError.server";
 
 // todo: improve or remove
-function isValidTopicWebHookData(data: WebHookTopic): data is WebHookTopic {
+function isValidTopicWebHookData(
+  data: ApiDiscourseWebHookTopic
+): data is ApiDiscourseWebHookTopic {
   return typeof data?.topic?.id === "number";
 }
 
@@ -45,7 +47,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     );
   }
 
-  const webhookJson: WebHookTopic = await request.json();
+  const webhookJson: ApiDiscourseWebHookTopic = await request.json();
 
   if (!isValidTopicWebHookData(webhookJson)) {
     return json(
