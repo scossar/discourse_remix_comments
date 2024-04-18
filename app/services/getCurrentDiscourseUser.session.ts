@@ -1,9 +1,9 @@
 import type { Session } from "@remix-run/node";
-import type { DiscourseConnectUser } from "~/types/discourse";
+import type { ApiDiscourseConnectUser } from "~/types/apiDiscourse";
 
 export default function getCurrentDiscourseUser(
   currentUserSession: Session
-): DiscourseConnectUser {
+): ApiDiscourseConnectUser {
   const externalId =
     currentUserSession.get("external_id") &&
     typeof currentUserSession.get("external_id") === "number"

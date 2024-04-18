@@ -9,9 +9,9 @@ import {
 
 import { db } from "~/services/db.server";
 import { discourseSessionStorage } from "~/services/session.server";
-import type { DiscourseConnectUser } from "~/types/discourse";
+import type { ApiDiscourseConnectUser } from "~/types/apiDiscourse";
+import type { ParsedDiscourseTopic } from "~/types/parsedDiscourse";
 import { fetchCommentsForUser } from "~/services/fetchCommentsForUser.server";
-import type { PostStreamForTopic } from "~/services/fetchCommentsForUser.server";
 import Avatar from "~/components/Avatar";
 
 export const meta: MetaFunction = () => {
@@ -25,7 +25,7 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
   const userSession = await discourseSessionStorage.getSession(
     request.headers.get("Cookie")
   );
-  const user: DiscourseConnectUser = {
+  const user: ApiDiscourseConnectUser = {
     externalId: userSession.get("external_id"),
     avatarUrl: userSession.get("avatar_url"),
     admin: userSession.get("admin"),
@@ -103,11 +103,9 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
     }
   );
 }
+
 interface CommentFetcher {
-  data: {
-    comments?: PostStreamForTopic | undefined;
-  };
-  comments?: PostStreamForTopic | undefined;
+  comments?: ParsedDiscourseTopic | undefined;
 }
 
 export default function TopicForSlugAndId() {

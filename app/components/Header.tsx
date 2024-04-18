@@ -1,7 +1,7 @@
 import { Link } from "@remix-run/react";
-import type { DiscourseConnectUser } from "~/types/discourse";
+import type { ApiDiscourseConnectUser } from "~/types/apiDiscourse";
 export interface HeaderProps {
-  user: DiscourseConnectUser;
+  user: ApiDiscourseConnectUser;
 }
 
 export default function Header({ user }: HeaderProps) {

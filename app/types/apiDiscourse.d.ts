@@ -1,4 +1,4 @@
-export interface DiscourseWebhookHeaders {
+export interface ApiDiscourseWebhookHeaders {
   Accept?: string | null;
   Connection?: string | null;
   "Content-Length"?: string | null;
@@ -12,36 +12,36 @@ export interface DiscourseWebhookHeaders {
   "X-Discourse-Event-Signature"?: string | null;
 }
 
-export enum PostType {
+export enum ApiDiscoursePostType {
   Regular = 1,
   ModeratorAction = 2,
   SmallAction = 3,
   Whisper = 4,
 }
 
-export interface BasicUser {
+export interface ApiDiscourseBasicUser {
   id: number;
   username: string;
   avatar_template: string;
 }
 
-export interface DiscourseConnectUser {
+export interface ApiDiscourseConnectUser {
   externalId?: number | null;
   avatarUrl?: string | null;
   admin?: boolean | null;
   username?: string | null;
 }
 
-export interface Participant extends BasicUser {
+export interface ApiDiscourseParticipant extends ApiDiscourseBasicUser {
   post_count: number;
 }
 
-export interface Details {
+export interface ApiDiscourseDetails {
   can_create_post: boolean;
-  participants: Participant[];
+  participants: ApiDiscourseParticipant[];
 }
 
-export interface Category {
+export interface ApiDiscourseCategory {
   id: number;
   parent_category_id?: number;
   name: string;
@@ -54,21 +54,21 @@ export interface Category {
   uploaded_logo_dark?: string;
 }
 
-export interface Tag {
+export interface ApiDiscourseTag {
   id: string;
   text: string;
   description?: string;
   count?: number; // probably don't use this field, all other fields are available in webhook topic payload
 }
 
-export interface Post {
+export interface ApiDiscoursePost {
   id: number;
   username: string;
   avatar_template: string;
   created_at: string;
   cooked: string;
   post_number: number;
-  post_type: PostType;
+  post_type: ApiDiscoursePostType;
   updated_at: string;
   reply_count: number;
   reply_to_post_number?: number;
@@ -81,7 +81,7 @@ export interface Post {
   category_slug?: string;
 }
 
-export interface BasicTopic {
+export interface ApiDiscourseBasicTopic {
   tags: string[];
   tags_descriptions: Record<string, string>;
   id: number;
@@ -98,29 +98,30 @@ export interface BasicTopic {
   category_id: number;
   word_count: number;
   user_id: number;
-  created_by: BasicUser;
-  last_poster: BasicUser;
+  created_by: ApiDiscourseBasicUser;
+  last_poster: ApiDiscourseBasicUser;
 }
 
-export interface PostStream {
+export interface ApiDiscoursePostStream {
   post_stream: {
-    posts: Post[];
+    posts: ApiDiscoursePost[];
     stream: number[];
   };
 }
 
-export interface TopicWithPostStream extends BasicTopic {
+export interface ApiDiscourseTopicWithPostStream
+  extends ApiDiscourseBasicTopic {
   post_stream: {
-    posts: Post[];
+    posts: ApiDiscoursePost[];
     stream: number[];
   };
-  details: Details;
+  details: ApiDiscourseDetails;
 }
 
-export interface WebHookTopic {
-  topic: BasicTopic;
+export interface ApiDiscourseWebHookTopic {
+  topic: ApiDiscourseBasicTopic;
 }
 
-export interface WebHookPost {
-  post: Post;
+export interface ApiDiscourseWebHookPost {
+  post: ApiDiscoursePost;
 }

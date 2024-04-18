@@ -7,41 +7,7 @@ import type {
   ApiDiscourseTopicWithPostStream,
 } from "~/types/apiDiscourse";
 
-// data for the client:
-interface TopicPostStreamPost {
-  id: number;
-  username: string;
-  avatarUrl: string;
-  createdAt: string;
-  cooked: string;
-  postNumber: number;
-  updatedAt: string;
-  userId: number;
-}
-
-interface TopicPostStreamParticipant {
-  id: number;
-  username: string;
-  postCount: number;
-  avatarUrl: string;
-}
-
-interface TopicPostStreamDetails {
-  canCreatePost: boolean;
-  participants: TopicPostStreamParticipant[];
-}
-
-export interface PostStreamForTopic {
-  id: number;
-  slug?: string;
-  postStream: {
-    posts: TopicPostStreamPost[];
-    stream?: number[];
-  };
-  details?: TopicPostStreamDetails;
-  lastPostId?: number;
-  page: number;
-}
+import type { ParsedDiscourseTopic } from "~/types/parsedDiscourse";
 
 function isRegularReplyPost(post: ApiDiscoursePost) {
   return post.post_type === 1 && post.post_number > 1;
@@ -100,7 +66,7 @@ export async function fetchCommentsForUser(
     // todo: validate data
     const postsData: ApiDiscourseTopicWithPostStream =
       await postsResponse.json();
-    const postsRequestStreamForUser: PostStreamForTopic = {
+    const postsRequestStreamForUser: ParsedDiscourseTopic = {
       id: postsData.id,
       postStream: {
         posts: postsData.post_stream.posts
@@ -137,7 +103,7 @@ export async function fetchCommentsForUser(
   // todo: since you've got the stream and the topic id, maybe update
   const stream = data.post_stream.stream;
   const lastPostId = stream[stream.length - 1];
-  const postStreamForUser: PostStreamForTopic = {
+  const postStreamForUser: ParsedDiscourseTopic = {
     id: data.id,
     slug: data.slug,
     postStream: {
