@@ -8,9 +8,12 @@ import type {
 } from "~/types/apiDiscourse";
 
 import type {
-  ParsedDiscourseTopic,
+  ParsedDiscourseParticipant,
+  ParsedDiscoursePost,
   ParsedPagedDiscourseTopic,
 } from "~/types/parsedDiscourse";
+import * as process from "node:process";
+import {RedisClientType, RedisDefaultModules} from "redis";
 
 const CHUNK_SIZE = 20;
 
@@ -27,6 +30,28 @@ function generateAvatarUrl(
   return `${discourseBaseUrl}${sized}`;
 }
 
+function transformPost(apiPost: ApiDiscoursePost, baseUrl: string): ParsedDiscoursePost {
+  return {
+    id: apiPost.id,
+    username: apiPost.username,
+    avatarUrl: generateAvatarUrl(apiPost.avatar_template, baseUrl),
+    createdAt: apiPost.created_at,
+    cooked: apiPost.cooked,
+    postNumber: apiPost.post_number,
+    updatedAt: apiPost.updated_at,
+    userId: apiPost.user_id,
+  }
+}
+
+function transformParticipant(apiParticipant: ApiDiscourseParticipant, baseUrl: string): ParsedDiscourseParticipant {
+  return {
+    id: apiParticipant.id,
+    username: apiParticipant.username,
+    postCount: apiParticipant.post_count,
+    avatarUrl: generateAvatarUrl(apiParticipant.avatar_template, baseUrl),
+  }
+}
+
 export async function fetchCommentsForUser(
   topicId: number,
   slug: string,
@@ -37,116 +62,86 @@ export async function fetchCommentsForUser(
   if (!process.env.DISCOURSE_BASE_URL || !process.env.DISCOURSE_API_KEY) {
     throw new FetchCommentsError("Env variables not configured", 403);
   }
-  const streamKey = `postStream:${topicId}`;
-  console.log(`streamKey: ${streamKey}`);
-  const apiKey = process.env.DISCOURSE_API_KEY;
+
   const baseUrl = process.env.DISCOURSE_BASE_URL;
   const headers = new Headers();
+  headers.append("Content-Type", "application/json");
   if (currentUsername) {
-    headers.append("Api-Key", apiKey);
+    headers.append("Api-Key", process.env.DISCOURSE_API_KEY);
     headers.append("Api-Username", currentUsername);
   }
-  if (lastSeenPost) {
-    let nextPostIds;
-    try {
-      console.log("there was a last seen poast");
-      const chunkSize = CHUNK_SIZE;
-      const client = await getRedisClient();
-      const nextPage = currentPage + 1;
-      const start = nextPage * chunkSize;
-      const end = start + chunkSize - 1;
-      nextPostIds = await client.lRange(streamKey, start, end);
-    } catch (error) {
-      throw new FetchCommentsError("Redis error", 500);
-    }
-    const lastId = Number(nextPostIds[nextPostIds.length - 1]);
-    const queryString = "?post_ids[]=" + nextPostIds.join("&post_ids[]=");
-    const postsUrl = `${baseUrl}/t/${topicId}/posts.json${queryString}`;
-    const postsResponse = await fetch(postsUrl, {headers});
-    if (!postsResponse.ok) {
-      throw new FetchCommentsError(
-        "A bad response was returned from Discourse",
-        postsResponse.status,
-      );
-    }
 
-    // todo: validate data
-    const postsData: ApiDiscourseTopicWithPostStream =
-      await postsResponse.json();
-    const postsStreamForUser: ParsedPagedDiscourseTopic = {
-      [currentPage]: {
-        id: postsData.id,
-        postStream: {
-          posts: postsData.post_stream.posts
-            .filter(isRegularReplyPost)
-            .map((post: ApiDiscoursePost) => ({
-              id: post.id,
-              username: post.username,
-              avatarUrl: generateAvatarUrl(post.avatar_template, baseUrl),
-              createdAt: post.created_at,
-              cooked: post.cooked,
-              postNumber: post.post_number,
-              updatedAt: post.updated_at,
-              userId: post.user_id,
-            })),
-        },
-        lastPostId: lastId,
-        page: Number(currentPage) + 1,
-      },
-    };
-
-    return postsStreamForUser;
+  let client;
+  try {
+    client = await getRedisClient();
+  } catch (error) {
+    throw new FetchCommentsError("Redis error", 500);
   }
-  console.log("there wasn't a last seen post");
 
+  if (currentPage === 0) {
+    return await fetchInitialComments(topicId, slug, currentUsername, baseUrl, headers);
+  } else {
+    return await fetchSubsequentComments(topicId, currentPage, lastSeenPost, baseUrl, headers, client)
+  }
+}
+
+async function fetchInitialComments(topicId: number, slug: string, currentUsername: string | null, baseUrl: string, headers: Headers): Promise<ParsedPagedDiscourseTopic> {
   const topicUrl = `${baseUrl}/t/${slug}/${topicId}.json`;
-
   const response = await fetch(topicUrl, {headers});
   if (!response.ok) {
-    throw new FetchCommentsError(
-      "A bad response returned from Discourse",
-      response.status,
-    );
+    throw new FetchCommentsError("Failed to fetch initial comments", response.status);
   }
 
-  const data: ApiDiscourseTopicWithPostStream = await response.json();
-  // todo: since you've got the stream and the topic id, maybe update
-  const stream = data.post_stream.stream;
+  const postsData: ApiDiscourseTopicWithPostStream = await response.json();
+  const stream = postsData.post_stream.stream;
   const lastPostId = stream[stream.length - 1];
-  const postStreamForUser: ParsedPagedDiscourseTopic = {
-    [currentPage]: {
-      id: data.id,
-      slug: data.slug,
+
+  return {
+    [0]: {
+      id: postsData.id,
+      slug: postsData.slug,
       postStream: {
         stream: stream,
-        posts: data.post_stream.posts
-          .filter(isRegularReplyPost)
-          .map((post: ApiDiscoursePost) => ({
-            id: post.id,
-            username: post.username,
-            avatarUrl: generateAvatarUrl(post.avatar_template, baseUrl),
-            createdAt: post.created_at,
-            cooked: post.cooked,
-            postNumber: post.post_number,
-            updatedAt: post.updated_at,
-            userId: post.user_id,
-          })),
+        posts: postsData.post_stream.posts.filter(isRegularReplyPost).map(post => transformPost(post, baseUrl)),
       },
       details: {
-        canCreatePost: data.details.can_create_post,
-        participants: data.details.participants.map(
-          (participant: ApiDiscourseParticipant) => ({
-            id: participant.id,
-            username: participant.username,
-            postCount: participant.post_count,
-            avatarUrl: generateAvatarUrl(participant.avatar_template, baseUrl),
-          }),
-        ),
+        canCreatePost: postsData.details.can_create_post,
+        participants: postsData.details.participants.map(participant => transformParticipant(participant, baseUrl)),
       },
       lastPostId: lastPostId,
-      page: currentPage,
+      page: 0,
     },
-  };
+  } as ParsedPagedDiscourseTopic; // Type assertion here
+}
 
-  return postStreamForUser;
+async function fetchSubsequentComments(topicId: number, currentPage: number, lastSeenPost: number | null, baseUrl: string, headers: Headers, client: RedisClientType<RedisDefaultModules>): Promise<ParsedPagedDiscourseTopic> {
+  const chunkSize = CHUNK_SIZE;
+  const nextPage = currentPage + 1;
+  const start: number = nextPage * chunkSize;
+  const end: number = start + chunkSize - 1;
+  let nextPostIds;
+  try {
+    nextPostIds = await client.lRange(`postStream:${topicId}`, start, end);
+  } catch (error) {
+    throw new FetchCommentsError("Redis error", 500);
+  }
+  const queryString = "?post_ids[]=" + nextPostIds.join("&post_ids[]=");
+  const postsUrl = `${baseUrl}/t/${topicId}/posts.json${queryString}`;
+  const response = await fetch(postsUrl, {headers});
+  if (!response.ok) {
+    throw new FetchCommentsError("Failed to fetch subsequent comments", response.status)
+  }
+  const postsData: ApiDiscourseTopicWithPostStream = await response.json();
+  const lastId = Number(nextPostIds[nextPostIds.length - 1]);
+  return {
+    [nextPage]: {
+      id: postsData.id,
+      postStream: {
+        posts: postsData.post_stream.posts.filter(isRegularReplyPost).map(post => transformPost(post, baseUrl)),
+      },
+      lastPostId: lastId,
+      page: Number(nextPage),
+    },
+  } as ParsedPagedDiscourseTopic;
+
 }
