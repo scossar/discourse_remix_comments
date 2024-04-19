@@ -59,11 +59,7 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
     );
   } catch {
     errorMessage = "Comments could not be loaded";
-  }
-
-  // tmp workaround
-  if (!postStreamForUser) {
-    return redirect("/");
+    throw new Error("Something has gone wrong!");
   }
 
   return json(
@@ -82,7 +78,7 @@ interface FetcherData {
 export default function DiscourseComments() {
   const { postStreamForUser, topicId } = useLoaderData<typeof loader>();
   const fetcher = useFetcher<FetcherData>();
-  const pageRef = useRef(Object.keys(postStreamForUser)[0]);
+  const pageRef = useRef(Number(Object.keys(postStreamForUser)[0]));
   const [pages, setPages] = useState(postStreamForUser);
   const { ref, inView } = useInView({ threshold: 0 });
 
@@ -93,8 +89,10 @@ export default function DiscourseComments() {
     }
   }, [fetcher?.data?.postStreamForUser]);
 
+  // there needs to be a way to track when you're on the last page!
   useEffect(() => {
     if (inView && fetcher.state === "idle") {
+      console.log(`typeof pageRef: ${typeof pageRef.current}`);
       pageRef.current += 1;
       fetcher.load(`/t/-/${topicId}/comments?page=${pageRef.current}`);
     }

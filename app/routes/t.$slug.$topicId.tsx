@@ -4,7 +4,6 @@ import {
   Link,
   isRouteErrorResponse,
   Outlet,
-  useFetcher,
   useLoaderData,
   useMatches,
   useOutletContext,
@@ -14,8 +13,6 @@ import {
 import { db } from "~/services/db.server";
 import { discourseSessionStorage } from "~/services/session.server";
 import type { ApiDiscourseConnectUser } from "~/types/apiDiscourse";
-import type { ParsedDiscourseTopic } from "~/types/parsedDiscourse";
-import { fetchCommentsForUser } from "~/services/fetchCommentsForUser.server";
 import Avatar from "~/components/Avatar";
 
 export const meta: MetaFunction = () => {
