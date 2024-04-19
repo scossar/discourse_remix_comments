@@ -92,6 +92,8 @@ export default async function createOrUpdateOp(topicId: number) {
   const client = await getRedisClient();
   const stringifiedStream = stream.map(String);
   try {
+    // delete the key before setting it, otherwise chaos will ensue
+    await client.del(streamKey);
     await client.rPush(streamKey, stringifiedStream);
   } catch (error) {
     throw new PostCreationError(

@@ -1,22 +1,18 @@
 import type {LoaderFunctionArgs, MetaFunction} from "@remix-run/node";
 import {json, redirect} from "@remix-run/node";
 import {
-  isRouteErrorResponse,
-  useFetcher,
+  isRouteErrorResponse, useFetcher,
   useLoaderData,
   useRouteError,
 } from "@remix-run/react";
 import {useEffect, useState} from "react";
 
-import {db} from "~/services/db.server";
 import {discourseSessionStorage} from "~/services/session.server";
-import type {ApiDiscourseConnectUser} from "~/types/apiDiscourse";
-import type {
-  ParsedDiscourseTopic,
-  ParsedPagedDiscourseTopic,
-} from "~/types/parsedDiscourse";
+
 import {fetchCommentsForUser} from "~/services/fetchCommentsForUser.server";
 import Avatar from "~/components/Avatar";
+import {ApiDiscourseConnectUser} from "~/types/apiDiscourse";
+import {ParsedPagedDiscourseTopic} from "~/types/parsedDiscourse";
 
 export const meta: MetaFunction = () => {
   return [
@@ -45,8 +41,8 @@ export async function loader({request, params}: LoaderFunctionArgs) {
   }
 
   const {searchParams} = new URL(request.url);
+  // note that you're updating this manually for testing
   const page = Number(searchParams.get("page")) || 0;
-  const lastPostId = Number(searchParams.get("lastPostId")) ?? null;
   const currentUsername = user?.username ?? null;
 
   let postStreamForUser;
@@ -54,10 +50,8 @@ export async function loader({request, params}: LoaderFunctionArgs) {
   try {
     postStreamForUser = await fetchCommentsForUser(
       topicId,
-      slug,
       currentUsername,
       page,
-      lastPostId,
     );
   } catch {
     errorMessage = "Comments could not be loaded";
@@ -78,16 +72,17 @@ export async function loader({request, params}: LoaderFunctionArgs) {
   );
 }
 
-//interface CommentFetcher {
-//  pagedComments?: ParsedPagedDiscourseTopic | undefined;
-//}
 
 export default function DiscourseComments() {
   const {postStreamForUser} = useLoaderData<typeof loader>();
-  // const commentFetcher = useFetcher<CommentFetcher>();
+  const fetcher = useFetcher<ParsedPagedDiscourseTopic>();
   const [pages, setPages] = useState(postStreamForUser);
 
-  console.log(JSON.stringify(pages, null, 2))
+  useEffect(() => {
+    if (fetcher?.data) {
+      console.log(JSON.stringify(fetcher.data, null, 2))
+    }
+  }, [fetcher.data])
 
   return (
     <div className="divide-y divide-cyan-800">

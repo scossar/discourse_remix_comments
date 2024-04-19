@@ -150,8 +150,6 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     }
   }
 
-  //let post;
-
   let post = await db.discoursePost.findUnique({
     where: { topicId: topic.externalId },
   });

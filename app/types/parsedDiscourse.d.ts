@@ -29,8 +29,6 @@ export interface ParsedDiscourseTopic {
     stream?: number[];
   };
   details?: ParsedDiscourseDetails;
-  lastPostId?: number;
-  page: number;
 }
 
 export type ParsedPagedDiscourseTopic = {
