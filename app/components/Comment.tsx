@@ -1,5 +1,7 @@
 import { forwardRef, memo } from "react";
 
+import ReplyButton from "./ReplyButton";
+
 import type { ParsedDiscoursePost } from "~/types/parsedDiscourse";
 import Avatar from "~/components/Avatar";
 
@@ -27,9 +29,7 @@ const Comment = memo(
             <div dangerouslySetInnerHTML={{ __html: post.cooked }} />
           </div>
           <div className="flex justify-end w-full items-center">
-            <button className="mr-2 px-2 py-1 bg-slate-50 hover:bg-slate-200 text-cyan-950 rounded-sm">
-              Reply
-            </button>
+            <ReplyButton />
           </div>
         </div>
       </div>
