@@ -1,15 +1,19 @@
 import FetchCommentsError from "./errors/fetchCommentsError.server";
-import {getRedisClient} from "./redisClient.server";
+import { getRedisClient } from "./redisClient.server";
 
 import type {
-  ApiDiscourseParticipant, ApiDiscoursePost, ApiDiscourseTopicWithPostStream,
+  ApiDiscourseParticipant,
+  ApiDiscoursePost,
+  ApiDiscourseTopicWithPostStream,
 } from "~/types/apiDiscourse";
 
 import type {
-  ParsedDiscourseParticipant, ParsedDiscoursePost, ParsedPagedDiscourseTopic,
+  ParsedDiscourseParticipant,
+  ParsedDiscoursePost,
+  ParsedPagedDiscourseTopic,
 } from "~/types/parsedDiscourse";
 import * as process from "node:process";
-import {RedisClientType, RedisDefaultModules} from "redis";
+import { RedisClientType, RedisDefaultModules } from "redis";
 
 const CHUNK_SIZE = 20;
 
@@ -17,12 +21,19 @@ function isRegularReplyPost(post: ApiDiscoursePost) {
   return post.post_type === 1 && post.post_number > 1;
 }
 
-function generateAvatarUrl(avatarTemplate: string, discourseBaseUrl: string, size = "48") {
+function generateAvatarUrl(
+  avatarTemplate: string,
+  discourseBaseUrl: string,
+  size = "48"
+) {
   const sized = avatarTemplate.replace("{size}", size);
   return `${discourseBaseUrl}${sized}`;
 }
 
-function transformPost(apiPost: ApiDiscoursePost, baseUrl: string): ParsedDiscoursePost {
+function transformPost(
+  apiPost: ApiDiscoursePost,
+  baseUrl: string
+): ParsedDiscoursePost {
   return {
     id: apiPost.id,
     username: apiPost.username,
@@ -32,16 +43,19 @@ function transformPost(apiPost: ApiDiscoursePost, baseUrl: string): ParsedDiscou
     postNumber: apiPost.post_number,
     updatedAt: apiPost.updated_at,
     userId: apiPost.user_id,
-  }
+  };
 }
 
-function transformParticipant(apiParticipant: ApiDiscourseParticipant, baseUrl: string): ParsedDiscourseParticipant {
+function transformParticipant(
+  apiParticipant: ApiDiscourseParticipant,
+  baseUrl: string
+): ParsedDiscourseParticipant {
   return {
     id: apiParticipant.id,
     username: apiParticipant.username,
     postCount: apiParticipant.post_count,
     avatarUrl: generateAvatarUrl(apiParticipant.avatar_template, baseUrl),
-  }
+  };
 }
 
 interface FetchContext {
@@ -74,7 +88,7 @@ export async function fetchCommentsForUser(
     throw new FetchCommentsError("Redis error", 500);
   }
 
-  const context: FetchContext = {baseUrl, headers, client };
+  const context: FetchContext = { baseUrl, headers, client };
 
   if (page === 0) {
     return await fetchInitialComments(topicId, context);
@@ -87,9 +101,14 @@ async function fetchInitialComments(
   topicId: number,
   context: FetchContext
 ): Promise<ParsedPagedDiscourseTopic> {
-  const response = await fetch(`${context.baseUrl}/t/-/${topicId}.json`, {headers: context.headers})
+  const response = await fetch(`${context.baseUrl}/t/-/${topicId}.json`, {
+    headers: context.headers,
+  });
   if (!response.ok) {
-    throw new FetchCommentsError("Failed to fetch initial comments", response.status);
+    throw new FetchCommentsError(
+      "Failed to fetch initial comments",
+      response.status
+    );
   }
 
   const postsData: ApiDiscourseTopicWithPostStream = await response.json();
@@ -107,12 +126,19 @@ async function fetchInitialComments(
 
   return {
     [0]: {
-      id: postsData.id, slug: postsData.slug, postStream: {
+      id: postsData.id,
+      slug: postsData.slug,
+      postStream: {
         stream: stream,
-        posts: postsData.post_stream.posts.filter(isRegularReplyPost).map(post => transformPost(post, context.baseUrl)),
-      }, details: {
+        posts: postsData.post_stream.posts
+          .filter(isRegularReplyPost)
+          .map((post) => transformPost(post, context.baseUrl)),
+      },
+      details: {
         canCreatePost: postsData.details.can_create_post,
-        participants: postsData.details.participants.map(participant => transformParticipant(participant, context.baseUrl)),
+        participants: postsData.details.participants.map((participant) =>
+          transformParticipant(participant, context.baseUrl)
+        ),
       },
     },
   } as ParsedPagedDiscourseTopic;
@@ -129,27 +155,41 @@ async function fetchSubsequentComments(
 
   let nextPostIds;
   try {
-    nextPostIds = await context.client.lRange(`postStream:${topicId}`, start, end);
+    nextPostIds = await context.client.lRange(
+      `postStream:${topicId}`,
+      start,
+      end
+    );
   } catch (error) {
     throw new FetchCommentsError("Redis error", 500);
   }
   if (!nextPostIds || nextPostIds.length === 0) {
     // temporary workaround:
-    console.warn(`No post IDs returned from Redis for topic ID ${topicId} on page ${page}. Falling back to initial comments.`);
+    console.warn(
+      `No post IDs returned from Redis for topic ID ${topicId} on page ${page}. Falling back to initial comments.`
+    );
     return await fetchInitialComments(topicId, context);
   }
 
   const queryString = "?post_ids[]=" + nextPostIds.join("&post_ids[]=");
-  const response = await fetch(`${context.baseUrl}/t/${topicId}/posts.json${queryString}`)
+  const response = await fetch(
+    `${context.baseUrl}/t/${topicId}/posts.json${queryString}`
+  );
   if (!response.ok) {
-    throw new FetchCommentsError("Failed to fetch subsequent comments", response.status);
+    throw new FetchCommentsError(
+      "Failed to fetch subsequent comments",
+      response.status
+    );
   }
   const postsData: ApiDiscourseTopicWithPostStream = await response.json();
 
   return {
     [page]: {
-      id: postsData.id, postStream: {
-        posts: postsData.post_stream.posts.filter(isRegularReplyPost).map(post => transformPost(post, context.baseUrl)),
+      id: postsData.id,
+      postStream: {
+        posts: postsData.post_stream.posts
+          .filter(isRegularReplyPost)
+          .map((post) => transformPost(post, context.baseUrl)),
       },
     },
   } as ParsedPagedDiscourseTopic;

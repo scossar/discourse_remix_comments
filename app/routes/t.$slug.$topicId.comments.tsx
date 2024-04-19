@@ -1,29 +1,34 @@
-import type {LoaderFunctionArgs, MetaFunction} from "@remix-run/node";
-import {json, redirect} from "@remix-run/node";
+import type { LoaderFunctionArgs, MetaFunction } from "@remix-run/node";
+import { json, redirect } from "@remix-run/node";
 import {
-  isRouteErrorResponse, useFetcher,
+  isRouteErrorResponse,
+  useFetcher,
   useLoaderData,
   useRouteError,
 } from "@remix-run/react";
-import {useEffect, useState} from "react";
+import { useEffect, useRef, useState } from "react";
+import { useInView } from "react-intersection-observer";
 
-import {discourseSessionStorage} from "~/services/session.server";
+import { discourseSessionStorage } from "~/services/session.server";
 
-import {fetchCommentsForUser} from "~/services/fetchCommentsForUser.server";
-import Avatar from "~/components/Avatar";
-import {ApiDiscourseConnectUser} from "~/types/apiDiscourse";
-import {ParsedPagedDiscourseTopic} from "~/types/parsedDiscourse";
+import { fetchCommentsForUser } from "~/services/fetchCommentsForUser.server";
+import Comment from "~/components/Comment";
+import { ApiDiscourseConnectUser } from "~/types/apiDiscourse";
+import {
+  ParsedDiscourseTopic,
+  ParsedPagedDiscourseTopic,
+} from "~/types/parsedDiscourse";
 
 export const meta: MetaFunction = () => {
   return [
-    {title: "Comments"},
-    {name: "description", content: "comments for..."},
+    { title: "Comments" },
+    { name: "description", content: "comments for..." },
   ];
 };
 
-export async function loader({request, params}: LoaderFunctionArgs) {
+export async function loader({ request, params }: LoaderFunctionArgs) {
   const userSession = await discourseSessionStorage.getSession(
-    request.headers.get("Cookie"),
+    request.headers.get("Cookie")
   );
   const user: ApiDiscourseConnectUser = {
     externalId: userSession.get("external_id"),
@@ -40,8 +45,7 @@ export async function loader({request, params}: LoaderFunctionArgs) {
     });
   }
 
-  const {searchParams} = new URL(request.url);
-  // note that you're updating this manually for testing
+  const { searchParams } = new URL(request.url);
   const page = Number(searchParams.get("page")) || 0;
   const currentUsername = user?.username ?? null;
 
@@ -51,7 +55,7 @@ export async function loader({request, params}: LoaderFunctionArgs) {
     postStreamForUser = await fetchCommentsForUser(
       topicId,
       currentUsername,
-      page,
+      page
     );
   } catch {
     errorMessage = "Comments could not be loaded";
@@ -59,62 +63,58 @@ export async function loader({request, params}: LoaderFunctionArgs) {
 
   // tmp workaround
   if (!postStreamForUser) {
-    return redirect("/")
+    return redirect("/");
   }
 
   return json(
-    {postStreamForUser, errorMessage, user},
+    { postStreamForUser, topicId, errorMessage, user },
     {
       headers: {
         "Set-Cookie": await discourseSessionStorage.commitSession(userSession),
       },
-    },
+    }
   );
 }
-
+interface FetcherData {
+  postStreamForUser: ParsedPagedDiscourseTopic;
+}
 
 export default function DiscourseComments() {
-  const {postStreamForUser} = useLoaderData<typeof loader>();
-  const fetcher = useFetcher<ParsedPagedDiscourseTopic>();
+  const { postStreamForUser, topicId } = useLoaderData<typeof loader>();
+  const fetcher = useFetcher<FetcherData>();
+  const pageRef = useRef(Object.keys(postStreamForUser)[0]);
   const [pages, setPages] = useState(postStreamForUser);
+  const { ref, inView } = useInView({ threshold: 0 });
 
   useEffect(() => {
-    if (fetcher?.data) {
-      console.log(JSON.stringify(fetcher.data, null, 2))
+    if (fetcher?.data && fetcher.data.postStreamForUser) {
+      const allPages = { ...pages, ...fetcher.data.postStreamForUser };
+      setPages(allPages);
     }
-  }, [fetcher.data])
+  }, [fetcher?.data?.postStreamForUser]);
+
+  useEffect(() => {
+    if (inView && fetcher.state === "idle") {
+      pageRef.current += 1;
+      fetcher.load(`/t/-/${topicId}/comments?page=${pageRef.current}`);
+    }
+  }, [inView]);
+
+  const renderPageOfComments = (topicData: ParsedDiscourseTopic) => {
+    return topicData?.postStream?.posts.map((post, index) => {
+      const isLastComment = index === topicData.postStream.posts.length - 1;
+      return (
+        <Comment key={post.id} post={post} ref={isLastComment ? ref : null} />
+      );
+    });
+  };
 
   return (
-    <div className="divide-y divide-cyan-800">
-      <div className="divide-y divide-cyan-500">
+    <div>
+      <div>
         {Object.entries(pages).map(([currentPage, topicData]) => (
-          <div key={currentPage}>
-            {topicData?.postStream?.posts?.map((post) => (
-              <div key={post.id} className="my-6 discourse-comment flex">
-                <Avatar
-                  user={{
-                    username: post.username,
-                    avatarTemplate: post.avatarUrl,
-                  }}
-                  absoluteUrl={true}
-                  className="rounded-full w-8 h-8 object-contain mt-2"
-                />
-                <div className="ml-2 w-full">
-                  <div className="w-full my-3">
-                    <span className="bg-slate-50 text-slate-900 inline-block p-1">
-                      {post.postNumber}
-                    </span>
-                    <div dangerouslySetInnerHTML={{__html: post.cooked}}/>
-                  </div>
-                  <div className="flex justify-end w-full items-center">
-                    <button
-                      className="mr-2 px-2 py-1 bg-slate-50 hover:bg-slate-200 text-cyan-950 rounded-sm">
-                      Reply
-                    </button>
-                  </div>
-                </div>
-              </div>
-            ))}
+          <div key={currentPage} className="divide-y divide-cyan-800">
+            {renderPageOfComments(topicData)}
           </div>
         ))}
       </div>
