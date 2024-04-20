@@ -86,7 +86,7 @@ export function useMarkdownSyntax(
         const beforeText = text.substring(0, selectionStart);
         const selectedText = text.substring(selectionStart, selectionEnd);
         const afterText = text.substring(selectionEnd);
-
+        // todo: handle the case of a "prepend" style type being selected from the middle of a line
         let styledText = "";
         if (selectedText.length === 0) {
           styledText = `${config.syntax}${config.placeholder}${
