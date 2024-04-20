@@ -123,20 +123,6 @@ export default function DiscourseComments() {
     ));
   }, [pages]);
 
-  const renderPageOfComments = (topicData: ParsedDiscourseTopic) => {
-    return topicData?.postStream?.posts.map((post, index) => {
-      const isLastComment = index === topicData.postStream.posts.length - 1;
-      return (
-        <Comment
-          key={post.id}
-          post={post}
-          handleReplyClick={handleReplyClick}
-          ref={isLastComment ? ref : null}
-        />
-      );
-    });
-  };
-
   return (
     <div>
       <div className="">

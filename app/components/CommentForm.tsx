@@ -1,5 +1,7 @@
-import { Form, useFetcher } from "@remix-run/react";
-import { memo, useRef, useState } from "react";
+import { Form } from "@remix-run/react";
+import { useCallback, useEffect, memo, useRef, useState } from "react";
+import { marked } from "marked";
+import DOMPurify from "dompurify";
 
 import debounce from "~/services/debounce";
 
@@ -7,32 +9,32 @@ interface CommentFormProps {
   className?: string;
 }
 
-interface FormFetcher {
-  html?: string | null;
-}
-
 function CommentForm({ className }: CommentFormProps) {
-  const previewFetcher = useFetcher<FormFetcher>({ key: "html-preview" });
   const [textareaValue, setTextareaValue] = useState("");
   const [previewOpen, setPreviewOpen] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const [preview, setPreview] = useState("");
 
-  let htmlPreview = "";
-  if (previewFetcher && previewFetcher?.data) {
-    htmlPreview = previewFetcher.data?.html ?? "";
-  }
+  const debouncedPreview = useCallback(
+    debounce((rawComment: string) => {
+      if (!previewOpen) return;
 
-  const debouncedPreview = debounce((rawComment: string) => {
-    previewFetcher.submit(
-      { rawComment },
-      {
-        method: "post",
-        action: "/api/markdownParser",
-        navigate: false, // not sure about this
-        preventScrollReset: true,
+      async function renderPreview(raw: string) {
+        const cleaned = DOMPurify.sanitize(raw, { ALLOWED_TAGS: [] });
+        const html = await marked.parse(cleaned);
+        setPreview(html);
       }
-    );
-  }, 500);
+
+      renderPreview(rawComment);
+    }, 500),
+    [previewOpen]
+  );
+
+  useEffect(() => {
+    if (previewOpen && textareaValue) {
+      debouncedPreview(textareaValue); // Generate preview when the preview window is opened
+    }
+  }, [previewOpen, textareaValue, debouncedPreview]);
 
   function handleTextareaChange(event: React.FormEvent<HTMLTextAreaElement>) {
     const value = event.currentTarget.value;
@@ -42,15 +44,6 @@ function CommentForm({ className }: CommentFormProps) {
 
   function handlePreviewClick(event: React.FormEvent<HTMLButtonElement>) {
     event.preventDefault();
-    previewFetcher.submit(
-      { rawComment: textareaValue },
-      {
-        method: "post",
-        action: "/api/markdownParser",
-        navigate: false, // not sure about this
-        preventScrollReset: true,
-      }
-    );
     setPreviewOpen(!previewOpen);
   }
 
@@ -253,7 +246,7 @@ function CommentForm({ className }: CommentFormProps) {
                 previewOpen ? "block" : "hidden"
               }`}
             >
-              <div dangerouslySetInnerHTML={{ __html: htmlPreview }} />
+              <div dangerouslySetInnerHTML={{ __html: preview }} />
             </div>
           </div>
         </div>
