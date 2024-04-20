@@ -1,3 +1,4 @@
+import { s } from "node_modules/vite/dist/node/types.d-aGj9QkWt";
 import { useCallback, useState } from "react";
 
 export type MarkdownStyle =
@@ -83,9 +84,25 @@ export function useMarkdownSyntax(
         typeof selectionStart === "number" &&
         typeof selectionEnd === "number"
       ) {
-        const beforeText = text.substring(0, selectionStart);
-        const selectedText = text.substring(selectionStart, selectionEnd);
+        let beforeText = text.substring(0, selectionStart);
+        let selectedText = text.substring(selectionStart, selectionEnd);
         const afterText = text.substring(selectionEnd);
+        console.log(
+          `beforeText: ${JSON.stringify(
+            beforeText,
+            null,
+            2
+          )}, selectedText: ${JSON.stringify(
+            selectedText,
+            null,
+            2
+          )}, afterText: ${JSON.stringify(afterText, null, 2)}`
+        );
+
+        if (config.syntaxType === "prepend" && beforeText.slice(-1) !== "\n") {
+          beforeText = `${beforeText}\n`;
+        }
+
         // todo: handle the case of a "prepend" style type being selected from the middle of a line
         let styledText = "";
         if (selectedText.length === 0) {
