@@ -1,10 +1,6 @@
 import { Form } from "@remix-run/react";
-import { useCallback, useEffect, memo, useRef, useState } from "react";
-import { marked } from "marked";
-import DOMPurify from "dompurify";
+import { memo, useRef, useState } from "react";
 import { useDebouncedPreview } from "~/hooks/useDebouncedPreview";
-
-import debounce from "~/services/debounce";
 
 interface CommentFormProps {
   className?: string;
@@ -12,37 +8,14 @@ interface CommentFormProps {
 
 function CommentForm({ className }: CommentFormProps) {
   const [textareaValue, setTextareaValue] = useState("");
-  // const [preview, setPreview] = useState("");
   const [previewOpen, setPreviewOpen] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  const prevTest = useDebouncedPreview(textareaValue, previewOpen);
-
-  /* const debouncedPreview = useCallback(
-    debounce((rawComment: string) => {
-      if (!previewOpen) return;
-
-      async function renderPreview(raw: string) {
-        const cleaned = DOMPurify.sanitize(raw, { ALLOWED_TAGS: [] });
-        const html = await marked.parse(cleaned);
-        setPreview(html);
-      }
-
-      renderPreview(rawComment);
-    }, 500),
-    [previewOpen]
-  );
-
-  useEffect(() => {
-    if (previewOpen && textareaValue) {
-      debouncedPreview(textareaValue); // Generate preview when the preview window is opened
-    }
-  }, [previewOpen, textareaValue, debouncedPreview]); */
+  const preview = useDebouncedPreview(textareaValue, previewOpen);
 
   function handleTextareaChange(event: React.FormEvent<HTMLTextAreaElement>) {
     const value = event.currentTarget.value;
     setTextareaValue(value);
-    // debouncedPreview(value);
   }
 
   type MarkdownStyle =
@@ -174,7 +147,6 @@ function CommentForm({ className }: CommentFormProps) {
           textareaRef.current?.focus();
         }
       }, 0);
-      //debouncedPreview(updatedTextContent);
     }
   }
 
@@ -246,8 +218,8 @@ function CommentForm({ className }: CommentFormProps) {
             >
               <div>
                 {previewOpen ? (
-                  prevTest ? (
-                    <div dangerouslySetInnerHTML={{ __html: prevTest }} />
+                  preview ? (
+                    <div dangerouslySetInnerHTML={{ __html: preview }} />
                   ) : (
                     <div>loading preview...</div>
                   )
