@@ -6,9 +6,15 @@ import MarkdownButton from "./MarkdownButton";
 
 interface CommentFormProps {
   className?: string;
+  topicId?: number;
+  replyToPostNumber?: number;
 }
 
-function CommentForm({ className }: CommentFormProps) {
+function CommentForm({
+  className,
+  topicId,
+  replyToPostNumber,
+}: CommentFormProps) {
   const [previewOpen, setPreviewOpen] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const { text, setText, applyMarkdownSyntax } = useMarkdownSyntax(
@@ -70,12 +76,17 @@ function CommentForm({ className }: CommentFormProps) {
               </div>
               <textarea
                 className="p-2 text-slate-950 h-full"
-                name="rawComment"
+                name="raw"
                 onChange={handleTextareaChange}
                 ref={textareaRef}
                 value={text}
               ></textarea>
             </div>
+            <input
+              type="hidden"
+              name="replyToPostNumber"
+              value={replyToPostNumber}
+            />
             <div
               className={`w-1/2 comment-preview p-2 h-full bg-slate-50 text-slate-950 overflow-y-scroll border-l-4 border-slate-400 ${
                 previewOpen ? "block" : "hidden"

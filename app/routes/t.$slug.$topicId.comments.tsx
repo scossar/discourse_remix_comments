@@ -1,4 +1,8 @@
-import type { LoaderFunctionArgs, MetaFunction } from "@remix-run/node";
+import type {
+  ActionFunctionArgs,
+  LoaderFunctionArgs,
+  MetaFunction,
+} from "@remix-run/node";
 import { json } from "@remix-run/node";
 import {
   isRouteErrorResponse,
@@ -8,6 +12,9 @@ import {
 } from "@remix-run/react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useInView } from "react-intersection-observer";
+import { marked } from "marked";
+import { JSDOM } from "jsdom";
+import DOMPurify from "dompurify";
 
 import { discourseSessionStorage } from "~/services/session.server";
 
@@ -27,6 +34,79 @@ export const meta: MetaFunction = () => {
   ];
 };
 
+export async function action({ request, params }: ActionFunctionArgs) {
+  if (!process.env.DISCOURSE_BASE_URL || !process.env.DISCOURSE_API_KEY) {
+    throw new Error("Env variables not configured");
+  }
+
+  const userSession = await discourseSessionStorage.getSession(
+    request.headers.get("Cookie")
+  );
+  const user: ApiDiscourseConnectUser = {
+    externalId: userSession.get("external_id"),
+    avatarUrl: userSession.get("avatar_url"),
+    admin: userSession.get("admin"),
+    username: userSession.get("username"),
+  };
+
+  if (!user.externalId || !user.username) {
+    throw new Error("User doesn't exist");
+  }
+
+  const topicId = Number(params?.topicId);
+  if (!topicId) {
+    throw new Error("Topic ID param is not set");
+  }
+
+  const formData = await request.formData();
+  const raw = String(formData.get("raw"));
+  if (!raw || raw.length < 2) {
+    throw new Error(
+      "This needs to be handled better. For example, return errors to the form"
+    );
+  }
+
+  let html;
+  try {
+    const window = new JSDOM("").window;
+    const purify = DOMPurify(window);
+    const cleaned = purify.sanitize(raw, { ALLOWED_TAGS: [] });
+    html = await marked.parse(cleaned);
+  } catch (error) {
+    throw new Error("couldn't parse raw");
+  }
+
+  if (!html) {
+    throw new Error("no html");
+  }
+
+  const headers = new Headers();
+  headers.append("Content-Type", "application/json");
+  headers.append("Api-Key", process.env.DISCOURSE_API_KEY);
+  headers.append("Api-Username", user.username);
+
+  const postsUrl = `${process.env.DISCOURSE_BASE_URL}/posts.json`;
+  const data = {
+    raw: html,
+    topic_id: topicId,
+  };
+
+  const response = await fetch(postsUrl, {
+    method: "POST",
+    headers,
+    body: JSON.stringify(data),
+  });
+
+  if (!response.ok) {
+    throw new Error("Bad response returned from Discourse");
+  }
+
+  const updatedTopic = await response.json();
+  console.log(`updatedTopic: ${JSON.stringify(updatedTopic, null, 2)}`);
+
+  return null;
+}
+
 export async function loader({ request, params }: LoaderFunctionArgs) {
   const userSession = await discourseSessionStorage.getSession(
     request.headers.get("Cookie")
@@ -37,7 +117,6 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
     admin: userSession.get("admin"),
     username: userSession.get("username"),
   };
-  console.log("comment route loader function");
 
   const topicId = Number(params?.topicId);
   const slug = params?.slug;
