@@ -169,6 +169,11 @@ export default function DiscourseComments() {
     // use postId
   };
 
+  const handleCreatePostClick = () => {
+    console.log("in handle create post click");
+    setEditorOpen(false);
+  };
+
   useEffect(() => {
     if (fetcher?.data && fetcher.data.postStreamForUser) {
       const allPages = { ...pages, ...fetcher.data.postStreamForUser };
@@ -221,7 +226,7 @@ export default function DiscourseComments() {
             } max-w-screen-md mx-auto bg-slate-50`}
           >
             {" "}
-            <CommentForm />
+            <CommentForm handleCreatePostClick={handleCreatePostClick} />
           </div>
         </div>
       </div>

@@ -8,12 +8,14 @@ interface CommentFormProps {
   className?: string;
   topicId?: number;
   replyToPostNumber?: number;
+  handleCreatePostClick: () => void;
 }
 
 function CommentForm({
   className,
   topicId,
   replyToPostNumber,
+  handleCreatePostClick,
 }: CommentFormProps) {
   const [previewOpen, setPreviewOpen] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -108,6 +110,7 @@ function CommentForm({
           <button
             className="text-cyan-900 font-bold bg-slate-50 w-fit px-2 py-1 mt-3 rounded-sm"
             type="submit"
+            onClick={() => handleCreatePostClick()}
           >
             Reply
           </button>

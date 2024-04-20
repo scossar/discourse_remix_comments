@@ -1,3 +1,3 @@
-# DiscourseConnect authentication for Remix
+# Discourse Remix Comments
 
-Note: this is a work in progress. It should not be considered to be production ready code.
+**WIP: DON'T USE YET!**
