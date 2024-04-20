@@ -64,6 +64,27 @@ const markdownConfig: MarkdownConfigType = {
   },
 };
 
+function debug(
+  beforeText: string,
+  selectedText: string,
+  afterText: string,
+  log = true
+) {
+  if (log) {
+    console.log(
+      `beforeText: ${JSON.stringify(
+        beforeText,
+        null,
+        2
+      )}, selectedText: ${JSON.stringify(
+        selectedText,
+        null,
+        2
+      )}, afterText: ${JSON.stringify(afterText, null, 2)}`
+    );
+  }
+}
+
 export function useMarkdownSyntax(
   textareaValue = "",
   textareaRef: React.RefObject<HTMLTextAreaElement>
@@ -85,25 +106,15 @@ export function useMarkdownSyntax(
         typeof selectionEnd === "number"
       ) {
         let beforeText = text.substring(0, selectionStart);
-        let selectedText = text.substring(selectionStart, selectionEnd);
+        const selectedText = text.substring(selectionStart, selectionEnd);
         const afterText = text.substring(selectionEnd);
-        console.log(
-          `beforeText: ${JSON.stringify(
-            beforeText,
-            null,
-            2
-          )}, selectedText: ${JSON.stringify(
-            selectedText,
-            null,
-            2
-          )}, afterText: ${JSON.stringify(afterText, null, 2)}`
-        );
+
+        debug(beforeText, selectedText, afterText);
 
         if (config.syntaxType === "prepend" && beforeText.slice(-1) !== "\n") {
           beforeText = `${beforeText}\n`;
         }
 
-        // todo: handle the case of a "prepend" style type being selected from the middle of a line
         let styledText = "";
         if (selectedText.length === 0) {
           styledText = `${config.syntax}${config.placeholder}${
@@ -128,12 +139,12 @@ export function useMarkdownSyntax(
             const syntaxOffset =
               config.syntaxType === "wrap" ? config.syntax.length : 0;
             textareaRef.current?.setSelectionRange(
-              selectionStart + config.syntax.length,
-              selectionStart + styledText.length - syntaxOffset
+              beforeText.length + config.syntax.length,
+              beforeText.length + styledText.length - syntaxOffset
             );
             textareaRef.current?.focus();
           } else {
-            const newCursorPosition = selectionStart + styledText.length;
+            const newCursorPosition = beforeText.length + styledText.length;
             textareaRef.current?.setSelectionRange(
               newCursorPosition,
               newCursorPosition
