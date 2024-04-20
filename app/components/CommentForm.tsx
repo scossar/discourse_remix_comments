@@ -2,6 +2,7 @@ import { Form } from "@remix-run/react";
 import { useCallback, useEffect, memo, useRef, useState } from "react";
 import { marked } from "marked";
 import DOMPurify from "dompurify";
+import { useDebouncedPreview } from "~/hooks/useDebouncedPreview";
 
 import debounce from "~/services/debounce";
 
@@ -11,11 +12,13 @@ interface CommentFormProps {
 
 function CommentForm({ className }: CommentFormProps) {
   const [textareaValue, setTextareaValue] = useState("");
+  // const [preview, setPreview] = useState("");
   const [previewOpen, setPreviewOpen] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-  const [preview, setPreview] = useState("");
 
-  const debouncedPreview = useCallback(
+  const prevTest = useDebouncedPreview(textareaValue, previewOpen);
+
+  /* const debouncedPreview = useCallback(
     debounce((rawComment: string) => {
       if (!previewOpen) return;
 
@@ -34,17 +37,12 @@ function CommentForm({ className }: CommentFormProps) {
     if (previewOpen && textareaValue) {
       debouncedPreview(textareaValue); // Generate preview when the preview window is opened
     }
-  }, [previewOpen, textareaValue, debouncedPreview]);
+  }, [previewOpen, textareaValue, debouncedPreview]); */
 
   function handleTextareaChange(event: React.FormEvent<HTMLTextAreaElement>) {
     const value = event.currentTarget.value;
     setTextareaValue(value);
-    debouncedPreview(value);
-  }
-
-  function handlePreviewClick(event: React.FormEvent<HTMLButtonElement>) {
-    event.preventDefault();
-    setPreviewOpen(!previewOpen);
+    // debouncedPreview(value);
   }
 
   type MarkdownStyle =
@@ -176,7 +174,7 @@ function CommentForm({ className }: CommentFormProps) {
           textareaRef.current?.focus();
         }
       }, 0);
-      debouncedPreview(updatedTextContent);
+      //debouncedPreview(updatedTextContent);
     }
   }
 
@@ -246,7 +244,15 @@ function CommentForm({ className }: CommentFormProps) {
                 previewOpen ? "block" : "hidden"
               }`}
             >
-              <div dangerouslySetInnerHTML={{ __html: preview }} />
+              <div>
+                {previewOpen ? (
+                  prevTest ? (
+                    <div dangerouslySetInnerHTML={{ __html: prevTest }} />
+                  ) : (
+                    <div>loading preview...</div>
+                  )
+                ) : null}
+              </div>
             </div>
           </div>
         </div>
@@ -259,9 +265,12 @@ function CommentForm({ className }: CommentFormProps) {
           </button>
           <button
             className="text-cyan-900 font-bold bg-slate-50 w-fit px-2 py-1 mt-3 ml-2 rounded-sm"
-            onClick={handlePreviewClick}
+            onClick={(event) => {
+              event.preventDefault();
+              setPreviewOpen(!previewOpen);
+            }}
           >
-            Preview
+            {previewOpen ? "Hide Preview" : "Show Preview"}
           </button>
         </div>
       </Form>
