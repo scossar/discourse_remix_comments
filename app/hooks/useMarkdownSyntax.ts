@@ -1,9 +1,6 @@
-export function useMarkdownSyntax(
-  textAreaValue = "",
-  textAreaRef: React.RefObject<HTMLTextAreaElement>
-) {}
+import { useCallback, useState } from "react";
 
-type MarkdownStyle =
+export type MarkdownStyle =
   | "bold"
   | "italic"
   | "h1"
@@ -12,7 +9,7 @@ type MarkdownStyle =
   | "ol"
   | "blockquote";
 
-type MarkdownConfigType = {
+export type MarkdownConfigType = {
   [key: string]: {
     syntax: string;
     syntaxType: "prepend" | "wrap";
@@ -66,65 +63,71 @@ const markdownConfig: MarkdownConfigType = {
   },
 };
 
-function handleMarkdownSyntax(
-  event: React.MouseEvent<HTMLButtonElement>,
-  style: MarkdownStyle
+export function useMarkdownSyntax(
+  textareaValue = "",
+  textareaRef: React.RefObject<HTMLTextAreaElement>
 ) {
-  event.preventDefault();
-  const config = markdownConfig[style];
+  const [text, setText] = useState(textareaValue);
 
-  if (!config) {
-    console.warn(`Unhandled style: ${style}. No syntax applied`);
-    return;
-  }
-
-  const selectionStart = textareaRef.current?.selectionStart;
-  const selectionEnd = textareaRef.current?.selectionEnd;
-
-  if (typeof selectionStart === "number" && typeof selectionEnd === "number") {
-    const beforeText = textareaValue.substring(0, selectionStart);
-    const selectedText = textareaValue.substring(selectionStart, selectionEnd);
-    const afterText = textareaValue.substring(selectionEnd);
-
-    let styledText = "";
-    if (selectedText.length === 0) {
-      styledText = `${config.syntax}${config.placeholder}${
-        config.syntaxType === "wrap" ? config.syntax : ""
-      }`;
-    } else {
-      const selections = selectedText.split(config.delimiter);
-      styledText = selections
-        .map((selection) =>
-          selection
-            ? `${config.syntax}${selection.trim()}${
-                config.syntaxType === "wrap" ? config.syntax : ""
-              }`
-            : selection
-        )
-        .join(config.delimiter);
-    }
-
-    const updatedTextContent = `${beforeText}${styledText}${afterText}`;
-    // this will trigger the component to re-render
-    setTextareaValue(updatedTextContent);
-    // update the ref inside a setTimeout function to ensure the callstack is clear
-    setTimeout(() => {
-      if (selectedText.length === 0) {
-        const syntaxOffset =
-          config.syntaxType === "wrap" ? config.syntax.length : 0;
-        textareaRef.current?.setSelectionRange(
-          selectionStart + config.syntax.length,
-          selectionStart + styledText.length - syntaxOffset
-        );
-        textareaRef.current?.focus();
-      } else {
-        const newCursorPosition = selectionStart + styledText.length;
-        textareaRef.current?.setSelectionRange(
-          newCursorPosition,
-          newCursorPosition
-        );
-        textareaRef.current?.focus();
+  const applyMarkdownSyntax = useCallback(
+    (style: MarkdownStyle) => {
+      const config = markdownConfig[style];
+      if (!config) {
+        console.warn(`Unhandled style: ${style}. No syntax applied`);
+        return;
       }
-    }, 0);
-  }
+
+      const selectionStart = textareaRef.current?.selectionStart;
+      const selectionEnd = textareaRef.current?.selectionEnd;
+      if (
+        typeof selectionStart === "number" &&
+        typeof selectionEnd === "number"
+      ) {
+        const beforeText = text.substring(0, selectionStart);
+        const selectedText = text.substring(selectionStart, selectionEnd);
+        const afterText = text.substring(selectionEnd);
+
+        let styledText = "";
+        if (selectedText.length === 0) {
+          styledText = `${config.syntax}${config.placeholder}${
+            config.syntaxType === "wrap" ? config.syntax : ""
+          }`;
+        } else {
+          const selections = selectedText.split(config.delimiter);
+          styledText = selections
+            .map((selection) =>
+              selection
+                ? `${config.syntax}${selection.trim()}${
+                    config.syntaxType === "wrap" ? config.syntax : ""
+                  }`
+                : selection
+            )
+            .join(config.delimiter);
+        }
+        setText(`${beforeText}${styledText}${afterText}`);
+        // note: update the ref inside a setTimeout function to ensure the callstack is clear
+        setTimeout(() => {
+          if (selectedText.length === 0) {
+            const syntaxOffset =
+              config.syntaxType === "wrap" ? config.syntax.length : 0;
+            textareaRef.current?.setSelectionRange(
+              selectionStart + config.syntax.length,
+              selectionStart + styledText.length - syntaxOffset
+            );
+            textareaRef.current?.focus();
+          } else {
+            const newCursorPosition = selectionStart + styledText.length;
+            textareaRef.current?.setSelectionRange(
+              newCursorPosition,
+              newCursorPosition
+            );
+            textareaRef.current?.focus();
+          }
+        }, 0);
+      }
+    },
+    [text]
+  );
+
+  return { text, setText, applyMarkdownSyntax };
 }
