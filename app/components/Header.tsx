@@ -10,7 +10,7 @@ export default function Header({ user }: HeaderProps) {
   const activeSession = externalId ? true : false;
   const logInOutLink = activeSession ? "/logout" : "/login";
   return (
-    <header className="h-14 w-full bg-cyan-700 text-slate-50 py-3 top-0 sticky">
+    <header className="h-14 w-full bg-cyan-700 text-slate-50 py-3 top-0 sticky z-10">
       <div className=" flex flex-row items-center justify-between max-w-screen-md mx-auto">
         <div>
           <Link to="/">

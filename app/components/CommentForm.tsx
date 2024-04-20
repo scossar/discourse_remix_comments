@@ -1,7 +1,7 @@
 import { Form, useFetcher } from "@remix-run/react";
-import { useRef, useState } from "react";
+import { memo, useRef, useState } from "react";
 
-import debounce from "~/services/debounce.server";
+import debounce from "~/services/debounce";
 
 interface CommentFormProps {
   className?: string;
@@ -11,7 +11,7 @@ interface FormFetcher {
   html?: string | null;
 }
 
-export default function CommentForm({ className }: CommentFormProps) {
+function CommentForm({ className }: CommentFormProps) {
   const previewFetcher = useFetcher<FormFetcher>({ key: "html-preview" });
   const [textareaValue, setTextareaValue] = useState("");
   const [previewOpen, setPreviewOpen] = useState(false);
@@ -275,3 +275,5 @@ export default function CommentForm({ className }: CommentFormProps) {
     </div>
   );
 }
+
+export default memo(CommentForm);

@@ -98,7 +98,7 @@ export default function TopicForSlugAndId() {
     : "#ffffff";
 
   return (
-    <div className="max-w-screen-md mx-auto pt-6 pb-12">
+    <div className="max-w-screen-md mx-auto pt-6 pb-12 relative">
       <header className="pb-3 border-b-cyan-800 border-b">
         <h1 className="text-3xl">{topic.title}</h1>
         <div className="flex items-center text-sm">

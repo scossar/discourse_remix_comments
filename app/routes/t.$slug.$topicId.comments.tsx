@@ -6,13 +6,14 @@ import {
   useLoaderData,
   useRouteError,
 } from "@remix-run/react";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useInView } from "react-intersection-observer";
 
 import { discourseSessionStorage } from "~/services/session.server";
 
 import { fetchCommentsForUser } from "~/services/fetchCommentsForUser.server";
 import Comment from "~/components/Comment";
+import CommentForm from "~/components/CommentForm";
 import { ApiDiscourseConnectUser } from "~/types/apiDiscourse";
 import {
   ParsedDiscourseTopic,
@@ -36,6 +37,7 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
     admin: userSession.get("admin"),
     username: userSession.get("username"),
   };
+  console.log("comment route loader function");
 
   const topicId = Number(params?.topicId);
   const slug = params?.slug;
@@ -81,6 +83,12 @@ export default function DiscourseComments() {
   const pageRef = useRef(Number(Object.keys(postStreamForUser)[0]));
   const [pages, setPages] = useState(postStreamForUser);
   const { ref, inView } = useInView({ threshold: 0 });
+  const [editorOpen, setEditorOpen] = useState(false);
+
+  const handleReplyClick = (postId: number) => {
+    setEditorOpen(true);
+    // use postId
+  };
 
   useEffect(() => {
     if (fetcher?.data && fetcher.data.postStreamForUser) {
@@ -92,29 +100,65 @@ export default function DiscourseComments() {
   // there needs to be a way to track when you're on the last page!
   useEffect(() => {
     if (inView && fetcher.state === "idle") {
-      console.log(`typeof pageRef: ${typeof pageRef.current}`);
       pageRef.current += 1;
       fetcher.load(`/t/-/${topicId}/comments?page=${pageRef.current}`);
     }
   }, [inView]);
 
+  const renderComments = useMemo(() => {
+    return Object.entries(pages).map(([currentPage, topicData]) => (
+      <div key={currentPage} className="divide-y divide-cyan-800">
+        {topicData?.postStream?.posts.map((post, index) => {
+          const isLastComment = index === topicData.postStream.posts.length - 1;
+          return (
+            <Comment
+              key={post.id}
+              post={post}
+              handleReplyClick={handleReplyClick}
+              ref={isLastComment ? ref : null}
+            />
+          );
+        })}
+      </div>
+    ));
+  }, [pages]);
+
   const renderPageOfComments = (topicData: ParsedDiscourseTopic) => {
     return topicData?.postStream?.posts.map((post, index) => {
       const isLastComment = index === topicData.postStream.posts.length - 1;
       return (
-        <Comment key={post.id} post={post} ref={isLastComment ? ref : null} />
+        <Comment
+          key={post.id}
+          post={post}
+          handleReplyClick={handleReplyClick}
+          ref={isLastComment ? ref : null}
+        />
       );
     });
   };
 
   return (
     <div>
-      <div>
+      <div className="">
         {Object.entries(pages).map(([currentPage, topicData]) => (
           <div key={currentPage} className="divide-y divide-cyan-800">
-            {renderPageOfComments(topicData)}
+            {renderComments}
           </div>
         ))}
+        <div
+          className={`${
+            editorOpen ? "min-h-52" : "h-8"
+          } bg-red-200 fixed bottom-0 left-0 right-0 w-screen`}
+        >
+          <div
+            className={`${
+              editorOpen ? "min-h-52" : "h-8"
+            } max-w-screen-md mx-auto bg-slate-50`}
+          >
+            {" "}
+            <CommentForm />
+          </div>
+        </div>
       </div>
     </div>
   );

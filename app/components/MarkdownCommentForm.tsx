@@ -1,7 +1,7 @@
 import { Form, useFetcher } from "@remix-run/react";
 import { useState, useRef } from "react";
 
-import debounce from "~/services/debounce.server";
+import debounce from "~/services/debounce";
 
 interface CommentFormProps {
   className?: string;
