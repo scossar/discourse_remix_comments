@@ -11,12 +11,21 @@ export type MarkdownStyle =
 
 export type SyntaxType = "prepend" | "wrap";
 
+export type Delimiter = "\n\n" | "\n";
+
+export type MarkdownConfig = {
+  syntax: string;
+  syntaxType: SyntaxType;
+  placeholder: string;
+  delimiter: Delimiter;
+};
+
 export type MarkdownConfigType = {
   [key: string]: {
     syntax: string;
     syntaxType: SyntaxType;
     placeholder: string;
-    delimiter: "\n\n" | "\n";
+    delimiter: Delimiter;
   };
 };
 
@@ -65,29 +74,17 @@ const markdownConfig: MarkdownConfigType = {
   },
 };
 
-function debug(before: string, selected: string, after: string, log = true) {
-  if (log) {
-    console.log(
-      `before: ${JSON.stringify(before, null, 2)}, selected: ${JSON.stringify(
-        selected,
-        null,
-        2
-      )}, after: ${JSON.stringify(after, null, 2)}`
-    );
-  }
-}
-
-function divisions(
+function textDivisions(
   start: number,
   end: number,
-  syntaxType: SyntaxType,
-  text: string
+  text: string,
+  config: MarkdownConfig
 ) {
   let before = text.substring(0, start);
   const selected = text.substring(start, end);
   const after = text.substring(end);
   if (
-    syntaxType === "prepend" &&
+    config.syntaxType === "prepend" &&
     before.length > 0 &&
     before.slice(-1) !== "\n"
   ) {
@@ -95,6 +92,51 @@ function divisions(
   }
 
   return { before, selected, after };
+}
+
+function styleSelected(selected: string, config: MarkdownConfig) {
+  let styled = "";
+  if (selected.length === 0) {
+    styled = `${config.syntax}${config.placeholder}${
+      config.syntaxType === "wrap" ? config.syntax : ""
+    }`;
+  } else {
+    const selections = selected.split(config.delimiter);
+    styled = selections
+      .map((selection) =>
+        selection
+          ? `${config.syntax}${selection.trim()}${
+              config.syntaxType === "wrap" ? config.syntax : ""
+            }`
+          : selection
+      )
+      .join(config.delimiter);
+  }
+
+  return styled;
+}
+
+function setSelectionRange(
+  before: string,
+  styled: string,
+  ref: React.RefObject<HTMLTextAreaElement>,
+  config: MarkdownConfig
+) {
+  const syntaxOffset = config.syntaxType === "wrap" ? config.syntax.length : 0;
+  const start = before.length;
+  ref.current?.setSelectionRange(
+    start + config.syntax.length,
+    start + styled.length - syntaxOffset
+  );
+}
+
+function setCursorPosition(
+  before: string,
+  styled: string,
+  ref: React.RefObject<HTMLTextAreaElement>
+) {
+  const position = before.length + styled.length;
+  ref.current?.setSelectionRange(position, position);
 }
 
 export function useMarkdownSyntax(
@@ -111,65 +153,25 @@ export function useMarkdownSyntax(
         return;
       }
 
-      const selectionStart = Number(textareaRef.current?.selectionStart) || 0;
-      const selectionEnd = Number(textareaRef.current?.selectionEnd) || 0;
+      const start = Number(textareaRef.current?.selectionStart) || 0;
+      const end = Number(textareaRef.current?.selectionEnd) || 0;
 
-      const { before, selected, after } = divisions(
-        selectionStart,
-        selectionEnd,
-        config.syntaxType,
-        text
+      const { before, selected, after } = textDivisions(
+        start,
+        end,
+        text,
+        config
       );
-      debug(before, selected, after);
+      const styled = styleSelected(selected, config);
 
-      let beforeText = text.substring(0, selectionStart);
-      const selectedText = text.substring(selectionStart, selectionEnd);
-      const afterText = text.substring(selectionEnd);
-
-      if (
-        config.syntaxType === "prepend" &&
-        beforeText.length > 0 &&
-        beforeText.slice(-1) !== "\n"
-      ) {
-        beforeText = `${beforeText}\n`;
-      }
-
-      let styledText = "";
-      if (selectedText.length === 0) {
-        styledText = `${config.syntax}${config.placeholder}${
-          config.syntaxType === "wrap" ? config.syntax : ""
-        }`;
-      } else {
-        const selections = selectedText.split(config.delimiter);
-        styledText = selections
-          .map((selection) =>
-            selection
-              ? `${config.syntax}${selection.trim()}${
-                  config.syntaxType === "wrap" ? config.syntax : ""
-                }`
-              : selection
-          )
-          .join(config.delimiter);
-      }
-      setText(`${beforeText}${styledText}${afterText}`);
-      // note: update the ref inside a setTimeout function to ensure the callstack is clear
+      setText(`${before}${styled}${after}`);
       setTimeout(() => {
-        if (selectedText.length === 0) {
-          const syntaxOffset =
-            config.syntaxType === "wrap" ? config.syntax.length : 0;
-          textareaRef.current?.setSelectionRange(
-            beforeText.length + config.syntax.length,
-            beforeText.length + styledText.length - syntaxOffset
-          );
-          textareaRef.current?.focus();
+        if (selected.length === 0) {
+          setSelectionRange(before, styled, textareaRef, config);
         } else {
-          const newCursorPosition = beforeText.length + styledText.length;
-          textareaRef.current?.setSelectionRange(
-            newCursorPosition,
-            newCursorPosition
-          );
-          textareaRef.current?.focus();
+          setCursorPosition(before, styled, textareaRef);
         }
+        textareaRef.current?.focus();
       }, 0);
     },
     [text]
