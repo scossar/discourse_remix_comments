@@ -10,6 +10,7 @@ import type {
 import type {
   ParsedDiscourseParticipant,
   ParsedDiscoursePost,
+  ParsedDiscourseTopicComments,
   ParsedPagedDiscourseTopic,
 } from "~/types/parsedDiscourse";
 import * as process from "node:process";
@@ -100,7 +101,7 @@ export async function fetchCommentsForUser(
 async function fetchInitialComments(
   topicId: number,
   context: FetchContext
-): Promise<ParsedPagedDiscourseTopic> {
+): Promise<ParsedDiscourseTopicComments> {
   const response = await fetch(`${context.baseUrl}/t/-/${topicId}.json`, {
     headers: context.headers,
   });
@@ -113,8 +114,7 @@ async function fetchInitialComments(
 
   const postsData: ApiDiscourseTopicWithPostStream = await response.json();
   const stream = postsData.post_stream.stream;
-
-  // use the stream array to update the old values
+  const totalPages = Math.ceil(stream.length / CHUNK_SIZE);
   const streamKey = `postStream:${topicId}`;
   const redisStream = stream.map(String);
   try {
@@ -124,51 +124,46 @@ async function fetchInitialComments(
     throw new FetchCommentsError("Redis error", 500);
   }
 
-  return {
-    [0]: {
-      id: postsData.id,
-      slug: postsData.slug,
-      postStream: {
-        stream: stream,
-        posts: postsData.post_stream.posts
-          .filter(isRegularReplyPost)
-          .map((post) => transformPost(post, context.baseUrl)),
-      },
-      details: {
-        canCreatePost: postsData.details.can_create_post,
-        participants: postsData.details.participants.map((participant) =>
-          transformParticipant(participant, context.baseUrl)
-        ),
-      },
+  const parsedTopicComments: ParsedDiscourseTopicComments = {
+    topicId: topicId,
+    currentPage: 0,
+    totalPages: totalPages,
+    slug: postsData.slug,
+    posts: postsData.post_stream.posts
+      .filter(isRegularReplyPost)
+      .map((post) => transformPost(post, context.baseUrl)),
+    details: {
+      canCreatePost: postsData.details.can_create_post,
+      participants: postsData.details.participants.map((participant) =>
+        transformParticipant(participant, context.baseUrl)
+      ),
     },
-  } as ParsedPagedDiscourseTopic;
+  };
+
+  return parsedTopicComments;
 }
 
 async function fetchSubsequentComments(
   topicId: number,
   page: number,
   context: FetchContext
-): Promise<ParsedPagedDiscourseTopic> {
+): Promise<ParsedDiscourseTopicComments> {
+  const streamKey = `postStream:${topicId}`;
   const chunkSize = CHUNK_SIZE;
   const start: number = page * chunkSize;
   const end: number = start + chunkSize - 1;
 
-  let nextPostIds;
+  let nextPostIds, stream;
   try {
-    nextPostIds = await context.client.lRange(
-      `postStream:${topicId}`,
-      start,
-      end
-    );
+    stream = await context.client.lRange(streamKey, 0, -1);
+    nextPostIds = await context.client.lRange(streamKey, start, end);
   } catch (error) {
     throw new FetchCommentsError("Redis error", 500);
   }
-  if (!nextPostIds || nextPostIds.length === 0) {
-    // temporary workaround:
+  if (!stream) {
     console.warn(
-      `No post IDs returned from Redis for topic ID ${topicId} on page ${page}. Falling back to initial comments.`
+      `This needs to be dealt with, but ideally shouldn't happen unless the Redis key has been dropped.`
     );
-    return await fetchInitialComments(topicId, context);
   }
 
   const queryString = "?post_ids[]=" + nextPostIds.join("&post_ids[]=");
@@ -182,15 +177,17 @@ async function fetchSubsequentComments(
     );
   }
   const postsData: ApiDiscourseTopicWithPostStream = await response.json();
+  // fudging this for now
+  const totalPages = Math.ceil(stream.length / CHUNK_SIZE) || 1;
 
-  return {
-    [page]: {
-      id: postsData.id,
-      postStream: {
-        posts: postsData.post_stream.posts
-          .filter(isRegularReplyPost)
-          .map((post) => transformPost(post, context.baseUrl)),
-      },
-    },
-  } as ParsedPagedDiscourseTopic;
+  const parsedDiscourseTopicComments: ParsedDiscourseTopicComments = {
+    topicId: topicId,
+    currentPage: page,
+    totalPages: totalPages,
+    posts: postsData.post_stream.posts
+      .filter(isRegularReplyPost)
+      .map((post) => transformPost(post, context.baseUrl)),
+  };
+
+  return parsedDiscourseTopicComments;
 }

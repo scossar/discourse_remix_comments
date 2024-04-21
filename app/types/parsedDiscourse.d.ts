@@ -33,5 +33,13 @@ export interface ParsedDiscourseTopic {
 
 export type ParsedPagedDiscourseTopic = {
   [currentPage: number]: ParsedDiscourseTopic;
-}
+};
 
+export interface ParsedDiscourseTopicComments {
+  topicId: number;
+  currentPage: number;
+  totalPages: number;
+  slug?: string;
+  posts: ParsedDiscoursePost[];
+  details?: ParsedDiscourseDetails;
+}

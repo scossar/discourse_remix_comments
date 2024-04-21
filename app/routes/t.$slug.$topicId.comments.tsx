@@ -25,6 +25,7 @@ import { ApiDiscourseConnectUser } from "~/types/apiDiscourse";
 import {
   ParsedDiscourseTopic,
   ParsedPagedDiscourseTopic,
+  ParsedDiscourseTopicComments,
 } from "~/types/parsedDiscourse";
 
 export const meta: MetaFunction = () => {
@@ -102,12 +103,12 @@ export async function action({ request, params }: ActionFunctionArgs) {
   }
 
   const updatedTopic = await response.json();
-  console.log(`updatedTopic: ${JSON.stringify(updatedTopic, null, 2)}`);
 
   return null;
 }
 
 export async function loader({ request, params }: LoaderFunctionArgs) {
+  console.log("in the loader");
   const userSession = await discourseSessionStorage.getSession(
     request.headers.get("Cookie")
   );
@@ -130,10 +131,10 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
   const page = Number(searchParams.get("page")) || 0;
   const currentUsername = user?.username ?? null;
 
-  let postStreamForUser;
+  let commentsForUser;
   let errorMessage;
   try {
-    postStreamForUser = await fetchCommentsForUser(
+    commentsForUser = await fetchCommentsForUser(
       topicId,
       currentUsername,
       page
@@ -142,9 +143,12 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
     errorMessage = "Comments could not be loaded";
     throw new Error("Something has gone wrong!");
   }
+  console.log(
+    `still in the loader: ${JSON.stringify(commentsForUser, null, 2)}`
+  );
 
   return json(
-    { postStreamForUser, topicId, errorMessage, user },
+    { commentsForUser, topicId, errorMessage, user },
     {
       headers: {
         "Set-Cookie": await discourseSessionStorage.commitSession(userSession),
@@ -152,48 +156,48 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
     }
   );
 }
-interface FetcherData {
-  postStreamForUser: ParsedPagedDiscourseTopic;
-}
+
+type FetcherData = {
+  commentsForUser: ParsedDiscourseTopicComments;
+};
 
 export default function DiscourseComments() {
-  const { postStreamForUser, topicId } = useLoaderData<typeof loader>();
+  const { commentsForUser, topicId } = useLoaderData<typeof loader>();
   const fetcher = useFetcher<FetcherData>();
-  const pageRef = useRef(Number(Object.keys(postStreamForUser)[0]));
-  const [pages, setPages] = useState(postStreamForUser);
+  const [posts, setPosts] = useState(commentsForUser.posts);
+  const [totalPages, setTotalPages] = useState(commentsForUser.totalPages);
+  const pageRef = useRef(0);
+
   const { ref, inView } = useInView({ threshold: 0 });
   const [editorOpen, setEditorOpen] = useState(false);
 
   const handleReplyClick = (postId: number) => {
     setEditorOpen(true);
-    // use postId
   };
 
   const handleCreatePostClick = () => {
-    console.log("in handle create post click");
     setEditorOpen(false);
   };
 
   useEffect(() => {
-    if (fetcher?.data && fetcher.data.postStreamForUser) {
-      const allPages = { ...pages, ...fetcher.data.postStreamForUser };
-      setPages(allPages);
+    if (fetcher?.data && fetcher.data?.commentsForUser?.posts) {
+      const allPosts = posts.concat(fetcher.data.commentsForUser.posts);
+      setPosts(allPosts);
     }
-  }, [fetcher?.data?.postStreamForUser]);
+  }, [fetcher.data]);
 
-  // there needs to be a way to track when you're on the last page!
   useEffect(() => {
-    if (inView && fetcher.state === "idle") {
+    if (inView && fetcher.state === "idle" && pageRef.current < totalPages) {
       pageRef.current += 1;
       fetcher.load(`/t/-/${topicId}/comments?page=${pageRef.current}`);
     }
   }, [inView]);
 
-  const renderComments = useMemo(() => {
-    return Object.entries(pages).map(([currentPage, topicData]) => (
-      <div key={currentPage} className="divide-y divide-cyan-800">
-        {topicData?.postStream?.posts.map((post, index) => {
-          const isLastComment = index === topicData.postStream.posts.length - 1;
+  const renderCommentsForUser = useMemo(() => {
+    return (
+      <div className="divide-y divide-cyan-800">
+        {posts.map((post, index) => {
+          const isLastComment = index === posts.length - 1;
           return (
             <Comment
               key={post.id}
@@ -204,17 +208,14 @@ export default function DiscourseComments() {
           );
         })}
       </div>
-    ));
-  }, [pages]);
+    );
+  }, [posts]);
 
   return (
     <div>
       <div className="">
-        {Object.entries(pages).map(([currentPage, topicData]) => (
-          <div key={currentPage} className="divide-y divide-cyan-800">
-            {renderComments}
-          </div>
-        ))}
+        <div className="divide-y divide-cyan-800">{renderCommentsForUser}</div>
+
         <div
           className={`${
             editorOpen ? "min-h-52" : "h-8"
