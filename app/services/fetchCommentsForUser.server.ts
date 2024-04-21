@@ -11,7 +11,6 @@ import type {
   ParsedDiscourseParticipant,
   ParsedDiscoursePost,
   ParsedDiscourseTopicComments,
-  ParsedPagedDiscourseTopic,
 } from "~/types/parsedDiscourse";
 import * as process from "node:process";
 import { RedisClientType, RedisDefaultModules } from "redis";
@@ -162,6 +161,7 @@ async function fetchSubsequentComments(
   }
   if (!stream) {
     console.warn(
+      // probably make a request to update the stream...
       `This needs to be dealt with, but ideally shouldn't happen unless the Redis key has been dropped.`
     );
   }
@@ -177,7 +177,7 @@ async function fetchSubsequentComments(
     );
   }
   const postsData: ApiDiscourseTopicWithPostStream = await response.json();
-  // fudging this for now
+  // fudging this for now... shouldn't continue if the stream isn't set
   const totalPages = Math.ceil(stream.length / CHUNK_SIZE) || 1;
 
   const parsedDiscourseTopicComments: ParsedDiscourseTopicComments = {

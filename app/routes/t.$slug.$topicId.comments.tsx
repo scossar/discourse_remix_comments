@@ -22,11 +22,7 @@ import { fetchCommentsForUser } from "~/services/fetchCommentsForUser.server";
 import Comment from "~/components/Comment";
 import CommentForm from "~/components/CommentForm";
 import { ApiDiscourseConnectUser } from "~/types/apiDiscourse";
-import {
-  ParsedDiscourseTopic,
-  ParsedPagedDiscourseTopic,
-  ParsedDiscourseTopicComments,
-} from "~/types/parsedDiscourse";
+import { ParsedDiscourseTopicComments } from "~/types/parsedDiscourse";
 
 export const meta: MetaFunction = () => {
   return [
@@ -103,12 +99,11 @@ export async function action({ request, params }: ActionFunctionArgs) {
   }
 
   const updatedTopic = await response.json();
-
+  // should be returning an errors object. then check for errors.any in the editor
   return null;
 }
 
 export async function loader({ request, params }: LoaderFunctionArgs) {
-  console.log("in the loader");
   const userSession = await discourseSessionStorage.getSession(
     request.headers.get("Cookie")
   );
@@ -143,9 +138,6 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
     errorMessage = "Comments could not be loaded";
     throw new Error("Something has gone wrong!");
   }
-  console.log(
-    `still in the loader: ${JSON.stringify(commentsForUser, null, 2)}`
-  );
 
   return json(
     { commentsForUser, topicId, errorMessage, user },
@@ -183,6 +175,7 @@ export default function DiscourseComments() {
     if (fetcher?.data && fetcher.data?.commentsForUser?.posts) {
       const allPosts = posts.concat(fetcher.data.commentsForUser.posts);
       setPosts(allPosts);
+      setTotalPages(fetcher.data.commentsForUser.totalPages);
     }
   }, [fetcher.data]);
 

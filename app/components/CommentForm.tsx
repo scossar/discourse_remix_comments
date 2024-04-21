@@ -6,14 +6,12 @@ import MarkdownButton from "./MarkdownButton";
 
 interface CommentFormProps {
   className?: string;
-  topicId?: number;
   replyToPostNumber?: number;
   handleCreatePostClick: () => void;
 }
 
 function CommentForm({
   className,
-  topicId,
   replyToPostNumber,
   handleCreatePostClick,
 }: CommentFormProps) {
