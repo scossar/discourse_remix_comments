@@ -11,7 +11,6 @@ import {
   useRouteError,
 } from "@remix-run/react";
 import { useEffect, useMemo, useState } from "react";
-import { useInView } from "react-intersection-observer";
 import { marked } from "marked";
 import { JSDOM } from "jsdom";
 import DOMPurify from "dompurify";
@@ -159,14 +158,13 @@ export default function DiscourseComments() {
   const [posts, setPosts] = useState(commentsForUser.posts);
   const [nextPage, setNextPage] = useState(commentsForUser.nextPage);
 
-  const { ref, inView } = useInView({ threshold: 0 });
   const [editorOpen, setEditorOpen] = useState(false);
 
-  useEffect(() => {
-    if (inView && fetcher.state === "idle" && nextPage) {
+  function loadMoreComments() {
+    if (fetcher.state === "idle" && nextPage) {
       fetcher.load(`/t/-/${topicId}/comments?page=${nextPage}`);
     }
-  }, [inView, fetcher, nextPage, topicId]);
+  }
 
   useEffect(() => {
     if (
@@ -190,26 +188,33 @@ export default function DiscourseComments() {
   const renderCommentsForUser = useMemo(() => {
     return (
       <div className="divide-y divide-cyan-800">
-        {posts.map((post, index) => {
-          const isLastComment = index === posts.length - 1;
+        {posts.map((post) => {
           return (
             <Comment
               key={post.id}
               post={post}
               handleReplyClick={handleReplyClick}
-              ref={isLastComment ? ref : null}
             />
           );
         })}
       </div>
     );
-  }, [posts, ref]);
+  }, [posts]);
 
   return (
     <div>
       <div className="">
         <div className="divide-y divide-cyan-800">{renderCommentsForUser}</div>
-
+        {nextPage && (
+          <div>
+            <button
+              className="text-blue-700 px-2 py-1 bg-white"
+              onClick={loadMoreComments}
+            >
+              {fetcher.state === "idle" ? "Load more" : "Loading..."}
+            </button>
+          </div>
+        )}
         <div
           className={`${
             editorOpen ? "min-h-52" : "h-8"
@@ -230,7 +235,7 @@ export default function DiscourseComments() {
 }
 
 export function ErrorBoundary() {
-  const error: any = useRouteError();
+  const error = useRouteError();
   const status = error?.status;
 
   if (isRouteErrorResponse(error) && error?.data) {
