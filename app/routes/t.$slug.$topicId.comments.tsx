@@ -10,7 +10,7 @@ import {
   useLoaderData,
   useRouteError,
 } from "@remix-run/react";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useInView } from "react-intersection-observer";
 import { marked } from "marked";
 import { JSDOM } from "jsdom";
@@ -157,7 +157,6 @@ export default function DiscourseComments() {
   const { commentsForUser, topicId } = useLoaderData<typeof loader>();
   const fetcher = useFetcher<FetcherData>();
   const [posts, setPosts] = useState(commentsForUser.posts);
-  //const nextPageRef = useRef(commentsForUser.nextPage);
   const [nextPage, setNextPage] = useState(commentsForUser.nextPage);
 
   const { ref, inView } = useInView({ threshold: 0 });

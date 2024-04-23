@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import type { ParsedDiscoursePost } from "~/types/parsedDiscourse";
 
 export function useCombinedUniquePosts(initialPosts: ParsedDiscoursePost[]) {
