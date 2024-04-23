@@ -113,7 +113,9 @@ async function fetchInitialComments(
 
   const postsData: ApiDiscourseTopicWithPostStream = await response.json();
   const stream = postsData.post_stream.stream;
+  const currentPage = 0;
   const totalPages = Math.ceil(stream.length / CHUNK_SIZE);
+  const nextPage = currentPage + 1 < totalPages ? currentPage + 1 : null;
   const streamKey = `postStream:${topicId}`;
   const redisStream = stream.map(String);
   try {
@@ -125,8 +127,7 @@ async function fetchInitialComments(
 
   const parsedTopicComments: ParsedDiscourseTopicComments = {
     topicId: topicId,
-    currentPage: 0,
-    totalPages: totalPages,
+    nextPage: nextPage,
     slug: postsData.slug,
     posts: postsData.post_stream.posts
       .filter(isRegularReplyPost)
@@ -179,11 +180,11 @@ async function fetchSubsequentComments(
   const postsData: ApiDiscourseTopicWithPostStream = await response.json();
   // fudging this for now... shouldn't continue if the stream isn't set
   const totalPages = Math.ceil(stream.length / CHUNK_SIZE) || 1;
+  const nextPage = page + 1 < totalPages ? page + 1 : null;
 
   const parsedDiscourseTopicComments: ParsedDiscourseTopicComments = {
     topicId: topicId,
-    currentPage: page,
-    totalPages: totalPages,
+    nextPage: nextPage,
     posts: postsData.post_stream.posts
       .filter(isRegularReplyPost)
       .map((post) => transformPost(post, context.baseUrl)),

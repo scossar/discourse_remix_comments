@@ -140,7 +140,7 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
   }
 
   return json(
-    { commentsForUser, topicId, errorMessage, user },
+    { commentsForUser, topicId, page, errorMessage, user },
     {
       headers: {
         "Set-Cookie": await discourseSessionStorage.commitSession(userSession),
@@ -157,11 +157,28 @@ export default function DiscourseComments() {
   const { commentsForUser, topicId } = useLoaderData<typeof loader>();
   const fetcher = useFetcher<FetcherData>();
   const [posts, setPosts] = useState(commentsForUser.posts);
-  const [totalPages, setTotalPages] = useState(commentsForUser.totalPages);
-  const pageRef = useRef(0);
+  //const nextPageRef = useRef(commentsForUser.nextPage);
+  const [nextPage, setNextPage] = useState(commentsForUser.nextPage);
 
   const { ref, inView } = useInView({ threshold: 0 });
   const [editorOpen, setEditorOpen] = useState(false);
+
+  useEffect(() => {
+    if (inView && fetcher.state === "idle" && nextPage) {
+      fetcher.load(`/t/-/${topicId}/comments?page=${nextPage}`);
+    }
+  }, [inView, fetcher, nextPage, topicId]);
+
+  useEffect(() => {
+    if (
+      fetcher.data?.commentsForUser.posts &&
+      fetcher.data.commentsForUser.nextPage !== nextPage
+    ) {
+      const newPosts = fetcher.data.commentsForUser.posts;
+      setNextPage(fetcher.data.commentsForUser.nextPage);
+      setPosts((prevPosts) => [...prevPosts, ...newPosts]);
+    }
+  }, [fetcher.data, nextPage]);
 
   const handleReplyClick = (postId: number) => {
     setEditorOpen(true);
@@ -170,21 +187,6 @@ export default function DiscourseComments() {
   const handleCreatePostClick = () => {
     setEditorOpen(false);
   };
-
-  useEffect(() => {
-    if (fetcher?.data && fetcher.data?.commentsForUser?.posts) {
-      const allPosts = posts.concat(fetcher.data.commentsForUser.posts);
-      setPosts(allPosts);
-      setTotalPages(fetcher.data.commentsForUser.totalPages);
-    }
-  }, [fetcher.data]);
-
-  useEffect(() => {
-    if (inView && fetcher.state === "idle" && pageRef.current < totalPages) {
-      pageRef.current += 1;
-      fetcher.load(`/t/-/${topicId}/comments?page=${pageRef.current}`);
-    }
-  }, [inView]);
 
   const renderCommentsForUser = useMemo(() => {
     return (
@@ -202,7 +204,7 @@ export default function DiscourseComments() {
         })}
       </div>
     );
-  }, [posts]);
+  }, [posts, ref]);
 
   return (
     <div>
