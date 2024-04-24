@@ -30,7 +30,7 @@ function generateAvatarUrl(
   return `${discourseBaseUrl}${sized}`;
 }
 
-function transformPost(
+export function transformPost(
   apiPost: ApiDiscoursePost,
   baseUrl: string
 ): ParsedDiscoursePost {
@@ -125,7 +125,7 @@ async function fetchInitialComments(
     throw new FetchCommentsError("Redis error", 500);
   }
 
-  const parsedTopicComments: ParsedDiscourseTopicComments = {
+  return {
     topicId: topicId,
     nextPage: nextPage,
     slug: postsData.slug,
@@ -139,8 +139,6 @@ async function fetchInitialComments(
       ),
     },
   };
-
-  return parsedTopicComments;
 }
 
 async function fetchSubsequentComments(
@@ -182,13 +180,11 @@ async function fetchSubsequentComments(
   const totalPages = Math.ceil(stream.length / CHUNK_SIZE) || 1;
   const nextPage = page + 1 < totalPages ? page + 1 : null;
 
-  const parsedDiscourseTopicComments: ParsedDiscourseTopicComments = {
+  return {
     topicId: topicId,
     nextPage: nextPage,
     posts: postsData.post_stream.posts
       .filter(isRegularReplyPost)
       .map((post) => transformPost(post, context.baseUrl)),
   };
-
-  return parsedDiscourseTopicComments;
 }

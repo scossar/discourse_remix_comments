@@ -99,7 +99,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     );
   }
 
-  let post = await db.discoursePost.findUnique({
+  const post = await db.discoursePost.findUnique({
     where: { externalId: postJson.id },
   });
 

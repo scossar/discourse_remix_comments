@@ -17,10 +17,16 @@ import DOMPurify from "dompurify";
 
 import { discourseSessionStorage } from "~/services/session.server";
 
-import { fetchCommentsForUser } from "~/services/fetchCommentsForUser.server";
+import {
+  fetchCommentsForUser,
+  transformPost,
+} from "~/services/fetchCommentsForUser.server";
 import Comment from "~/components/Comment";
 import CommentForm from "~/components/CommentForm";
-import { ApiDiscourseConnectUser } from "~/types/apiDiscourse";
+import {
+  ApiDiscourseConnectUser,
+  ApiDiscoursePost,
+} from "~/types/apiDiscourse";
 import { ParsedDiscourseTopicComments } from "~/types/parsedDiscourse";
 
 export const meta: MetaFunction = () => {
@@ -97,9 +103,14 @@ export async function action({ request, params }: ActionFunctionArgs) {
     throw new Error("Bad response returned from Discourse");
   }
 
-  const updatedTopic = await response.json();
-  // should be returning an errors object. then check for errors.any in the editor
-  return null;
+  const apiDiscoursePost: ApiDiscoursePost = await response.json();
+
+  const newComment = transformPost(
+    apiDiscoursePost,
+    process.env.DISCOURSE_BASE_URL
+  );
+
+  return json({ newComment });
 }
 
 export async function loader({ request, params }: LoaderFunctionArgs) {
@@ -154,6 +165,7 @@ type FetcherData = {
 
 export default function DiscourseComments() {
   const { commentsForUser, topicId } = useLoaderData<typeof loader>();
+  //const actionData = useActionData<typeof action>();
   const fetcher = useFetcher<FetcherData>();
   const [posts, setPosts] = useState(commentsForUser.posts);
   const [nextPage, setNextPage] = useState(commentsForUser.nextPage);
@@ -177,7 +189,7 @@ export default function DiscourseComments() {
     }
   }, [fetcher.data, nextPage]);
 
-  const handleReplyClick = (postId: number) => {
+  const handleReplyClick = () => {
     setEditorOpen(true);
   };
 
@@ -234,9 +246,14 @@ export default function DiscourseComments() {
   );
 }
 
+interface RouteError {
+  status?: number;
+  data?: string | null; // Adjust the type based on your actual data structure
+}
+
 export function ErrorBoundary() {
-  const error = useRouteError();
-  const status = error?.status;
+  const error = useRouteError() as unknown;
+  const status = (error as RouteError).status;
 
   if (isRouteErrorResponse(error) && error?.data) {
     const errorMessage = error?.data;
