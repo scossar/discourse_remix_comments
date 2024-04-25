@@ -27,7 +27,10 @@ import {
   ApiDiscourseConnectUser,
   ApiDiscoursePost,
 } from "~/types/apiDiscourse";
-import { ParsedDiscourseTopicComments } from "~/types/parsedDiscourse";
+import {
+  ParsedDiscoursePost,
+  ParsedDiscourseTopicComments,
+} from "~/types/parsedDiscourse";
 
 export const meta: MetaFunction = () => {
   return [
@@ -162,14 +165,19 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
   );
 }
 
-type FetcherData = {
+type CommentFetcherData = {
   commentsForUser: ParsedDiscourseTopicComments;
+};
+
+type ReplyFetcherData = {
+  repliesForPost: ParsedDiscoursePost[];
 };
 
 export default function DiscourseComments() {
   const { commentsForUser, topicId } = useLoaderData<typeof loader>();
   const actionData = useActionData<typeof action>();
-  const fetcher = useFetcher<FetcherData>();
+  const commentFetcher = useFetcher<CommentFetcherData>({ key: "comments" });
+  const replyFetcher = useFetcher<ReplyFetcherData>({ key: "replies" });
   const [posts, setPosts] = useState(commentsForUser.posts);
   const [nextPage, setNextPage] = useState(commentsForUser.nextPage);
 
@@ -177,13 +185,18 @@ export default function DiscourseComments() {
   const [replyToPostNumber, setReplyToPostNumber] = useState("");
 
   function loadMoreComments() {
-    if (fetcher.state === "idle" && nextPage) {
-      fetcher.load(`/t/-/${topicId}/comments?page=${nextPage}`);
+    if (commentFetcher.state === "idle" && nextPage) {
+      commentFetcher.load(`/t/-/${topicId}/comments?page=${nextPage}`);
     }
   }
 
   function getRepliesForPost(postId: number) {
     console.log(`getRepliesForPost, postId: ${postId}`);
+    if (replyFetcher.state === "idle") {
+      replyFetcher.load(
+        `/t/-/${topicId}/comments?page=${nextPage}&repliesFor=${postId}`
+      );
+    }
   }
 
   if (actionData && actionData.newComment) {
@@ -194,14 +207,14 @@ export default function DiscourseComments() {
 
   useEffect(() => {
     if (
-      fetcher.data?.commentsForUser.posts &&
-      fetcher.data.commentsForUser.nextPage !== nextPage
+      commentFetcher.data?.commentsForUser.posts &&
+      commentFetcher.data.commentsForUser.nextPage !== nextPage
     ) {
-      const newPosts = fetcher.data.commentsForUser.posts;
-      setNextPage(fetcher.data.commentsForUser.nextPage);
+      const newPosts = commentFetcher.data.commentsForUser.posts;
+      setNextPage(commentFetcher.data.commentsForUser.nextPage);
       setPosts((prevPosts) => [...prevPosts, ...newPosts]);
     }
-  }, [fetcher.data, nextPage]);
+  }, [commentFetcher.data, nextPage]);
 
   const handleReplyClick = (postNumber: string) => {
     console.log(`postNumber: ${postNumber}`);
