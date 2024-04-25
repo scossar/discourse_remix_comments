@@ -1,5 +1,11 @@
-import type { ApiDiscoursePost } from "~/types/apiDiscourse";
-import type { ParsedDiscoursePost } from "~/types/parsedDiscourse";
+import type {
+  ApiDiscourseParticipant,
+  ApiDiscoursePost,
+} from "~/types/apiDiscourse";
+import type {
+  ParsedDiscourseParticipant,
+  ParsedDiscoursePost,
+} from "~/types/parsedDiscourse";
 
 export function generateAvatarUrl(
   avatarTemplate: string,
@@ -21,7 +27,20 @@ export function transformPost(
     createdAt: apiPost.created_at,
     cooked: apiPost.cooked,
     postNumber: apiPost.post_number,
+    replyToPostNumber: apiPost.reply_to_post_number,
     updatedAt: apiPost.updated_at,
     userId: apiPost.user_id,
+  };
+}
+
+export function transformParticipant(
+  apiParticipant: ApiDiscourseParticipant,
+  baseUrl: string
+): ParsedDiscourseParticipant {
+  return {
+    id: apiParticipant.id,
+    username: apiParticipant.username,
+    postCount: apiParticipant.post_count,
+    avatarUrl: generateAvatarUrl(apiParticipant.avatar_template, baseUrl),
   };
 }

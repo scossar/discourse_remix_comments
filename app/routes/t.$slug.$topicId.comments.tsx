@@ -17,10 +17,9 @@ import DOMPurify from "dompurify";
 
 import { discourseSessionStorage } from "~/services/session.server";
 
-import {
-  fetchCommentsForUser,
-  transformPost,
-} from "~/services/fetchCommentsForUser.server";
+import { transformPost } from "~/services/transformDiscourseData.server";
+
+import { fetchCommentsForUser } from "~/services/fetchCommentsForUser.server";
 import Comment from "~/components/Comment";
 import CommentForm from "~/components/CommentForm";
 import {

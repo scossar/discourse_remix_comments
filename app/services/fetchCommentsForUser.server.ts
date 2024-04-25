@@ -2,16 +2,17 @@ import FetchCommentsError from "./errors/fetchCommentsError.server";
 import { getRedisClient } from "./redisClient.server";
 
 import type {
-  ApiDiscourseParticipant,
   ApiDiscoursePost,
   ApiDiscourseTopicWithPostStream,
 } from "~/types/apiDiscourse";
 
-import type {
-  ParsedDiscourseParticipant,
-  ParsedDiscoursePost,
-  ParsedDiscourseTopicComments,
-} from "~/types/parsedDiscourse";
+import type { ParsedDiscourseTopicComments } from "~/types/parsedDiscourse";
+
+import {
+  transformParticipant,
+  transformPost,
+} from "./transformDiscourseData.server";
+
 import * as process from "node:process";
 import { RedisClientType, RedisDefaultModules } from "redis";
 
@@ -19,43 +20,6 @@ const CHUNK_SIZE = 20;
 
 function isRegularReplyPost(post: ApiDiscoursePost) {
   return post.post_type === 1 && post.post_number > 1;
-}
-
-function generateAvatarUrl(
-  avatarTemplate: string,
-  discourseBaseUrl: string,
-  size = "48"
-) {
-  const sized = avatarTemplate.replace("{size}", size);
-  return `${discourseBaseUrl}${sized}`;
-}
-
-export function transformPost(
-  apiPost: ApiDiscoursePost,
-  baseUrl: string
-): ParsedDiscoursePost {
-  return {
-    id: apiPost.id,
-    username: apiPost.username,
-    avatarUrl: generateAvatarUrl(apiPost.avatar_template, baseUrl),
-    createdAt: apiPost.created_at,
-    cooked: apiPost.cooked,
-    postNumber: apiPost.post_number,
-    updatedAt: apiPost.updated_at,
-    userId: apiPost.user_id,
-  };
-}
-
-function transformParticipant(
-  apiParticipant: ApiDiscourseParticipant,
-  baseUrl: string
-): ParsedDiscourseParticipant {
-  return {
-    id: apiParticipant.id,
-    username: apiParticipant.username,
-    postCount: apiParticipant.post_count,
-    avatarUrl: generateAvatarUrl(apiParticipant.avatar_template, baseUrl),
-  };
 }
 
 interface FetchContext {
