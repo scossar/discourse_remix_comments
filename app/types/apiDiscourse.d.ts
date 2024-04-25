@@ -71,7 +71,7 @@ export interface ApiDiscoursePost {
   post_type: ApiDiscoursePostType;
   updated_at: string;
   reply_count: number;
-  reply_to_post_number?: number;
+  reply_to_post_number: number | null;
   topic_id: number;
   topic_title: string;
   category_id: number;
