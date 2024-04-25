@@ -6,6 +6,7 @@ import type {
 import { json } from "@remix-run/node";
 import {
   isRouteErrorResponse,
+  useActionData,
   useFetcher,
   useLoaderData,
   useRouteError,
@@ -167,7 +168,7 @@ type FetcherData = {
 
 export default function DiscourseComments() {
   const { commentsForUser, topicId } = useLoaderData<typeof loader>();
-  //const actionData = useActionData<typeof action>();
+  const actionData = useActionData<typeof action>();
   const fetcher = useFetcher<FetcherData>();
   const [posts, setPosts] = useState(commentsForUser.posts);
   const [nextPage, setNextPage] = useState(commentsForUser.nextPage);
@@ -179,6 +180,12 @@ export default function DiscourseComments() {
     if (fetcher.state === "idle" && nextPage) {
       fetcher.load(`/t/-/${topicId}/comments?page=${nextPage}`);
     }
+  }
+
+  if (actionData && actionData.newComment) {
+    console.log(
+      `actionData postId: ${JSON.stringify(actionData.newComment.id, null, 2)}`
+    );
   }
 
   useEffect(() => {
