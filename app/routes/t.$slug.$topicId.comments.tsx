@@ -188,12 +188,17 @@ export default function DiscourseComments() {
     }
   }, [fetcher.data, nextPage]);
 
-  const handleReplyClick = () => {
+  const handleReplyClick = (postId: number) => {
+    console.log(`postId from reply button: ${postId}`);
     setEditorOpen(true);
   };
 
   const handleCreatePostClick = () => {
     setEditorOpen(false);
+  };
+
+  const toggleEditorOpen = () => {
+    setEditorOpen(!editorOpen);
   };
 
   const renderCommentsForUser = useMemo(() => {
@@ -237,7 +242,10 @@ export default function DiscourseComments() {
             } max-w-screen-md mx-auto bg-slate-50`}
           >
             {" "}
-            <CommentForm handleCreatePostClick={handleCreatePostClick} />
+            <CommentForm
+              handleCreatePostClick={handleCreatePostClick}
+              toggleEditorOpen={toggleEditorOpen}
+            />
           </div>
         </div>
       </div>

@@ -8,12 +8,14 @@ interface CommentFormProps {
   className?: string;
   replyToPostNumber?: number;
   handleCreatePostClick: () => void;
+  toggleEditorOpen: () => void;
 }
 
 function CommentForm({
   className,
   replyToPostNumber,
   handleCreatePostClick,
+  toggleEditorOpen,
 }: CommentFormProps) {
   const [previewOpen, setPreviewOpen] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -33,7 +35,7 @@ function CommentForm({
     <div {...(className ? { className } : {})}>
       <Form className={`my-2 flex flex-col w-full`} method="post">
         <div className="formatting/editor/preview-container">
-          <div className="formatting/editor-container flex flex-row w-full h-full min-h-96">
+          <div className="flex flex-row w-full h-full formatting/editor-container min-h-96">
             <div
               className={`flex flex-col ${previewOpen ? "w-1/2" : "w-full"}`}
             >
@@ -75,7 +77,7 @@ function CommentForm({
                 />
               </div>
               <textarea
-                className="p-2 text-slate-950 h-full"
+                className="h-full p-2 text-slate-950"
                 name="raw"
                 onChange={handleTextareaChange}
                 ref={textareaRef}
@@ -106,20 +108,29 @@ function CommentForm({
         </div>
         <div className="submit/preview-button-container">
           <button
-            className="text-cyan-900 font-bold bg-slate-50 w-fit px-2 py-1 mt-3 rounded-sm"
+            className="px-2 py-1 mt-3 font-bold rounded-sm text-cyan-900 bg-slate-50 w-fit"
             type="submit"
             onClick={() => handleCreatePostClick()}
           >
             Reply
           </button>
           <button
-            className="text-cyan-900 font-bold bg-slate-50 w-fit px-2 py-1 mt-3 ml-2 rounded-sm"
+            className="px-2 py-1 mt-3 ml-2 font-bold rounded-sm text-cyan-900 bg-slate-50 w-fit"
             onClick={(event) => {
               event.preventDefault();
               setPreviewOpen(!previewOpen);
             }}
           >
             {previewOpen ? "Hide Preview" : "Show Preview"}
+          </button>
+          <button
+            className="text-cyan-950"
+            onClick={(event) => {
+              event.preventDefault();
+              toggleEditorOpen();
+            }}
+          >
+            X
           </button>
         </div>
       </Form>
