@@ -67,6 +67,8 @@ export async function action({ request, params }: ActionFunctionArgs) {
     );
   }
 
+  const replyToPostNumber = Number(formData.get("replyToPostNumber")) || null;
+
   let html;
   try {
     const window = new JSDOM("").window;
@@ -90,6 +92,7 @@ export async function action({ request, params }: ActionFunctionArgs) {
   const data = {
     raw: html,
     topic_id: topicId,
+    reply_to_post_number: replyToPostNumber,
   };
 
   const response = await fetch(postsUrl, {
