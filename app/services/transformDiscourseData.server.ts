@@ -27,6 +27,7 @@ export function transformPost(
     createdAt: apiPost.created_at,
     cooked: apiPost.cooked,
     postNumber: apiPost.post_number,
+    replyCount: apiPost.reply_count,
     replyToPostNumber: apiPost.reply_to_post_number,
     updatedAt: apiPost.updated_at,
     userId: apiPost.user_id,

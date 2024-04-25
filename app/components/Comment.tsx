@@ -8,13 +8,17 @@ import Avatar from "~/components/Avatar";
 export type CommentProps = {
   post: ParsedDiscoursePost;
   handleReplyClick: (postNumber: string) => void;
+  getRepliesForPost: (postId: number) => void;
 };
 
 const Comment = forwardRef<HTMLDivElement, CommentProps>(function Comment(
-  { post, handleReplyClick },
+  { post, handleReplyClick, getRepliesForPost },
   ref
 ) {
   const postNumber = String(post.postNumber) || "";
+  const replyCount = post.replyCount;
+  const replyText = replyCount === 1 ? "reply" : "replies";
+
   return (
     <div className="flex my-6 discourse-comment" ref={ref}>
       <Avatar
@@ -32,7 +36,14 @@ const Comment = forwardRef<HTMLDivElement, CommentProps>(function Comment(
           </span>
           <div dangerouslySetInnerHTML={{ __html: post.cooked }} />
         </div>
-        <div className="flex items-center justify-end w-full">
+        <div className="flex items-center w-full">
+          <div className="mr-6">
+            {replyCount > 0 && (
+              <button
+                onClick={() => getRepliesForPost(post.id)}
+              >{`${replyCount} ${replyText}`}</button>
+            )}
+          </div>
           <ReplyButton
             handleReplyClick={handleReplyClick}
             postNumber={postNumber}

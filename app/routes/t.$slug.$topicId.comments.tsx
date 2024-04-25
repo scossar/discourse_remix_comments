@@ -182,6 +182,10 @@ export default function DiscourseComments() {
     }
   }
 
+  function getRepliesForPost(postId: number) {
+    console.log(`getRepliesForPost, postId: ${postId}`);
+  }
+
   if (actionData && actionData.newComment) {
     console.log(
       `actionData postId: ${JSON.stringify(actionData.newComment.id, null, 2)}`
@@ -222,6 +226,7 @@ export default function DiscourseComments() {
               key={post.id}
               post={post}
               handleReplyClick={handleReplyClick}
+              getRepliesForPost={getRepliesForPost}
             />
           );
         })}

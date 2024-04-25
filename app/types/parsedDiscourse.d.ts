@@ -5,6 +5,7 @@ export interface ParsedDiscoursePost {
   createdAt: string;
   cooked: string;
   postNumber: number;
+  replyCount: number;
   replyToPostNumber: number | null;
   updatedAt: string;
   userId: number;
