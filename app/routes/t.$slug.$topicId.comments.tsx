@@ -170,6 +170,7 @@ export default function DiscourseComments() {
   const [nextPage, setNextPage] = useState(commentsForUser.nextPage);
 
   const [editorOpen, setEditorOpen] = useState(false);
+  const [replyToPostNumber, setReplyToPostNumber] = useState("");
 
   function loadMoreComments() {
     if (fetcher.state === "idle" && nextPage) {
@@ -188,8 +189,9 @@ export default function DiscourseComments() {
     }
   }, [fetcher.data, nextPage]);
 
-  const handleReplyClick = (postId: number) => {
-    console.log(`postId from reply button: ${postId}`);
+  const handleReplyClick = (postNumber: string) => {
+    console.log(`postNumber: ${postNumber}`);
+    setReplyToPostNumber(postNumber);
     setEditorOpen(true);
   };
 
@@ -243,6 +245,7 @@ export default function DiscourseComments() {
           >
             {" "}
             <CommentForm
+              replyToPostNumber={replyToPostNumber}
               handleCreatePostClick={handleCreatePostClick}
               toggleEditorOpen={toggleEditorOpen}
             />

@@ -1,17 +1,17 @@
 export type ReplyButtonProps = {
-  handleReplyClick: (postId: number) => void;
-  postId: number;
+  handleReplyClick: (postNumber: string) => void;
+  postNumber: string;
 };
 
 export default function ReplyButton({
   handleReplyClick,
-  postId,
+  postNumber,
 }: ReplyButtonProps) {
   return (
     <>
       <button
-        onClick={() => handleReplyClick(postId)}
-        className="mr-2 px-2 py-1 bg-slate-50 hover:bg-slate-200 text-cyan-950 rounded-sm"
+        onClick={() => handleReplyClick(postNumber)}
+        className="px-2 py-1 mr-2 rounded-sm bg-slate-50 hover:bg-slate-200 text-cyan-950"
       >
         Reply
       </button>

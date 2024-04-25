@@ -7,32 +7,36 @@ import Avatar from "~/components/Avatar";
 
 export type CommentProps = {
   post: ParsedDiscoursePost;
-  handleReplyClick: (postId: number) => void;
+  handleReplyClick: (postNumber: string) => void;
 };
 
 const Comment = forwardRef<HTMLDivElement, CommentProps>(function Comment(
   { post, handleReplyClick },
   ref
 ) {
+  const postNumber = String(post.postNumber) || "";
   return (
-    <div className="my-6 discourse-comment flex" ref={ref}>
+    <div className="flex my-6 discourse-comment" ref={ref}>
       <Avatar
         user={{
           username: post.username,
           avatarTemplate: post.avatarUrl,
         }}
         absoluteUrl={true}
-        className="rounded-full w-8 h-8 object-contain mt-2"
+        className="object-contain w-8 h-8 mt-2 rounded-full"
       />
-      <div className="ml-2 w-full">
+      <div className="w-full ml-2">
         <div className="w-full my-3">
-          <span className=" text-slate-50 text-sm inline-block p-1">
+          <span className="inline-block p-1 text-sm text-slate-50">
             {post.postNumber}
           </span>
           <div dangerouslySetInnerHTML={{ __html: post.cooked }} />
         </div>
-        <div className="flex justify-end w-full items-center">
-          <ReplyButton handleReplyClick={handleReplyClick} postId={post.id} />
+        <div className="flex items-center justify-end w-full">
+          <ReplyButton
+            handleReplyClick={handleReplyClick}
+            postNumber={postNumber}
+          />
         </div>
       </div>
     </div>

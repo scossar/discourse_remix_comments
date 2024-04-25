@@ -6,16 +6,16 @@ import MarkdownButton from "./MarkdownButton";
 
 interface CommentFormProps {
   className?: string;
-  replyToPostNumber?: number;
   handleCreatePostClick: () => void;
   toggleEditorOpen: () => void;
+  replyToPostNumber: string;
 }
 
 function CommentForm({
   className,
-  replyToPostNumber,
   handleCreatePostClick,
   toggleEditorOpen,
+  replyToPostNumber,
 }: CommentFormProps) {
   const [previewOpen, setPreviewOpen] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
