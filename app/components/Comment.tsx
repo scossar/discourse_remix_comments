@@ -1,4 +1,5 @@
 import { forwardRef } from "react";
+import { useFetcher } from "@remix-run/react";
 
 import ReplyButton from "./ReplyButton";
 
@@ -8,16 +9,24 @@ import Avatar from "~/components/Avatar";
 export type CommentProps = {
   post: ParsedDiscoursePost;
   handleReplyClick: (postNumber: string) => void;
-  getRepliesForPost: (postId: number) => void;
+};
+
+type ReplyFetcherData = {
+  repliesForPost: ParsedDiscoursePost[];
 };
 
 const Comment = forwardRef<HTMLDivElement, CommentProps>(function Comment(
-  { post, handleReplyClick, getRepliesForPost },
+  { post, handleReplyClick },
   ref
 ) {
+  const replyFetcher = useFetcher<ReplyFetcherData>({ key: "replies" });
   const postNumber = String(post.postNumber) || "";
   const replyCount = post.replyCount;
   const replyText = replyCount === 1 ? "reply" : "replies";
+
+  function getRepliesForPost(postId: number) {
+    console.log(`getRepliesForPost, postId: ${postId}`);
+  }
 
   return (
     <div className="flex my-6 discourse-comment" ref={ref}>

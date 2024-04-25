@@ -27,10 +27,7 @@ import {
   ApiDiscourseConnectUser,
   ApiDiscoursePost,
 } from "~/types/apiDiscourse";
-import {
-  ParsedDiscoursePost,
-  ParsedDiscourseTopicComments,
-} from "~/types/parsedDiscourse";
+import { ParsedDiscourseTopicComments } from "~/types/parsedDiscourse";
 
 export const meta: MetaFunction = () => {
   return [
@@ -141,6 +138,8 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
   const { searchParams } = new URL(request.url);
   const page = Number(searchParams.get("page")) || 0;
   const currentUsername = user?.username ?? null;
+  const repliesFor = Number(searchParams.get("repliesFor")) || null;
+  console.log(`repliesFor: ${repliesFor}`);
 
   let commentsForUser;
   let errorMessage;
@@ -169,15 +168,10 @@ type CommentFetcherData = {
   commentsForUser: ParsedDiscourseTopicComments;
 };
 
-type ReplyFetcherData = {
-  repliesForPost: ParsedDiscoursePost[];
-};
-
 export default function DiscourseComments() {
   const { commentsForUser, topicId } = useLoaderData<typeof loader>();
   const actionData = useActionData<typeof action>();
   const commentFetcher = useFetcher<CommentFetcherData>({ key: "comments" });
-  const replyFetcher = useFetcher<ReplyFetcherData>({ key: "replies" });
   const [posts, setPosts] = useState(commentsForUser.posts);
   const [nextPage, setNextPage] = useState(commentsForUser.nextPage);
 
@@ -187,15 +181,6 @@ export default function DiscourseComments() {
   function loadMoreComments() {
     if (commentFetcher.state === "idle" && nextPage) {
       commentFetcher.load(`/t/-/${topicId}/comments?page=${nextPage}`);
-    }
-  }
-
-  function getRepliesForPost(postId: number) {
-    console.log(`getRepliesForPost, postId: ${postId}`);
-    if (replyFetcher.state === "idle") {
-      replyFetcher.load(
-        `/t/-/${topicId}/comments?page=${nextPage}&repliesFor=${postId}`
-      );
     }
   }
 
@@ -239,7 +224,6 @@ export default function DiscourseComments() {
               key={post.id}
               post={post}
               handleReplyClick={handleReplyClick}
-              getRepliesForPost={getRepliesForPost}
             />
           );
         })}
@@ -257,7 +241,7 @@ export default function DiscourseComments() {
               className="px-2 py-1 text-blue-700 bg-white"
               onClick={loadMoreComments}
             >
-              {fetcher.state === "idle" ? "Load more" : "Loading..."}
+              {commentFetcher.state === "idle" ? "Load more" : "Loading..."}
             </button>
           </div>
         )}
