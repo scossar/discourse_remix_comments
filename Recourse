@@ -13,30 +13,43 @@ if &shortmess =~ 'A'
 else
   set shortmess=aoO
 endif
-badd +1 term://~/remix/discourse/discourse_remix_comments//16641:/bin/bash
-badd +1 term://~/remix/discourse/discourse_remix_comments//17053:/bin/bash
+badd +1 health://
+badd +25 term://~/remix/discourse/discourse_remix_comments//16641:/bin/bash
+badd +10 term://~/remix/discourse/discourse_remix_comments//17053:/bin/bash
 badd +8 app/components/Avatar.tsx
-badd +90 health://
 badd +61 app/routes/_index.tsx
 badd +158 Recourse
-badd +0 app/routes/api.discoursePostEvent.tsx
-badd +0 postcss.config.js
+badd +104 app/routes/api.discoursePostEvent.tsx
+badd +1 postcss.config.js
+badd +26 app/hooks/useDebouncedPreview.ts
+badd +1 ~/.config/nvim/lua/plugins.lua
+badd +46 ~/.config/nvim/lua/coc.lua
+badd +20 app/routes/t.\$slug.\$topicId.comments.tsx
+badd +3 ~/.config/nvim/lua/keybindings.lua
+badd +77 app/components/CommentForm.tsx
+badd +0 term://~/remix/discourse/discourse_remix_comments//76076:/bin/bash
+badd +0 term://~/remix/discourse/discourse_remix_comments//76547:/bin/bash
+badd +28 app/services/fetchCommentsForUser.server.ts
+badd +37 app/services/transformDiscourseData.server.ts
+badd +19 app/types/parsedDiscourse.d.ts
+badd +75 app/types/apiDiscourse.d.ts
 argglobal
 %argdel
-edit postcss.config.js
+edit app/routes/t.\$slug.\$topicId.comments.tsx
 let s:save_splitbelow = &splitbelow
 let s:save_splitright = &splitright
 set splitbelow splitright
 wincmd _ | wincmd |
 vsplit
-wincmd _ | wincmd |
-vsplit
-2wincmd h
-wincmd w
+1wincmd h
 wincmd w
 wincmd _ | wincmd |
 split
 1wincmd k
+wincmd _ | wincmd |
+vsplit
+1wincmd h
+wincmd w
 wincmd w
 wincmd _ | wincmd |
 vsplit
@@ -52,17 +65,18 @@ set winheight=1
 set winminwidth=0
 set winwidth=1
 exe 'vert 1resize ' . ((&columns * 31 + 171) / 342)
-exe 'vert 2resize ' . ((&columns * 134 + 171) / 342)
-exe '3resize ' . ((&lines * 44 + 30) / 60)
-exe 'vert 3resize ' . ((&columns * 175 + 171) / 342)
-exe '4resize ' . ((&lines * 13 + 30) / 60)
-exe 'vert 4resize ' . ((&columns * 72 + 171) / 342)
-exe '5resize ' . ((&lines * 13 + 30) / 60)
-exe 'vert 5resize ' . ((&columns * 102 + 171) / 342)
+exe '2resize ' . ((&lines * 41 + 30) / 60)
+exe 'vert 2resize ' . ((&columns * 155 + 171) / 342)
+exe '3resize ' . ((&lines * 41 + 30) / 60)
+exe 'vert 3resize ' . ((&columns * 154 + 171) / 342)
+exe '4resize ' . ((&lines * 16 + 30) / 60)
+exe 'vert 4resize ' . ((&columns * 155 + 171) / 342)
+exe '5resize ' . ((&lines * 16 + 30) / 60)
+exe 'vert 5resize ' . ((&columns * 154 + 171) / 342)
 argglobal
 enew
-file NERD_tree_tab_2
-balt Recourse
+file NERD_tree_tab_1
+balt app/components/CommentForm.tsx
 setlocal fdm=manual
 setlocal fde=0
 setlocal fmr={{{,}}}
@@ -73,7 +87,7 @@ setlocal fdn=20
 setlocal nofen
 wincmd w
 argglobal
-balt app/routes/_index.tsx
+balt app/components/CommentForm.tsx
 setlocal fdm=manual
 setlocal fde=0
 setlocal fmr={{{,}}}
@@ -84,18 +98,19 @@ setlocal fdn=20
 setlocal fen
 silent! normal! zE
 let &fdl = &fdl
-let s:l = 6 - ((5 * winheight(0) + 29) / 58)
+let s:l = 27 - ((17 * winheight(0) + 20) / 41)
 if s:l < 1 | let s:l = 1 | endif
 keepjumps exe s:l
 normal! zt
-keepjumps 6
-normal! 0
+keepjumps 27
+normal! 019|
 wincmd w
 argglobal
-if bufexists(fnamemodify("app/routes/api.discoursePostEvent.tsx", ":p")) | buffer app/routes/api.discoursePostEvent.tsx | else | edit app/routes/api.discoursePostEvent.tsx | endif
+if bufexists(fnamemodify("app/components/CommentForm.tsx", ":p")) | buffer app/components/CommentForm.tsx | else | edit app/components/CommentForm.tsx | endif
 if &buftype ==# 'terminal'
-  silent file app/routes/api.discoursePostEvent.tsx
+  silent file app/components/CommentForm.tsx
 endif
+balt app/routes/t.\$slug.\$topicId.comments.tsx
 setlocal fdm=manual
 setlocal fde=0
 setlocal fmr={{{,}}}
@@ -106,17 +121,17 @@ setlocal fdn=20
 setlocal fen
 silent! normal! zE
 let &fdl = &fdl
-let s:l = 73 - ((0 * winheight(0) + 22) / 44)
+let s:l = 79 - ((20 * winheight(0) + 20) / 41)
 if s:l < 1 | let s:l = 1 | endif
 keepjumps exe s:l
 normal! zt
-keepjumps 73
-normal! 027|
+keepjumps 79
+normal! 010|
 wincmd w
 argglobal
-if bufexists(fnamemodify("term://~/remix/discourse/discourse_remix_comments//16641:/bin/bash", ":p")) | buffer term://~/remix/discourse/discourse_remix_comments//16641:/bin/bash | else | edit term://~/remix/discourse/discourse_remix_comments//16641:/bin/bash | endif
+if bufexists(fnamemodify("term://~/remix/discourse/discourse_remix_comments//76547:/bin/bash", ":p")) | buffer term://~/remix/discourse/discourse_remix_comments//76547:/bin/bash | else | edit term://~/remix/discourse/discourse_remix_comments//76547:/bin/bash | endif
 if &buftype ==# 'terminal'
-  silent file term://~/remix/discourse/discourse_remix_comments//16641:/bin/bash
+  silent file term://~/remix/discourse/discourse_remix_comments//76547:/bin/bash
 endif
 balt term://~/remix/discourse/discourse_remix_comments//16641:/bin/bash
 setlocal fdm=manual
@@ -127,19 +142,19 @@ setlocal fdl=0
 setlocal fml=1
 setlocal fdn=20
 setlocal fen
-let s:l = 13 - ((12 * winheight(0) + 6) / 13)
+let s:l = 18 - ((13 * winheight(0) + 8) / 16)
 if s:l < 1 | let s:l = 1 | endif
 keepjumps exe s:l
 normal! zt
-keepjumps 13
+keepjumps 18
 normal! 0
 wincmd w
 argglobal
-if bufexists(fnamemodify("term://~/remix/discourse/discourse_remix_comments//17053:/bin/bash", ":p")) | buffer term://~/remix/discourse/discourse_remix_comments//17053:/bin/bash | else | edit term://~/remix/discourse/discourse_remix_comments//17053:/bin/bash | endif
+if bufexists(fnamemodify("term://~/remix/discourse/discourse_remix_comments//76076:/bin/bash", ":p")) | buffer term://~/remix/discourse/discourse_remix_comments//76076:/bin/bash | else | edit term://~/remix/discourse/discourse_remix_comments//76076:/bin/bash | endif
 if &buftype ==# 'terminal'
-  silent file term://~/remix/discourse/discourse_remix_comments//17053:/bin/bash
+  silent file term://~/remix/discourse/discourse_remix_comments//76076:/bin/bash
 endif
-balt term://~/remix/discourse/discourse_remix_comments//17053:/bin/bash
+balt term://~/remix/discourse/discourse_remix_comments//16641:/bin/bash
 setlocal fdm=manual
 setlocal fde=0
 setlocal fmr={{{,}}}
@@ -148,22 +163,23 @@ setlocal fdl=0
 setlocal fml=1
 setlocal fdn=20
 setlocal fen
-let s:l = 1 - ((0 * winheight(0) + 6) / 13)
+let s:l = 2495 - ((8 * winheight(0) + 8) / 16)
 if s:l < 1 | let s:l = 1 | endif
 keepjumps exe s:l
 normal! zt
-keepjumps 1
+keepjumps 2495
 normal! 0
 wincmd w
-2wincmd w
+4wincmd w
 exe 'vert 1resize ' . ((&columns * 31 + 171) / 342)
-exe 'vert 2resize ' . ((&columns * 134 + 171) / 342)
-exe '3resize ' . ((&lines * 44 + 30) / 60)
-exe 'vert 3resize ' . ((&columns * 175 + 171) / 342)
-exe '4resize ' . ((&lines * 13 + 30) / 60)
-exe 'vert 4resize ' . ((&columns * 72 + 171) / 342)
-exe '5resize ' . ((&lines * 13 + 30) / 60)
-exe 'vert 5resize ' . ((&columns * 102 + 171) / 342)
+exe '2resize ' . ((&lines * 41 + 30) / 60)
+exe 'vert 2resize ' . ((&columns * 155 + 171) / 342)
+exe '3resize ' . ((&lines * 41 + 30) / 60)
+exe 'vert 3resize ' . ((&columns * 154 + 171) / 342)
+exe '4resize ' . ((&lines * 16 + 30) / 60)
+exe 'vert 4resize ' . ((&columns * 155 + 171) / 342)
+exe '5resize ' . ((&lines * 16 + 30) / 60)
+exe 'vert 5resize ' . ((&columns * 154 + 171) / 342)
 tabnext 1
 if exists('s:wipebuf') && len(win_findbuf(s:wipebuf)) == 0 && getbufvar(s:wipebuf, '&buftype') isnot# 'terminal'
   silent exe 'bwipe ' . s:wipebuf
@@ -179,6 +195,7 @@ if filereadable(s:sx)
 endif
 let &g:so = s:so_save | let &g:siso = s:siso_save
 set hlsearch
+nohlsearch
 doautoall SessionLoadPost
 unlet SessionLoad
 " vim: set ft=vim :
