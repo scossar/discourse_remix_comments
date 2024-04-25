@@ -19,11 +19,13 @@ badd +8 app/components/Avatar.tsx
 badd +90 health://
 badd +61 app/routes/_index.tsx
 badd +158 Recourse
-badd +0 app/routes/api.discoursePostEvent.tsx
-badd +0 postcss.config.js
+badd +93 app/routes/api.discoursePostEvent.tsx
+badd +6 postcss.config.js
+badd +1 ~/.config/nvim/lua/coc.lua
+badd +32 app/routes/t.\$slug.\$topicId.comments.tsx
 argglobal
 %argdel
-edit postcss.config.js
+edit app/routes/t.\$slug.\$topicId.comments.tsx
 let s:save_splitbelow = &splitbelow
 let s:save_splitright = &splitright
 set splitbelow splitright
@@ -52,17 +54,17 @@ set winheight=1
 set winminwidth=0
 set winwidth=1
 exe 'vert 1resize ' . ((&columns * 31 + 171) / 342)
-exe 'vert 2resize ' . ((&columns * 134 + 171) / 342)
+exe 'vert 2resize ' . ((&columns * 76 + 171) / 342)
 exe '3resize ' . ((&lines * 44 + 30) / 60)
-exe 'vert 3resize ' . ((&columns * 175 + 171) / 342)
+exe 'vert 3resize ' . ((&columns * 233 + 171) / 342)
 exe '4resize ' . ((&lines * 13 + 30) / 60)
-exe 'vert 4resize ' . ((&columns * 72 + 171) / 342)
+exe 'vert 4resize ' . ((&columns * 159 + 171) / 342)
 exe '5resize ' . ((&lines * 13 + 30) / 60)
-exe 'vert 5resize ' . ((&columns * 102 + 171) / 342)
+exe 'vert 5resize ' . ((&columns * 73 + 171) / 342)
 argglobal
 enew
-file NERD_tree_tab_2
-balt Recourse
+file NERD_tree_tab_1
+balt postcss.config.js
 setlocal fdm=manual
 setlocal fde=0
 setlocal fmr={{{,}}}
@@ -73,7 +75,7 @@ setlocal fdn=20
 setlocal nofen
 wincmd w
 argglobal
-balt app/routes/_index.tsx
+balt postcss.config.js
 setlocal fdm=manual
 setlocal fde=0
 setlocal fmr={{{,}}}
@@ -84,18 +86,19 @@ setlocal fdn=20
 setlocal fen
 silent! normal! zE
 let &fdl = &fdl
-let s:l = 6 - ((5 * winheight(0) + 29) / 58)
+let s:l = 32 - ((31 * winheight(0) + 29) / 58)
 if s:l < 1 | let s:l = 1 | endif
 keepjumps exe s:l
 normal! zt
-keepjumps 6
-normal! 0
+keepjumps 32
+normal! 027|
 wincmd w
 argglobal
-if bufexists(fnamemodify("app/routes/api.discoursePostEvent.tsx", ":p")) | buffer app/routes/api.discoursePostEvent.tsx | else | edit app/routes/api.discoursePostEvent.tsx | endif
+if bufexists(fnamemodify("~/.config/nvim/lua/coc.lua", ":p")) | buffer ~/.config/nvim/lua/coc.lua | else | edit ~/.config/nvim/lua/coc.lua | endif
 if &buftype ==# 'terminal'
-  silent file app/routes/api.discoursePostEvent.tsx
+  silent file ~/.config/nvim/lua/coc.lua
 endif
+balt app/routes/api.discoursePostEvent.tsx
 setlocal fdm=manual
 setlocal fde=0
 setlocal fmr={{{,}}}
@@ -106,19 +109,38 @@ setlocal fdn=20
 setlocal fen
 silent! normal! zE
 let &fdl = &fdl
-let s:l = 73 - ((0 * winheight(0) + 22) / 44)
+let s:l = 80 - ((40 * winheight(0) + 22) / 44)
 if s:l < 1 | let s:l = 1 | endif
 keepjumps exe s:l
 normal! zt
-keepjumps 73
-normal! 027|
+keepjumps 80
+normal! 0
 wincmd w
 argglobal
 if bufexists(fnamemodify("term://~/remix/discourse/discourse_remix_comments//16641:/bin/bash", ":p")) | buffer term://~/remix/discourse/discourse_remix_comments//16641:/bin/bash | else | edit term://~/remix/discourse/discourse_remix_comments//16641:/bin/bash | endif
 if &buftype ==# 'terminal'
   silent file term://~/remix/discourse/discourse_remix_comments//16641:/bin/bash
 endif
-balt term://~/remix/discourse/discourse_remix_comments//16641:/bin/bash
+setlocal fdm=manual
+setlocal fde=0
+setlocal fmr={{{,}}}
+setlocal fdi=#
+setlocal fdl=0
+setlocal fml=1
+setlocal fdn=20
+setlocal fen
+let s:l = 1 - ((0 * winheight(0) + 6) / 13)
+if s:l < 1 | let s:l = 1 | endif
+keepjumps exe s:l
+normal! zt
+keepjumps 1
+normal! 064|
+wincmd w
+argglobal
+if bufexists(fnamemodify("term://~/remix/discourse/discourse_remix_comments//17053:/bin/bash", ":p")) | buffer term://~/remix/discourse/discourse_remix_comments//17053:/bin/bash | else | edit term://~/remix/discourse/discourse_remix_comments//17053:/bin/bash | endif
+if &buftype ==# 'terminal'
+  silent file term://~/remix/discourse/discourse_remix_comments//17053:/bin/bash
+endif
 setlocal fdm=manual
 setlocal fde=0
 setlocal fmr={{{,}}}
@@ -134,36 +156,15 @@ normal! zt
 keepjumps 13
 normal! 0
 wincmd w
-argglobal
-if bufexists(fnamemodify("term://~/remix/discourse/discourse_remix_comments//17053:/bin/bash", ":p")) | buffer term://~/remix/discourse/discourse_remix_comments//17053:/bin/bash | else | edit term://~/remix/discourse/discourse_remix_comments//17053:/bin/bash | endif
-if &buftype ==# 'terminal'
-  silent file term://~/remix/discourse/discourse_remix_comments//17053:/bin/bash
-endif
-balt term://~/remix/discourse/discourse_remix_comments//17053:/bin/bash
-setlocal fdm=manual
-setlocal fde=0
-setlocal fmr={{{,}}}
-setlocal fdi=#
-setlocal fdl=0
-setlocal fml=1
-setlocal fdn=20
-setlocal fen
-let s:l = 1 - ((0 * winheight(0) + 6) / 13)
-if s:l < 1 | let s:l = 1 | endif
-keepjumps exe s:l
-normal! zt
-keepjumps 1
-normal! 0
-wincmd w
-2wincmd w
+3wincmd w
 exe 'vert 1resize ' . ((&columns * 31 + 171) / 342)
-exe 'vert 2resize ' . ((&columns * 134 + 171) / 342)
+exe 'vert 2resize ' . ((&columns * 76 + 171) / 342)
 exe '3resize ' . ((&lines * 44 + 30) / 60)
-exe 'vert 3resize ' . ((&columns * 175 + 171) / 342)
+exe 'vert 3resize ' . ((&columns * 233 + 171) / 342)
 exe '4resize ' . ((&lines * 13 + 30) / 60)
-exe 'vert 4resize ' . ((&columns * 72 + 171) / 342)
+exe 'vert 4resize ' . ((&columns * 159 + 171) / 342)
 exe '5resize ' . ((&lines * 13 + 30) / 60)
-exe 'vert 5resize ' . ((&columns * 102 + 171) / 342)
+exe 'vert 5resize ' . ((&columns * 73 + 171) / 342)
 tabnext 1
 if exists('s:wipebuf') && len(win_findbuf(s:wipebuf)) == 0 && getbufvar(s:wipebuf, '&buftype') isnot# 'terminal'
   silent exe 'bwipe ' . s:wipebuf

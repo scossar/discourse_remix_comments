@@ -36,6 +36,10 @@ Search forwards: / Enter
 Select next search result: n 
 Clear a search (to remove visual clutter): :nohlsearch (:noh)
 
+## Buffers
+
+Goto previous buffer: :b# or :buffer # or Ctrl-6 
+
 
 ### Visual mode
 

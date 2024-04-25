@@ -220,7 +220,7 @@ export default function DiscourseComments() {
         {nextPage && (
           <div>
             <button
-              className="text-blue-700 px-2 py-1 bg-white"
+              className="px-2 py-1 text-blue-700 bg-white"
               onClick={loadMoreComments}
             >
               {fetcher.state === "idle" ? "Load more" : "Loading..."}
