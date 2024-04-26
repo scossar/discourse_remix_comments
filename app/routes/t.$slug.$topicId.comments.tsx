@@ -27,7 +27,10 @@ import {
   ApiDiscourseConnectUser,
   ApiDiscoursePost,
 } from "~/types/apiDiscourse";
-import { ParsedDiscourseTopicComments } from "~/types/parsedDiscourse";
+import {
+  ParsedDiscourseCommentReplies,
+  ParsedDiscourseTopicComments,
+} from "~/types/parsedDiscourse";
 
 export const meta: MetaFunction = () => {
   return [
@@ -170,6 +173,9 @@ export default function DiscourseComments() {
   const { commentsForUser, topicId } = useLoaderData<typeof loader>();
   const actionData = useActionData<typeof action>();
   const commentFetcher = useFetcher<CommentFetcherData>({ key: "comments" });
+  const replyFetcher = useFetcher<ParsedDiscourseCommentReplies>({
+    key: "replies",
+  });
   const [posts, setPosts] = useState(commentsForUser.posts);
   const [nextPage, setNextPage] = useState(commentsForUser.nextPage);
 
@@ -180,6 +186,12 @@ export default function DiscourseComments() {
     if (commentFetcher.state === "idle" && nextPage) {
       commentFetcher.load(`/t/-/${topicId}/comments?page=${nextPage}`);
     }
+  }
+
+  if (replyFetcher.data?.posts) {
+    console.log(
+      `posts in the comment route: ${JSON.stringify(posts, null, 2)}`
+    );
   }
 
   if (actionData && actionData.newComment) {

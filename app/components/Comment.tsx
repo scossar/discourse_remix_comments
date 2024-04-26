@@ -26,7 +26,6 @@ const Comment = forwardRef<HTMLDivElement, CommentProps>(function Comment(
   const replyText = replyCount === 1 ? "reply" : "replies";
 
   function getRepliesForPost(postId: number) {
-    console.log(`getRepliesForPost, postId: ${postId}`);
     replyFetcher.load(`/api/discourseRepliesForPost?postId=${postId}`);
   }
 
@@ -67,15 +66,19 @@ const Comment = forwardRef<HTMLDivElement, CommentProps>(function Comment(
           />
         </div>
       </div>
-      {replyFetcher.data?.posts &&
-        replyFetcher.data.posts.map((post) => (
-          <div
-            key={`${post.id}-${post.replyToPostNumber}`}
-            className="bg-red-500 min-h-96"
-          >
-            <div dangerouslySetInnerHTML={{ __html: post.cooked }} />
-          </div>
-        ))}
+      {replyFetcher.data &&
+        replyFetcher.data?.posts &&
+        replyFetcher.data.posts.map(
+          (replyPost) =>
+            replyPost.replyToPostNumber === post.postNumber && (
+              <div
+                key={`${post.id}-${replyPost.replyToPostNumber}`}
+                className="bg-red-500 min-h-96"
+              >
+                <div dangerouslySetInnerHTML={{ __html: replyPost.cooked }} />
+              </div>
+            )
+        )}
     </div>
   );
 });

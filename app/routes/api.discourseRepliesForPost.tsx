@@ -38,8 +38,6 @@ export async function loader({
 
   const postsData: ApiDiscourseReplyPost[] = await response.json();
 
-  console.log(`postReplies: ${JSON.stringify(postsData, null, 2)}`);
-
   return {
     posts: postsData
       .filter(isRegularPost)
