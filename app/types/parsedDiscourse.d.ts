@@ -53,5 +53,5 @@ export interface ParsedDiscourseTopicComments {
 }
 
 export interface ParsedDiscourseCommentReplies {
-  posts: ParsedDiscoursePost[];
+  posts: ParsedDiscourseReplyPost[];
 }

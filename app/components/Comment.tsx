@@ -3,7 +3,10 @@ import { useFetcher } from "@remix-run/react";
 
 import ReplyButton from "./ReplyButton";
 
-import type { ParsedDiscoursePost } from "~/types/parsedDiscourse";
+import type {
+  ParsedDiscoursePost,
+  ParsedDiscourseCommentReplies,
+} from "~/types/parsedDiscourse";
 import Avatar from "~/components/Avatar";
 
 export type CommentProps = {
@@ -11,15 +14,13 @@ export type CommentProps = {
   handleReplyClick: (postNumber: string) => void;
 };
 
-type ReplyFetcherData = {
-  repliesForPost: ParsedDiscoursePost[];
-};
-
 const Comment = forwardRef<HTMLDivElement, CommentProps>(function Comment(
   { post, handleReplyClick },
   ref
 ) {
-  const replyFetcher = useFetcher<ReplyFetcherData>({ key: "replies" });
+  const replyFetcher = useFetcher<ParsedDiscourseCommentReplies>({
+    key: "replies",
+  });
   const postNumber = String(post.postNumber) || "";
   const replyCount = post.replyCount;
   const replyText = replyCount === 1 ? "reply" : "replies";
@@ -66,6 +67,15 @@ const Comment = forwardRef<HTMLDivElement, CommentProps>(function Comment(
           />
         </div>
       </div>
+      {replyFetcher.data?.posts &&
+        replyFetcher.data.posts.map((post) => (
+          <div
+            key={`${post.id}-${post.replyToPostNumber}`}
+            className="bg-red-500 min-h-96"
+          >
+            <div dangerouslySetInnerHTML={{ __html: post.cooked }} />
+          </div>
+        ))}
     </div>
   );
 });
