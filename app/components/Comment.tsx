@@ -68,9 +68,41 @@ const Comment = forwardRef<HTMLDivElement, CommentProps>(function Comment(
             replyPost.replyToPostNumber === post.postNumber && (
               <div
                 key={`${post.id}-${replyPost.replyToPostNumber}`}
-                className="bg-red-500 min-h-96"
+                className="flex my-6 discourse-comment"
               >
-                <div dangerouslySetInnerHTML={{ __html: replyPost.cooked }} />
+                <Avatar
+                  user={{
+                    username: replyPost.username,
+                    avatarTemplate: replyPost.avatarUrl,
+                  }}
+                  absoluteUrl={true}
+                  className="object-contain w-8 h-8 mt-2 rounded-full"
+                />
+                <div className="w-full ml-2">
+                  <div className="w-full my-3">
+                    <span className="inline-block p-1 text-sm text-slate-50">
+                      {replyPost.postNumber}
+                    </span>
+                    <div
+                      dangerouslySetInnerHTML={{ __html: replyPost.cooked }}
+                    />
+                  </div>
+                  <div className="flex items-center w-full">
+                    <div className="mr-6">
+                      {replyPost.replyCount > 0 && (
+                        <button
+                          onClick={() => getRepliesForPost(replyPost.id)}
+                        >{`${replyPost.replyCount} ${
+                          replyPost.replyCount === 1 ? "reply" : "replies"
+                        }`}</button>
+                      )}
+                    </div>
+                    <ReplyButton
+                      handleReplyClick={handleReplyClick}
+                      postNumber={String(replyPost.postNumber)}
+                    />
+                  </div>
+                </div>
               </div>
             )
         )}

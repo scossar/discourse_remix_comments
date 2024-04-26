@@ -212,6 +212,7 @@ export default function DiscourseComments() {
   }, [commentFetcher.data, nextPage]);
 
   const handleReplyClick = (postNumber: string) => {
+    console.log(`handleReplyClick: ${postNumber}`);
     setReplyToPostNumber(postNumber);
     setEditorOpen(true);
   };
