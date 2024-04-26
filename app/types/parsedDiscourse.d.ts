@@ -11,11 +11,18 @@ export interface ParsedDiscoursePost {
   userId: number;
 }
 
-export interface ParsedDiscourseParticipant {
+export interface ParsedDiscourseReplyPost extends ParsedDiscoursePost {
+  replyToUser: ParsedDiscourseBasicUser;
+}
+
+export interface ParsedDiscourseBasicUser {
   id: number;
   username: string;
-  postCount: number;
   avatarUrl: string;
+}
+
+export interface ParsedDiscourseParticipant extends ParsedDiscourseBasicUser {
+  postCount: number;
 }
 
 export interface ParsedDiscourseDetails {
@@ -43,4 +50,8 @@ export interface ParsedDiscourseTopicComments {
   slug?: string;
   posts: ParsedDiscoursePost[];
   details?: ParsedDiscourseDetails;
+}
+
+export interface ParsedDiscourseCommentReplies {
+  posts: ParsedDiscoursePost[];
 }

@@ -138,8 +138,6 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
   const { searchParams } = new URL(request.url);
   const page = Number(searchParams.get("page")) || 0;
   const currentUsername = user?.username ?? null;
-  const repliesFor = Number(searchParams.get("repliesFor")) || null;
-  console.log(`repliesFor: ${repliesFor}`);
 
   let commentsForUser;
   let errorMessage;

@@ -1,10 +1,14 @@
 import type {
+  ApiDiscourseBasicUser,
   ApiDiscourseParticipant,
   ApiDiscoursePost,
+  ApiDiscourseReplyPost,
 } from "~/types/apiDiscourse";
 import type {
+  ParsedDiscourseBasicUser,
   ParsedDiscourseParticipant,
   ParsedDiscoursePost,
+  ParsedDiscourseReplyPost,
 } from "~/types/parsedDiscourse";
 
 export function generateAvatarUrl(
@@ -31,6 +35,36 @@ export function transformPost(
     replyToPostNumber: apiPost.reply_to_post_number,
     updatedAt: apiPost.updated_at,
     userId: apiPost.user_id,
+  };
+}
+
+export function transformReplyPost(
+  apiReplyPost: ApiDiscourseReplyPost,
+  baseUrl: string
+): ParsedDiscourseReplyPost {
+  return {
+    id: apiReplyPost.id,
+    username: apiReplyPost.username,
+    avatarUrl: generateAvatarUrl(apiReplyPost.avatar_template, baseUrl),
+    createdAt: apiReplyPost.created_at,
+    cooked: apiReplyPost.cooked,
+    postNumber: apiReplyPost.post_number,
+    replyCount: apiReplyPost.reply_count,
+    replyToPostNumber: apiReplyPost.reply_to_post_number,
+    updatedAt: apiReplyPost.updated_at,
+    userId: apiReplyPost.user_id,
+    replyToUser: transformUser(apiReplyPost.reply_to_user, baseUrl),
+  };
+}
+
+export function transformUser(
+  apiUser: ApiDiscourseBasicUser,
+  baseUrl: string
+): ParsedDiscourseBasicUser {
+  return {
+    id: apiUser.id,
+    username: apiUser.username,
+    avatarUrl: generateAvatarUrl(apiUser.avatar_template, baseUrl),
   };
 }
 

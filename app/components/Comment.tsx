@@ -26,6 +26,13 @@ const Comment = forwardRef<HTMLDivElement, CommentProps>(function Comment(
 
   function getRepliesForPost(postId: number) {
     console.log(`getRepliesForPost, postId: ${postId}`);
+    replyFetcher.load(`/api/discourseRepliesForPost?postId=${postId}`);
+  }
+
+  if (replyFetcher.data) {
+    console.log(
+      `replyFetcher.data: ${JSON.stringify(replyFetcher.data, null, 2)}`
+    );
   }
 
   return (

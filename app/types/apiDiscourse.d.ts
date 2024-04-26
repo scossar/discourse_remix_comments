@@ -81,6 +81,10 @@ export interface ApiDiscoursePost {
   category_slug?: string;
 }
 
+export interface ApiDiscourseReplyPost extends ApiDiscoursePost {
+  reply_to_user: ApiDiscourseBasicUser;
+}
+
 export interface ApiDiscourseBasicTopic {
   tags: string[];
   tags_descriptions: Record<string, string>;
