@@ -98,8 +98,8 @@ export default function TopicForSlugAndId() {
     : "#ffffff";
 
   return (
-    <div className="max-w-screen-md mx-auto pt-6 pb-12 relative">
-      <header className="pb-3 border-b-cyan-800 border-b">
+    <div className="relative pt-6 pb-12 mx-auto max-w-screen-md">
+      <header className="pb-3 border-b border-b-cyan-800">
         <h1 className="text-3xl">{topic.title}</h1>
         <div className="flex items-center text-sm">
           <div
@@ -116,11 +116,11 @@ export default function TopicForSlugAndId() {
           </span>
         </div>
       </header>
-      <div className="discourse-op flex py-3 border-b border-cyan-800">
+      <div className="flex py-3 border-b discourse-op border-cyan-800">
         <Avatar
           user={topic.user}
           size="48"
-          className="rounded-full object-contain w-10 h-10 mt-3"
+          className="object-contain w-10 h-10 mt-3 rounded-full"
         />
         <div className="ml-2">
           {topic?.post?.cooked && (

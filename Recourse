@@ -19,25 +19,28 @@ badd +10 term://~/remix/discourse/discourse_remix_comments//17053:/bin/bash
 badd +8 app/components/Avatar.tsx
 badd +61 app/routes/_index.tsx
 badd +158 Recourse
-badd +104 app/routes/api.discoursePostEvent.tsx
+badd +16 app/routes/api.discoursePostEvent.tsx
 badd +1 postcss.config.js
 badd +26 app/hooks/useDebouncedPreview.ts
 badd +1 ~/.config/nvim/lua/plugins.lua
 badd +46 ~/.config/nvim/lua/coc.lua
-badd +192 app/routes/t.\$slug.\$topicId.comments.tsx
+badd +231 app/routes/t.\$slug.\$topicId.comments.tsx
 badd +3 ~/.config/nvim/lua/keybindings.lua
 badd +90 app/components/CommentForm.tsx
 badd +1 term://~/remix/discourse/discourse_remix_comments//76076:/bin/bash
 badd +1 term://~/remix/discourse/discourse_remix_comments//76547:/bin/bash
-badd +28 app/services/fetchCommentsForUser.server.ts
-badd +30 app/services/transformDiscourseData.server.ts
-badd +9 app/types/parsedDiscourse.d.ts
-badd +83 app/types/apiDiscourse.d.ts
-badd +32 app/components/Comment.tsx
-badd +8 app/components/ReplyButton.tsx
+badd +105 app/services/fetchCommentsForUser.server.ts
+badd +50 app/services/transformDiscourseData.server.ts
+badd +57 app/types/parsedDiscourse.d.ts
+badd +98 app/types/apiDiscourse.d.ts
+badd +68 app/components/Comment.tsx
+badd +1 app/components/ReplyButton.tsx
+badd +23 app/routes/api.discourseRepliesForPost.tsx
+badd +19 app/components/CommentBody.tsx
+badd +0 app/routes/t.\$slug.\$topicId.tsx
 argglobal
 %argdel
-edit app/routes/t.\$slug.\$topicId.comments.tsx
+edit app/routes/t.\$slug.\$topicId.tsx
 let s:save_splitbelow = &splitbelow
 let s:save_splitright = &splitright
 set splitbelow splitright
@@ -66,15 +69,15 @@ set winminheight=0
 set winheight=1
 set winminwidth=0
 set winwidth=1
-exe 'vert 1resize ' . ((&columns * 31 + 171) / 342)
-exe '2resize ' . ((&lines * 44 + 30) / 60)
-exe 'vert 2resize ' . ((&columns * 112 + 171) / 342)
-exe '3resize ' . ((&lines * 44 + 30) / 60)
-exe 'vert 3resize ' . ((&columns * 197 + 171) / 342)
-exe '4resize ' . ((&lines * 13 + 30) / 60)
-exe 'vert 4resize ' . ((&columns * 155 + 171) / 342)
-exe '5resize ' . ((&lines * 13 + 30) / 60)
-exe 'vert 5resize ' . ((&columns * 154 + 171) / 342)
+exe 'vert 1resize ' . ((&columns * 35 + 191) / 382)
+exe '2resize ' . ((&lines * 65 + 38) / 76)
+exe 'vert 2resize ' . ((&columns * 201 + 191) / 382)
+exe '3resize ' . ((&lines * 65 + 38) / 76)
+exe 'vert 3resize ' . ((&columns * 144 + 191) / 382)
+exe '4resize ' . ((&lines * 8 + 38) / 76)
+exe 'vert 4resize ' . ((&columns * 173 + 191) / 382)
+exe '5resize ' . ((&lines * 8 + 38) / 76)
+exe 'vert 5resize ' . ((&columns * 172 + 191) / 382)
 argglobal
 enew
 file NERD_tree_tab_1
@@ -88,7 +91,7 @@ setlocal fdn=20
 setlocal nofen
 wincmd w
 argglobal
-balt app/services/transformDiscourseData.server.ts
+balt app/routes/t.\$slug.\$topicId.comments.tsx
 setlocal fdm=manual
 setlocal fde=0
 setlocal fmr={{{,}}}
@@ -99,19 +102,19 @@ setlocal fdn=20
 setlocal fen
 silent! normal! zE
 let &fdl = &fdl
-let s:l = 31 - ((30 * winheight(0) + 22) / 44)
+let s:l = 65 - ((16 * winheight(0) + 32) / 65)
 if s:l < 1 | let s:l = 1 | endif
 keepjumps exe s:l
 normal! zt
-keepjumps 31
-normal! 0
+keepjumps 65
+normal! 030|
 wincmd w
 argglobal
 if bufexists(fnamemodify("app/components/Comment.tsx", ":p")) | buffer app/components/Comment.tsx | else | edit app/components/Comment.tsx | endif
 if &buftype ==# 'terminal'
   silent file app/components/Comment.tsx
 endif
-balt app/components/CommentForm.tsx
+balt app/routes/api.discourseRepliesForPost.tsx
 setlocal fdm=manual
 setlocal fde=0
 setlocal fmr={{{,}}}
@@ -122,12 +125,12 @@ setlocal fdn=20
 setlocal fen
 silent! normal! zE
 let &fdl = &fdl
-let s:l = 26 - ((22 * winheight(0) + 22) / 44)
+let s:l = 58 - ((39 * winheight(0) + 32) / 65)
 if s:l < 1 | let s:l = 1 | endif
 keepjumps exe s:l
 normal! zt
-keepjumps 26
-normal! 0
+keepjumps 58
+normal! 018|
 wincmd w
 argglobal
 if bufexists(fnamemodify("term://~/remix/discourse/discourse_remix_comments//76547:/bin/bash", ":p")) | buffer term://~/remix/discourse/discourse_remix_comments//76547:/bin/bash | else | edit term://~/remix/discourse/discourse_remix_comments//76547:/bin/bash | endif
@@ -143,11 +146,11 @@ setlocal fdl=0
 setlocal fml=1
 setlocal fdn=20
 setlocal fen
-let s:l = 106 - ((12 * winheight(0) + 6) / 13)
+let s:l = 138 - ((7 * winheight(0) + 4) / 8)
 if s:l < 1 | let s:l = 1 | endif
 keepjumps exe s:l
 normal! zt
-keepjumps 106
+keepjumps 138
 normal! 064|
 wincmd w
 argglobal
@@ -164,23 +167,23 @@ setlocal fdl=0
 setlocal fml=1
 setlocal fdn=20
 setlocal fen
-let s:l = 901 - ((12 * winheight(0) + 6) / 13)
+let s:l = 925 - ((7 * winheight(0) + 4) / 8)
 if s:l < 1 | let s:l = 1 | endif
 keepjumps exe s:l
 normal! zt
-keepjumps 901
+keepjumps 925
 normal! 064|
 wincmd w
-3wincmd w
-exe 'vert 1resize ' . ((&columns * 31 + 171) / 342)
-exe '2resize ' . ((&lines * 44 + 30) / 60)
-exe 'vert 2resize ' . ((&columns * 112 + 171) / 342)
-exe '3resize ' . ((&lines * 44 + 30) / 60)
-exe 'vert 3resize ' . ((&columns * 197 + 171) / 342)
-exe '4resize ' . ((&lines * 13 + 30) / 60)
-exe 'vert 4resize ' . ((&columns * 155 + 171) / 342)
-exe '5resize ' . ((&lines * 13 + 30) / 60)
-exe 'vert 5resize ' . ((&columns * 154 + 171) / 342)
+4wincmd w
+exe 'vert 1resize ' . ((&columns * 35 + 191) / 382)
+exe '2resize ' . ((&lines * 65 + 38) / 76)
+exe 'vert 2resize ' . ((&columns * 201 + 191) / 382)
+exe '3resize ' . ((&lines * 65 + 38) / 76)
+exe 'vert 3resize ' . ((&columns * 144 + 191) / 382)
+exe '4resize ' . ((&lines * 8 + 38) / 76)
+exe 'vert 4resize ' . ((&columns * 173 + 191) / 382)
+exe '5resize ' . ((&lines * 8 + 38) / 76)
+exe 'vert 5resize ' . ((&columns * 172 + 191) / 382)
 tabnext 1
 if exists('s:wipebuf') && len(win_findbuf(s:wipebuf)) == 0 && getbufvar(s:wipebuf, '&buftype') isnot# 'terminal'
   silent exe 'bwipe ' . s:wipebuf
@@ -196,7 +199,6 @@ if filereadable(s:sx)
 endif
 let &g:so = s:so_save | let &g:siso = s:siso_save
 set hlsearch
-nohlsearch
 doautoall SessionLoadPost
 unlet SessionLoad
 " vim: set ft=vim :
