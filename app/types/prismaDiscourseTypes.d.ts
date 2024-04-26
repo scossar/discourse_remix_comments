@@ -1,6 +1,6 @@
 import { Prisma } from "@prisma/client";
 
-export type FullDiscourseTopic = Prisma.DiscourseTopicGetPayload<{
+export type DiscourseArticle = Prisma.DiscourseTopicGetPayload<{
   include: {
     user: true;
     category: true;
@@ -16,3 +16,7 @@ export type FullDiscourseTopic = Prisma.DiscourseTopicGetPayload<{
     };
   };
 }>;
+
+export type JsonifiedDiscourseArticle = JsonifyObject<DiscourseArticle>;
+
+export type JsonifiedDiscourseTag = JsonifyObject<Prisma.DiscourseTag>;

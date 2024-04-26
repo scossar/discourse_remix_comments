@@ -1,9 +1,12 @@
-import type { FullDiscourseTopic } from "~/types/prismaDiscourseTypes";
+import {
+  JsonifiedDiscourseTag,
+  JsonifiedDiscourseArticle,
+} from "~/types/prismaDiscourseTypes";
 
 import Avatar from "./Avatar";
 
 interface ArticleProps {
-  topic: FullDiscourseTopic;
+  topic: JsonifiedDiscourseArticle;
 }
 
 export function Article({ topic }: ArticleProps) {
@@ -21,7 +24,7 @@ export function Article({ topic }: ArticleProps) {
           ></div>
           <span className="pr-1">{topic.category?.name}</span>
           <span>
-            {topic?.tags.map((topicTag) => (
+            {topic?.tags.map((topicTag: JsonifiedDiscourseTag) => (
               <span key={topicTag.tagId} className="px-1">
                 {topicTag.tag.text}
               </span>

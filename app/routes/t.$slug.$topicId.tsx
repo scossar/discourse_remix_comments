@@ -15,6 +15,7 @@ import { discourseSessionStorage } from "~/services/session.server";
 import type { ApiDiscourseConnectUser } from "~/types/apiDiscourse";
 import type { RouteError } from "~/types/errorTypes";
 import Avatar from "~/components/Avatar";
+import { Article } from "~/components/Article";
 
 export const meta: MetaFunction = () => {
   return [
@@ -61,7 +62,6 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
     },
   });
 
-  // todo: improve the error boundary
   if (!topic) {
     throw new Response(null, {
       status: 404,
@@ -94,42 +94,9 @@ export default function TopicForSlugAndId() {
   const onCommentRoot = pathEnd === "comments";
   const discourseData: DiscourseData = useOutletContext();
 
-  const categoryColor = topic?.category?.color
-    ? `#${topic.category.color}`
-    : "#ffffff";
-
   return (
     <div className="relative pt-6 pb-12 mx-auto max-w-screen-md">
-      <header className="pb-3 border-b border-b-cyan-800">
-        <h1 className="text-3xl">{topic.title}</h1>
-        <div className="flex items-center text-sm">
-          <div
-            style={{ backgroundColor: `${categoryColor}` }}
-            className={`inline-block p-2 mr-1`}
-          ></div>
-          <span className="pr-1">{topic.category?.name}</span>
-          <span>
-            {topic?.tags.map((topicTag) => (
-              <span key={topicTag.tagId} className="px-1">
-                {topicTag.tag.text}
-              </span>
-            ))}
-          </span>
-        </div>
-      </header>
-      <div className="flex py-3 border-b discourse-op border-cyan-800">
-        <Avatar
-          user={topic.user}
-          size="48"
-          className="object-contain w-10 h-10 mt-3 rounded-full"
-        />
-        <div className="ml-2">
-          {topic?.post?.cooked && (
-            <div dangerouslySetInnerHTML={{ __html: topic.post.cooked }} />
-          )}
-        </div>
-      </div>
-
+      <Article topic={topic} />
       <Link className={`${onCommentRoot ? "hidden" : "block"}`} to={`comments`}>
         Comments
       </Link>
