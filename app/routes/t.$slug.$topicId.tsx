@@ -142,7 +142,6 @@ export default function TopicForSlugAndId() {
 export function ErrorBoundary() {
   const error = useRouteError() as RouteError;
   const status = error?.status;
-
   if (isRouteErrorResponse(error) && error?.data) {
     const errorMessage = error?.data;
 
