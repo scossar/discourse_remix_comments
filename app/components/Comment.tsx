@@ -18,8 +18,9 @@ const Comment = forwardRef<HTMLDivElement, CommentProps>(function Comment(
   { post, handleReplyClick },
   ref
 ) {
+  const replyKey = String(post.postNumber);
   const replyFetcher = useFetcher<ParsedDiscourseCommentReplies>({
-    key: "replies",
+    key: replyKey,
   });
   const postNumber = String(post.postNumber) || "";
   const replyCount = post.replyCount;
@@ -27,12 +28,6 @@ const Comment = forwardRef<HTMLDivElement, CommentProps>(function Comment(
 
   function getRepliesForPost(postId: number) {
     replyFetcher.load(`/api/discourseRepliesForPost?postId=${postId}`);
-  }
-
-  if (replyFetcher.data) {
-    console.log(
-      `replyFetcher.data: ${JSON.stringify(replyFetcher.data, null, 2)}`
-    );
   }
 
   return (

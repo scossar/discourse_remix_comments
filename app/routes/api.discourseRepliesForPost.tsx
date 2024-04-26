@@ -18,8 +18,6 @@ export async function loader({
   const { searchParams } = new URL(request.url);
   const postId = Number(searchParams.get("postId")) || null;
 
-  console.log(`replies have been requested for postId: ${postId}`);
-
   if (!postId) {
     throw new Error("Request for comments without required postId");
   }
