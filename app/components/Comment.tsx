@@ -31,81 +31,85 @@ const Comment = forwardRef<HTMLDivElement, CommentProps>(function Comment(
   }
 
   return (
-    <div className="flex my-6 discourse-comment" ref={ref}>
-      <Avatar
-        user={{
-          username: post.username,
-          avatarTemplate: post.avatarUrl,
-        }}
-        absoluteUrl={true}
-        className="object-contain w-8 h-8 mt-2 rounded-full"
-      />
-      <div className="w-full ml-2">
-        <div className="w-full my-3">
-          <span className="inline-block p-1 text-sm text-slate-50">
-            {post.postNumber}
-          </span>
-          <div dangerouslySetInnerHTML={{ __html: post.cooked }} />
-        </div>
-        <div className="flex items-center w-full">
-          <div className="mr-6">
-            {replyCount > 0 && (
-              <button
-                onClick={() => getRepliesForPost(post.id)}
-              >{`${replyCount} ${replyText}`}</button>
-            )}
+    <div className="flex flex-col discourse-comment">
+      <div className="flex w-full my-6 bg-red-600" ref={ref}>
+        <Avatar
+          user={{
+            username: post.username,
+            avatarTemplate: post.avatarUrl,
+          }}
+          absoluteUrl={true}
+          className="object-contain w-8 h-8 mt-2 rounded-full"
+        />
+        <div className="w-full ml-2">
+          <div className="w-full my-3">
+            <span className="inline-block p-1 text-sm text-slate-50">
+              {post.postNumber}
+            </span>
+            <div dangerouslySetInnerHTML={{ __html: post.cooked }} />
           </div>
-          <ReplyButton
-            handleReplyClick={handleReplyClick}
-            postNumber={postNumber}
-          />
+          <div className="flex items-center w-full">
+            <div className="mr-6">
+              {replyCount > 0 && (
+                <button
+                  onClick={() => getRepliesForPost(post.id)}
+                >{`${replyCount} ${replyText}`}</button>
+              )}
+            </div>
+            <ReplyButton
+              handleReplyClick={handleReplyClick}
+              postNumber={postNumber}
+            />
+          </div>
         </div>
       </div>
-      {replyFetcher.data &&
-        replyFetcher.data?.posts &&
-        replyFetcher.data.posts.map(
-          (replyPost) =>
-            replyPost.replyToPostNumber === post.postNumber && (
-              <div
-                key={`${post.id}-${replyPost.replyToPostNumber}`}
-                className="flex my-6 discourse-comment"
-              >
-                <Avatar
-                  user={{
-                    username: replyPost.username,
-                    avatarTemplate: replyPost.avatarUrl,
-                  }}
-                  absoluteUrl={true}
-                  className="object-contain w-8 h-8 mt-2 rounded-full"
-                />
-                <div className="w-full ml-2">
-                  <div className="w-full my-3">
-                    <span className="inline-block p-1 text-sm text-slate-50">
-                      {replyPost.postNumber}
-                    </span>
-                    <div
-                      dangerouslySetInnerHTML={{ __html: replyPost.cooked }}
-                    />
-                  </div>
-                  <div className="flex items-center w-full">
-                    <div className="mr-6">
-                      {replyPost.replyCount > 0 && (
-                        <button
-                          onClick={() => getRepliesForPost(replyPost.id)}
-                        >{`${replyPost.replyCount} ${
-                          replyPost.replyCount === 1 ? "reply" : "replies"
-                        }`}</button>
-                      )}
+      <div className="flex w-full my-6 bg-green-600">
+        {replyFetcher.data &&
+          replyFetcher.data?.posts &&
+          replyFetcher.data.posts.map(
+            (replyPost) =>
+              replyPost.replyToPostNumber === post.postNumber && (
+                <div
+                  key={`${post.id}-${replyPost.replyToPostNumber}`}
+                  className="flex my-6"
+                >
+                  <Avatar
+                    user={{
+                      username: replyPost.username,
+                      avatarTemplate: replyPost.avatarUrl,
+                    }}
+                    absoluteUrl={true}
+                    className="object-contain w-8 h-8 mt-2 rounded-full"
+                  />
+                  <div className="w-full ml-2">
+                    <div className="w-full my-3">
+                      <span className="inline-block p-1 text-sm text-slate-50">
+                        {replyPost.postNumber}
+                      </span>
+                      <div
+                        dangerouslySetInnerHTML={{ __html: replyPost.cooked }}
+                      />
                     </div>
-                    <ReplyButton
-                      handleReplyClick={handleReplyClick}
-                      postNumber={String(replyPost.postNumber)}
-                    />
+                    <div className="flex items-center w-full">
+                      <div className="mr-6">
+                        {replyPost.replyCount > 0 && (
+                          <button
+                            onClick={() => getRepliesForPost(replyPost.id)}
+                          >{`${replyPost.replyCount} ${
+                            replyPost.replyCount === 1 ? "reply" : "replies"
+                          }`}</button>
+                        )}
+                      </div>
+                      <ReplyButton
+                        handleReplyClick={handleReplyClick}
+                        postNumber={String(replyPost.postNumber)}
+                      />
+                    </div>
                   </div>
                 </div>
-              </div>
-            )
-        )}
+              )
+          )}
+      </div>
     </div>
   );
 });
