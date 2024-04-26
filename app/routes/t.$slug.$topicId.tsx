@@ -13,6 +13,7 @@ import {
 import { db } from "~/services/db.server";
 import { discourseSessionStorage } from "~/services/session.server";
 import type { ApiDiscourseConnectUser } from "~/types/apiDiscourse";
+import type { RouteError } from "~/types/errorTypes";
 import Avatar from "~/components/Avatar";
 
 export const meta: MetaFunction = () => {
@@ -139,7 +140,7 @@ export default function TopicForSlugAndId() {
 }
 
 export function ErrorBoundary() {
-  const error: any = useRouteError();
+  const error = useRouteError() as RouteError;
   const status = error?.status;
 
   if (isRouteErrorResponse(error) && error?.data) {
