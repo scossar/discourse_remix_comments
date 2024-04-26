@@ -1,12 +1,8 @@
 import type { LoaderFunctionArgs, MetaFunction } from "@remix-run/node";
 import { json } from "@remix-run/node";
 import {
-  Link,
   isRouteErrorResponse,
-  Outlet,
   useLoaderData,
-  useMatches,
-  useOutletContext,
   useRouteError,
 } from "@remix-run/react";
 
@@ -14,7 +10,6 @@ import { db } from "~/services/db.server";
 import { discourseSessionStorage } from "~/services/session.server";
 import type { ApiDiscourseConnectUser } from "~/types/apiDiscourse";
 import type { RouteError } from "~/types/errorTypes";
-import Avatar from "~/components/Avatar";
 import { Article } from "~/components/Article";
 
 export const meta: MetaFunction = () => {
@@ -82,26 +77,12 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
   );
 }
 
-interface DiscourseData {
-  baseUrl: string;
-}
-
 export default function TopicForSlugAndId() {
   const { topic } = useLoaderData<typeof loader>();
-  const matches = useMatches();
-  const pathEnd: string =
-    matches.slice(-1)?.[0].pathname.split("/").slice(-1).toString() || "";
-  const onCommentRoot = pathEnd === "comments";
-  const discourseData: DiscourseData = useOutletContext();
 
   return (
     <div className="relative pt-6 pb-12 mx-auto max-w-screen-md">
       <Article topic={topic} />
-      <Link className={`${onCommentRoot ? "hidden" : "block"}`} to={`comments`}>
-        Comments
-      </Link>
-
-      <Outlet context={discourseData} />
     </div>
   );
 }
