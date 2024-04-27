@@ -10,7 +10,8 @@ import { db } from "~/services/db.server";
 import { discourseSessionStorage } from "~/services/session.server";
 import type { ApiDiscourseConnectUser } from "~/types/apiDiscourse";
 import type { RouteError } from "~/types/errorTypes";
-import { Article } from "~/components/Article";
+import Topic from "~/components/Topic";
+import Comments from "~/components/Comments";
 
 export const meta: MetaFunction = () => {
   return [
@@ -82,7 +83,8 @@ export default function TopicForSlugAndId() {
 
   return (
     <div className="relative pt-6 pb-12 mx-auto max-w-screen-md">
-      <Article topic={topic} />
+      <Topic topic={topic} />
+      <Comments />
     </div>
   );
 }
