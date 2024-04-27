@@ -22,6 +22,7 @@ export function discourseEnv() {
   } catch (error) {
     if (error instanceof z.ZodError) {
       console.error("Failed to parse environment variables:", error.issues);
+      throw new Error("Configuration error");
     }
     throw new Error("Configuration error");
   }
