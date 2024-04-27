@@ -84,7 +84,7 @@ export default function TopicForSlugAndId() {
   return (
     <div className="relative pt-6 pb-12 mx-auto max-w-screen-md">
       <Topic topic={topic} />
-      <Comments />
+      <Comments topicId={topic.id} />
     </div>
   );
 }
