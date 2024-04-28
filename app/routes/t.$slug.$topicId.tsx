@@ -8,7 +8,8 @@ import {
 
 import { db } from "~/services/db.server";
 import { discourseSessionStorage } from "~/services/session.server";
-import type { ApiDiscourseConnectUser } from "~/types/apiDiscourse";
+import { discourseEnv } from "~/services/config.server";
+import { getSessionData, validateSession } from "~/schemas/currentUser.server";
 import type { RouteError } from "~/types/errorTypes";
 import Topic from "~/components/Topic";
 import Comments from "~/components/Comments";
@@ -21,16 +22,19 @@ export const meta: MetaFunction = () => {
 };
 
 export async function loader({ request, params }: LoaderFunctionArgs) {
-  const userSession = await discourseSessionStorage.getSession(
+  const session = await discourseSessionStorage.getSession(
     request.headers.get("Cookie")
   );
-  const user: ApiDiscourseConnectUser = {
-    externalId: userSession.get("external_id"),
-    avatarUrl: userSession.get("avatar_url"),
-    admin: userSession.get("admin"),
-    username: userSession.get("username"),
-  };
 
+  const sessionData = getSessionData(session);
+  let currentUser;
+  try {
+    currentUser = validateSession(sessionData);
+  } catch (error) {
+    throw new Response("Something has gone wrong", { status: 403 });
+  }
+
+  console.log(`currentUser: ${JSON.stringify(currentUser, null, 2)}`);
   const slug = params?.slug;
   const topicId = Number(params?.topicId);
 
@@ -68,11 +72,11 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
   return json(
     {
       topic,
-      user,
+      currentUser,
     },
     {
       headers: {
-        "Set-Cookie": await discourseSessionStorage.commitSession(userSession),
+        "Set-Cookie": await discourseSessionStorage.commitSession(session),
       },
     }
   );

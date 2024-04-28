@@ -54,11 +54,11 @@ export default function App() {
   const matchesData = useMatches()
     .slice(-1)
     .map((match) => match.data)?.[0] as HeaderProps;
-  const currentUser = matchesData?.user;
+  const currentUser = matchesData?.currentUser;
 
   return (
-    <div className="bg-cyan-950 min-h-screen text-white">
-      <Header user={currentUser} />
+    <div className="min-h-screen text-white bg-cyan-950">
+      <Header currentUser={currentUser} />
       <Outlet context={discourseData} />
     </div>
   );
