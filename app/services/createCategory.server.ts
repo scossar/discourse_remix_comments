@@ -1,18 +1,11 @@
 import { db } from "~/services/db.server";
+import { discourseEnv } from "./config.server";
 import { ApiDiscourseCategory } from "~/types/apiDiscourse";
 import CategoryCreationError from "./errors/categoryCreationError.server";
 import type { Prisma } from "@prisma/client";
 
 export default async function createCategory(id: number) {
-  if (!process.env.DISCOURSE_BASE_URL || !process.env.DISCOURSE_API_KEY) {
-    throw new CategoryCreationError(
-      "DISCOURSE_BASE_URL and DISCOURSE_API_KEY environment variables not configured on client",
-      500
-    );
-  }
-
-  const apiKey = process.env.DISCOURSE_API_KEY;
-  const baseUrl = process.env.DISCOURSE_BASE_URL;
+  const { apiKey, baseUrl } = discourseEnv();
   const headers = new Headers();
   headers.append("Api-Key", apiKey);
   headers.append("Api-Username", "system");
