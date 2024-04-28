@@ -1,9 +1,9 @@
 import type { LoaderFunctionArgs } from "@remix-run/node";
 import { redirect } from "@remix-run/node";
 import { isRouteErrorResponse, useRouteError } from "@remix-run/react";
-
 import { createHmac, randomBytes } from "node:crypto";
 
+import { discourseEnv } from "~/services/config.server";
 import {
   nonceStorage,
   discourseSessionStorage,
@@ -39,11 +39,7 @@ function paramTypeConversions(key: string, value: string) {
 }
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
-  if (!process.env.DISCOURSE_SSO_SECRET || !process.env.DISCOURSE_BASE_URL) {
-    return redirect("/"); // todo: this should be configurable
-  }
-
-  const secret = process.env.DISCOURSE_SSO_SECRET;
+  const { ssoSecret, baseUrl } = discourseEnv();
   const url = new URL(request.url);
   const sso = url.searchParams.get("sso");
   const sig = url.searchParams.get("sig");
@@ -57,11 +53,10 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
     const ssoPayload = `nonce=${nonce}&return_sso_url=http://localhost:5173/login`;
     const base64EncodedPayload = Buffer.from(ssoPayload).toString("base64");
     const urlEncodedPayload = encodeURIComponent(base64EncodedPayload);
-    const signature = createHmac("sha256", secret)
+    const signature = createHmac("sha256", ssoSecret)
       .update(base64EncodedPayload)
       .digest("hex");
-    const discourseBaseUrl = process.env.DISCOURSE_BASE_URL;
-    const discourseConnectUrl = `${discourseBaseUrl}/session/sso_provider?sso=${urlEncodedPayload}&sig=${signature}`;
+    const discourseConnectUrl = `${baseUrl}/session/sso_provider?sso=${urlEncodedPayload}&sig=${signature}`;
     nonceSession.set("nonce", nonce);
 
     return redirect(discourseConnectUrl, {
@@ -72,7 +67,7 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
   }
 
   if (sso && sig) {
-    const computedSig = createHmac("sha256", secret).update(sso).digest();
+    const computedSig = createHmac("sha256", ssoSecret).update(sso).digest();
     const receivedSigBytes = Buffer.from(sig, "hex");
     if (!computedSig.equals(receivedSigBytes)) {
       console.error(
@@ -106,7 +101,6 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
     }
 
     const userSession = await discourseSessionStorage.getSession();
-
     const sessionParams: SessionParamSet = new Set([
       "external_id",
       "username",
