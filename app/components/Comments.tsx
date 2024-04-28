@@ -27,6 +27,13 @@ export default function Comments({ topicId }: CommentsProps) {
     }
   }
 
+  function loadMoreComments() {
+    if (commentFetcher.state === "idle" && page) {
+      const commentUrl = `/api/getTopicComments?page=${page}&topicId=${topicId}`;
+      commentFetcher.load(commentUrl);
+    }
+  }
+
   useEffect(() => {
     if (
       commentFetcher.data?.comments.posts &&
@@ -35,7 +42,6 @@ export default function Comments({ topicId }: CommentsProps) {
       const newPosts = commentFetcher.data.comments.posts;
       const allPosts = posts ? [...posts, ...newPosts] : newPosts;
       setPosts(allPosts);
-      console.log(JSON.stringify(allPosts, null, 2));
       setPage(commentFetcher.data.comments.nextPage);
     }
   }, [commentFetcher.data, page, posts]);
@@ -65,6 +71,17 @@ export default function Comments({ topicId }: CommentsProps) {
     <div>
       <button onClick={getInitialComments}>Comments</button>
       <div className="divide-y divide-cyan-800">{renderComments}</div>
+
+      {page && (
+        <div>
+          <button
+            className="px-2 py-1 text-blue-700 bg-white"
+            onClick={loadMoreComments}
+          >
+            {commentFetcher.state === "idle" ? "Load more" : "Loading..."}
+          </button>
+        </div>
+      )}
     </div>
   );
 }
