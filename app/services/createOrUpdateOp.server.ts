@@ -1,4 +1,5 @@
 import { db } from "./db.server";
+import { discourseEnv } from "~/services/config.server";
 import PostCreationError from "./errors/postCreationError.server";
 import type { DiscoursePost, Prisma } from "@prisma/client";
 import type {
@@ -9,12 +10,6 @@ import { getRedisClient } from "./redisClient.server";
 import { generateAvatarUrl } from "./transformDiscourseData.server";
 
 export default async function createOrUpdateOp(topicId: number) {
-  if (!process.env.DISCOURSE_BASE_URL || !process.env.DISCOURSE_API_KEY) {
-    throw new PostCreationError(
-      "DISCOURSE_BASE_URL and DISCOURSE_API_KEY environment variables not configured on client",
-      500
-    );
-  }
   if (!topicId) {
     throw new PostCreationError(
       "The createOrUpdatePost function was called without a topicId argument",
@@ -22,8 +17,7 @@ export default async function createOrUpdateOp(topicId: number) {
     );
   }
 
-  const apiKey = process.env.DISCOURSE_API_KEY;
-  const baseUrl = process.env.DISCOURSE_BASE_URL;
+  const { apiKey, baseUrl } = discourseEnv();
   const headers = new Headers();
   headers.append("Api-Key", apiKey);
   headers.append("Api-Username", "system");
