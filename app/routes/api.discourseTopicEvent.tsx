@@ -16,7 +16,7 @@ import PostCreationError from "~/services/errors/postCreationError.server";
 import TagCreationError from "~/services/errors/tagCreationError.server";
 import TopicCreationError from "~/services/errors/topicCreationError.server";
 
-// todo: improve or remove
+// todo: validate with zod
 function isValidTopicWebHookData(
   data: ApiDiscourseWebHookTopic
 ): data is ApiDiscourseWebHookTopic {
@@ -76,22 +76,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     );
   }
 
-  if (!process.env.DISCOURSE_BASE_URL || !process.env.DISCOURSE_API_KEY) {
-    console.warn(
-      "Webhook Error: DISCOURSE_BASE_URL environmental variable not set"
-    );
-    return json(
-      {
-        message: "Webhook environmental variables not configured on client",
-      },
-      500
-    );
-  }
-
   const topicJson = webhookJson.topic;
-
-  // "personal_message" archetypes don't have a category, so confirm before trying to get the topic's category:
-  // the app shouldn't be creating topics for PMs though, so handle that case
   const categoryId = topicJson?.category_id;
   if (categoryId) {
     let category = await db.discourseCategory.findUnique({
