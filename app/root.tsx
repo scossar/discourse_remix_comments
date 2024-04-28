@@ -7,7 +7,6 @@ import {
   Outlet,
   Scripts,
   ScrollRestoration,
-  useLoaderData,
   useMatches,
   useRouteError,
 } from "@remix-run/react";
@@ -17,15 +16,6 @@ import type { HeaderProps } from "~/components/Header";
 
 import styles from "./tailwind.css?url";
 export const links: LinksFunction = () => [{ rel: "stylesheet", href: styles }];
-
-export async function loader() {
-  if (!process.env.DISCOURSE_BASE_URL) {
-    throw new Response("DISCOURSE_BASE_URL is not defined", { status: 500 });
-  }
-  const discourseBaseUrl = process.env.DISCOURSE_BASE_URL;
-
-  return json({ discourseBaseUrl });
-}
 
 export function Layout({ children }: { children: React.ReactNode }) {
   return (
@@ -46,11 +36,6 @@ export function Layout({ children }: { children: React.ReactNode }) {
 }
 
 export default function App() {
-  const { discourseBaseUrl } = useLoaderData<typeof loader>();
-  // this is kind of awkward, but allows the baseUrl env variable to be passed to components
-  const discourseData = {
-    baseUrl: discourseBaseUrl,
-  };
   const matchesData = useMatches()
     .slice(-1)
     .map((match) => match.data)?.[0] as HeaderProps;
@@ -59,7 +44,7 @@ export default function App() {
   return (
     <div className="min-h-screen text-white bg-cyan-950">
       <Header currentUser={currentUser} />
-      <Outlet context={discourseData} />
+      <Outlet />
     </div>
   );
 }
@@ -72,10 +57,7 @@ export function ErrorBoundary() {
     return (
       <div>
         <h1>Error</h1>
-        <p>
-          todo: this works, but don't display env variable names to the app's
-          users {errorMessage}
-        </p>
+        <p>users {errorMessage}</p>
       </div>
     );
   } else {

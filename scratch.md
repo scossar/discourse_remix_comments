@@ -10,3 +10,7 @@ delete unnamed buffers:
 
 Prisma generates the GetPayload utiltity type for all models defined in the schema. Especially useful for models
 that have relations. It allows types to be generated for the return type of specific queries.
+
+## Clear search
+
+<ctrl-l>

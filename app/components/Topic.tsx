@@ -9,10 +9,34 @@ interface ArticleProps {
   topic: JsonifiedDiscourseArticle;
 }
 
+// tmp fix:
+import type { DiscourseUser } from "@prisma/client";
+
+function absolutizeAvatarTemplateForUser(user: DiscourseUser, baseUrl: string) {
+  if (!/^https?:\/\//i.test(user.avatarTemplate)) {
+    user.avatarTemplate = generateAvatarUrl(user.avatarTemplate, baseUrl);
+  }
+  return user;
+}
+
+function generateAvatarUrl(
+  avatarTemplate: string,
+  discourseBaseUrl: string,
+  size = "48"
+) {
+  const sized = avatarTemplate.replace("{size}", size);
+  return `${discourseBaseUrl}${sized}`;
+}
+// end tmp fix
+
 export default function Topic({ topic }: ArticleProps) {
+  // tmp fix. REMOVE THIS!!!
+  const baseUrl = "http://localhost:4200";
+  const user = absolutizeAvatarTemplateForUser(topic.user, baseUrl);
   const categoryColor = topic?.category?.color
     ? `#{topic.category.color}`
     : "#ffffff";
+
   return (
     <>
       <header className="pb-3 border-b border-cyan-800">
@@ -34,8 +58,7 @@ export default function Topic({ topic }: ArticleProps) {
       </header>
       <article className="flex py-3 border-b discourse-op border-cyan-800">
         <Avatar
-          user={topic.user}
-          size="48"
+          user={user}
           className="object-contain w-10 h-10 mt-3 rounded-full"
         />
         <div className="ml-2">

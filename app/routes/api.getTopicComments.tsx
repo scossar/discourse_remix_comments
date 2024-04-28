@@ -8,14 +8,8 @@ export async function loader({ request }: LoaderFunctionArgs) {
   const session = await discourseSessionStorage.getSession(
     request.headers.get("Cookie")
   );
-
   const sessionData = getSessionData(session);
-  let currentUser;
-  try {
-    currentUser = validateSession(sessionData);
-  } catch (error) {
-    throw new Response("Something has gone wrong", { status: 403 });
-  }
+  const currentUser = validateSession(sessionData);
 
   const { searchParams } = new URL(request.url);
   const topicId = Number(searchParams?.get("topicId"));

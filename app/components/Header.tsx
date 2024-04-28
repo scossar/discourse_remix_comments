@@ -1,7 +1,7 @@
 import { Link } from "@remix-run/react";
-import type { ApiDiscourseConnectUser } from "~/types/apiDiscourse";
+import type { CurrentUser } from "~/schemas/currentUser.server";
 export interface HeaderProps {
-  currentUser: ApiDiscourseConnectUser;
+  currentUser: CurrentUser;
 }
 
 export default function Header({ currentUser }: HeaderProps) {
@@ -11,7 +11,7 @@ export default function Header({ currentUser }: HeaderProps) {
   const logInOutLink = activeSession ? "/logout" : "/login";
   return (
     <header className="sticky top-0 z-10 w-full py-3 h-14 bg-cyan-700 text-slate-50">
-      <div className="flex flex-row items-center justify-between mx-auto  max-w-screen-md">
+      <div className="flex flex-row items-center justify-between mx-auto max-w-screen-md">
         <div>
           <Link to="/">
             <h1 className="text-2xl">Recourse</h1>

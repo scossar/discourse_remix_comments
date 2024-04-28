@@ -6,6 +6,7 @@ import type {
   ApiDiscourseTopicWithPostStream,
 } from "~/types/apiDiscourse";
 import { getRedisClient } from "./redisClient.server";
+import { generateAvatarUrl } from "./transformDiscourseData.server";
 
 export default async function createOrUpdateOp(topicId: number) {
   if (!process.env.DISCOURSE_BASE_URL || !process.env.DISCOURSE_API_KEY) {
@@ -45,7 +46,7 @@ export default async function createOrUpdateOp(topicId: number) {
   const postFields: Prisma.DiscoursePostCreateInput = {
     externalId: post.id,
     username: post.username,
-    avatarTemplate: post.avatar_template,
+    avatarTemplate: generateAvatarUrl(post.avatar_template, baseUrl),
     externalCreatedAt: new Date(post.created_at),
     cooked: post.cooked,
     postNumber: post.post_number,
@@ -63,7 +64,7 @@ export default async function createOrUpdateOp(topicId: number) {
         create: {
           externalId: post.user_id,
           username: post.username,
-          avatarTemplate: post.avatar_template,
+          avatarTemplate: generateAvatarUrl(post.avatar_template, baseUrl),
         },
       },
     },

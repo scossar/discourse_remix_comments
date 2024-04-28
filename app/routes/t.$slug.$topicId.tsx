@@ -25,16 +25,9 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
   const session = await discourseSessionStorage.getSession(
     request.headers.get("Cookie")
   );
-
   const sessionData = getSessionData(session);
-  let currentUser;
-  try {
-    currentUser = validateSession(sessionData);
-  } catch (error) {
-    throw new Response("Something has gone wrong", { status: 403 });
-  }
+  const currentUser = validateSession(sessionData);
 
-  console.log(`currentUser: ${JSON.stringify(currentUser, null, 2)}`);
   const slug = params?.slug;
   const topicId = Number(params?.topicId);
 

@@ -34,6 +34,7 @@ export function validateSession(data: CurrentUser): CurrentUser {
       console.error("Session validation error:", error.flatten());
       return ANONYMOUS_USER;
     }
+    // todo: maybe throw Response? In any case, it needs a message and status
     throw error;
   }
 }

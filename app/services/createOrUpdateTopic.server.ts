@@ -1,11 +1,14 @@
 import { db } from "./db.server";
 import type { ApiDiscourseBasicTopic } from "~/types/apiDiscourse";
 import TopicCreationError from "./errors/topicCreationError.server";
+import { generateAvatarUrl } from "./transformDiscourseData.server";
+import { discourseEnv } from "./config.server";
 import { DiscourseTopic, Prisma } from "@prisma/client";
 
 export default async function createOrUpdateTopic(
   topicJson: ApiDiscourseBasicTopic
 ) {
+  const env = discourseEnv();
   const topicFields: Prisma.DiscourseTopicCreateInput = {
     externalId: topicJson.id,
     title: topicJson.title,
@@ -27,7 +30,10 @@ export default async function createOrUpdateTopic(
         create: {
           externalId: topicJson.user_id,
           username: topicJson.created_by.username,
-          avatarTemplate: topicJson.created_by.avatar_template,
+          avatarTemplate: generateAvatarUrl(
+            topicJson.created_by.avatar_template,
+            env.baseUrl
+          ),
         },
       },
     },

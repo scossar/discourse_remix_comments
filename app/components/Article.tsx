@@ -35,7 +35,6 @@ export default function Topic({ topic }: ArticleProps) {
       <article className="flex py-3 border-b discourse-op border-cyan-800">
         <Avatar
           user={topic.user}
-          size="48"
           className="object-contain w-10 h-10 mt-3 rounded-full"
         />
         <div className="ml-2">
@@ -46,4 +45,7 @@ export default function Topic({ topic }: ArticleProps) {
       </article>
     </>
   );
+  console.log(JSON.stringify(topic.user, null, 2));
+}
+}
 }
