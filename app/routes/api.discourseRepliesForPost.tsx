@@ -1,4 +1,7 @@
 import type { LoaderFunctionArgs } from "@remix-run/node";
+
+import { discourseEnv } from "~/services/config.server";
+
 import type { ApiDiscourseReplyPost } from "~/types/apiDiscourse";
 import type { ParsedDiscourseCommentReplies } from "~/types/parsedDiscourse";
 import { transformReplyPost } from "~/services/transformDiscourseData.server";
@@ -10,11 +13,7 @@ function isRegularPost(post: ApiDiscourseReplyPost) {
 export async function loader({
   request,
 }: LoaderFunctionArgs): Promise<ParsedDiscourseCommentReplies> {
-  if (!process.env.DISCOURSE_BASE_URL || !process.env.DISCOURSE_API_KEY) {
-    throw new Error("Environment variables are not configured");
-  }
-  const baseUrl = process.env.DISCOURSE_BASE_URL;
-
+  const { baseUrl, apiKey } = discourseEnv();
   const { searchParams } = new URL(request.url);
   const postId = Number(searchParams.get("postId")) || null;
 
@@ -23,9 +22,8 @@ export async function loader({
   }
 
   const headers = new Headers();
-  // for now
   headers.append("Content-Type", "application/json");
-  headers.append("Api-Key", process.env.DISCOURSE_API_KEY);
+  headers.append("Api-Key", apiKey);
   headers.append("Api-Username", "system");
 
   const response = await fetch(`${baseUrl}/posts/${postId}/replies.json`);

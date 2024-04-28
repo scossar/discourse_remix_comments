@@ -8,7 +8,6 @@ import {
 
 import { db } from "~/services/db.server";
 import { discourseSessionStorage } from "~/services/session.server";
-import { discourseEnv } from "~/services/config.server";
 import { getSessionData, validateSession } from "~/schemas/currentUser.server";
 import type { RouteError } from "~/types/errorTypes";
 import Topic from "~/components/Topic";
