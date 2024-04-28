@@ -5,6 +5,7 @@ import type {
   ParsedDiscourseTopicComments,
 } from "~/types/parsedDiscourse";
 import Comment from "~/components/Comment";
+import CommentForm from "~/components/CommentForm";
 
 type CommentFetcherData = { comments: ParsedDiscourseTopicComments };
 
@@ -51,6 +52,14 @@ export default function Comments({ topicId }: CommentsProps) {
     setEditorOpen(true);
   };
 
+  const handleCreatePostClick = () => {
+    setEditorOpen(false);
+  };
+
+  const toggleEditorOpen = () => {
+    setEditorOpen(!editorOpen);
+  };
+
   const renderComments = useMemo(() => {
     return (
       <div className="divide-y divide-cyan-800">
@@ -70,8 +79,8 @@ export default function Comments({ topicId }: CommentsProps) {
   return (
     <div>
       <button onClick={getInitialComments}>Comments</button>
-      <div className="divide-y divide-cyan-800">{renderComments}</div>
 
+      <div className="divide-y divide-cyan-800">{renderComments}</div>
       {page && (
         <div>
           <button
@@ -82,6 +91,24 @@ export default function Comments({ topicId }: CommentsProps) {
           </button>
         </div>
       )}
+      <div
+        className={`${
+          editorOpen ? "min-h-52" : "h-8"
+        } bg-red-200 fixed bottom-0 left-0 right-0 w-screen`}
+      >
+        <div
+          className={`${
+            editorOpen ? "min-h-52" : "h-8"
+          } max-w-screen-md mx-auto bg-slate-50`}
+        >
+          {" "}
+          <CommentForm
+            replyToPostNumber={replyToPostNumber}
+            handleCreatePostClick={handleCreatePostClick}
+            toggleEditorOpen={toggleEditorOpen}
+          />
+        </div>
+      </div>
     </div>
   );
 }
