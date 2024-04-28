@@ -18,8 +18,9 @@ export async function loader({ request }: LoaderFunctionArgs) {
   }
 
   const { searchParams } = new URL(request.url);
-  const topicId = Number(searchParams.get("topicId")) || null;
-  const page = Number(searchParams.get("page")) || null;
+  const topicId = Number(searchParams?.get("topicId"));
+  const page = Number(searchParams?.get("page"));
+
   if (topicId === null || page === null) {
     throw new Response("Something has gone wrong", { status: 500 });
   }
