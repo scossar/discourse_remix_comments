@@ -1,15 +1,25 @@
-import type { LoaderFunctionArgs, MetaFunction } from "@remix-run/node";
+import type {
+  ActionFunctionArgs,
+  LoaderFunctionArgs,
+  MetaFunction,
+} from "@remix-run/node";
 import { json } from "@remix-run/node";
 import {
   isRouteErrorResponse,
   useLoaderData,
   useRouteError,
 } from "@remix-run/react";
+import { marked } from "marked";
+import { JSDOM } from "jsdom";
+import DOMPurify from "dompurify";
 
 import { db } from "~/services/db.server";
+import { discourseEnv } from "~/services/config.server";
 import { discourseSessionStorage } from "~/services/session.server";
 import { getSessionData, validateSession } from "~/schemas/currentUser.server";
+import { transformPost } from "~/services/transformDiscourseData.server";
 import type { RouteError } from "~/types/errorTypes";
+import type { ApiDiscoursePost } from "~/types/apiDiscourse";
 import Topic from "~/components/Topic";
 import Comments from "~/components/Comments";
 
@@ -19,6 +29,76 @@ export const meta: MetaFunction = () => {
     { name: "description", content: "Discourse Topic Route" },
   ];
 };
+
+export async function action({ request, params }: ActionFunctionArgs) {
+  const session = await discourseSessionStorage.getSession(
+    request.headers.get("Cookie")
+  );
+  const sessionData = getSessionData(session);
+  const currentUser = validateSession(sessionData);
+
+  if (currentUser.externalId === null || currentUser.username === null) {
+    throw new Error("Comments can only be created by authenticated users");
+  }
+
+  const topicId = Number(params?.topicId);
+  if (!topicId) {
+    throw new Error("Required topicId param is not set");
+  }
+
+  const formData = await request.formData();
+  const raw = String(formData.get("raw"));
+  if (!raw || raw.length < 2) {
+    throw new Error("Todo: all these errors need to be handled");
+  }
+  const replyToPostNumber = Number(formData.get("replyToPostNumber")) || null;
+
+  let html;
+
+  try {
+    const window = new JSDOM("").window;
+    const purify = DOMPurify(window);
+    const cleaned = purify.sanitize(raw, { ALLOWED_TAGS: [] });
+    html = await marked.parse(cleaned);
+  } catch (error) {
+    throw new Error("couldn't parse raw");
+  }
+
+  if (!html) {
+    throw new Error(
+      "Don't actually throw an error here, return an error message to the user"
+    );
+  }
+
+  const { apiKey, baseUrl } = discourseEnv();
+  const headers = new Headers();
+  headers.append("Content-Type", "application/json");
+  headers.append("Api-Key", apiKey);
+  headers.append("Api-Username", currentUser.username);
+
+  const postsUrl = `${baseUrl}/posts.json`;
+  const data = {
+    raw: html,
+    topic_id: topicId,
+    reply_to_post_number: replyToPostNumber,
+  };
+
+  const response = await fetch(postsUrl, {
+    method: "POST",
+    headers,
+    body: JSON.stringify(data),
+  });
+
+  if (!response.ok) {
+    throw new Error("Bad response returned from Discourse");
+  }
+
+  const apiDiscoursePost: ApiDiscoursePost = await response.json();
+
+  const newComment = transformPost(apiDiscoursePost, baseUrl);
+
+  return json({ newComment });
+}
 
 export async function loader({ request, params }: LoaderFunctionArgs) {
   const session = await discourseSessionStorage.getSession(
