@@ -1,10 +1,7 @@
 import { createCookieSessionStorage } from "@remix-run/node";
+import { discourseEnv } from "./config.server";
 
-if (!process.env.NONCE_SECRET || !process.env.DISCOURSE_SESSION_SECRET) {
-  throw new Error("Required cookie secret not set");
-}
-const nonceSecret: string = process.env.NONCE_SECRET;
-const discourseSessionSecret: string = process.env.DISCOURSE_SESSION_SECRET;
+const { nonceSecret, sessionSecret } = discourseEnv();
 
 export const nonceStorage = createCookieSessionStorage({
   cookie: {
@@ -24,7 +21,7 @@ export const discourseSessionStorage = createCookieSessionStorage({
     sameSite: "lax",
     path: "/",
     httpOnly: true,
-    secrets: [discourseSessionSecret],
+    secrets: [sessionSecret],
     secure: process.env.NODE_ENV === "production",
     maxAge: 60 * 60 * 48, // set to two days for now
   },
