@@ -38,7 +38,6 @@ const Comment = forwardRef<HTMLDivElement, CommentProps>(function Comment(
             username: post.username,
             avatarTemplate: post.avatarUrl,
           }}
-          absoluteUrl={true}
           className="object-contain w-8 h-8 mt-2 rounded-full"
         />
         <div className="w-full ml-2">
@@ -78,7 +77,6 @@ const Comment = forwardRef<HTMLDivElement, CommentProps>(function Comment(
                       username: replyPost.username,
                       avatarTemplate: replyPost.avatarUrl,
                     }}
-                    absoluteUrl={true}
                     className="object-contain w-8 h-8 mt-2 rounded-full"
                   />
                   <div className="w-full ml-2">

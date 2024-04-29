@@ -1,7 +1,7 @@
+import { discourseEnv } from "./config.server";
 import type { ApiDiscourseWebhookHeaders } from "~/types/apiDiscourse";
 import { createHmac, timingSafeEqual } from "node:crypto";
 
-// helper function for accessing webhook headers
 export const discourseWehbookHeaders = (
   headers: Headers
 ): ApiDiscourseWebhookHeaders => {
@@ -24,12 +24,8 @@ export const verifyWebhookRequest = (
   payload: string,
   xDiscourseEventSignature: string
 ) => {
-  if (!process.env.DISCOURSE_WEBHOOK_SECRET) {
-    console.warn("Webhook Error: webhook secret not set");
-    return false;
-  }
-  const secret = process.env.DISCOURSE_WEBHOOK_SECRET;
-  const computedSig = createHmac("sha256", secret)
+  const { ssoSecret } = discourseEnv();
+  const computedSig = createHmac("sha256", ssoSecret)
     .update(payload)
     .digest("hex");
   const receivedSig = xDiscourseEventSignature.substring(7);

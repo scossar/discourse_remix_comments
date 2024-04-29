@@ -1,19 +1,27 @@
-import type { LoaderFunctionArgs, MetaFunction } from "@remix-run/node";
+import type {
+  ActionFunctionArgs,
+  LoaderFunctionArgs,
+  MetaFunction,
+} from "@remix-run/node";
 import { json } from "@remix-run/node";
 import {
-  Link,
   isRouteErrorResponse,
-  Outlet,
   useLoaderData,
-  useMatches,
-  useOutletContext,
   useRouteError,
 } from "@remix-run/react";
+import { marked } from "marked";
+import { JSDOM } from "jsdom";
+import DOMPurify from "dompurify";
 
 import { db } from "~/services/db.server";
+import { discourseEnv } from "~/services/config.server";
 import { discourseSessionStorage } from "~/services/session.server";
-import type { ApiDiscourseConnectUser } from "~/types/apiDiscourse";
-import Avatar from "~/components/Avatar";
+import { getSessionData, validateSession } from "~/schemas/currentUser.server";
+import { transformPost } from "~/services/transformDiscourseData.server";
+import type { RouteError } from "~/types/errorTypes";
+import type { ApiDiscoursePost } from "~/types/apiDiscourse";
+import Topic from "~/components/Topic";
+import Comments from "~/components/Comments";
 
 export const meta: MetaFunction = () => {
   return [
@@ -22,16 +30,82 @@ export const meta: MetaFunction = () => {
   ];
 };
 
-export async function loader({ request, params }: LoaderFunctionArgs) {
-  const userSession = await discourseSessionStorage.getSession(
+export async function action({ request, params }: ActionFunctionArgs) {
+  const session = await discourseSessionStorage.getSession(
     request.headers.get("Cookie")
   );
-  const user: ApiDiscourseConnectUser = {
-    externalId: userSession.get("external_id"),
-    avatarUrl: userSession.get("avatar_url"),
-    admin: userSession.get("admin"),
-    username: userSession.get("username"),
+  const sessionData = getSessionData(session);
+  const currentUser = validateSession(sessionData);
+
+  if (currentUser.externalId === null || currentUser.username === null) {
+    throw new Error("Comments can only be created by authenticated users");
+  }
+
+  const topicId = Number(params?.topicId);
+  if (!topicId) {
+    throw new Error("Required topicId param is not set");
+  }
+
+  const formData = await request.formData();
+  const raw = String(formData.get("raw"));
+  if (!raw || raw.length < 2) {
+    throw new Error("Todo: all these errors need to be handled");
+  }
+  const replyToPostNumber = Number(formData.get("replyToPostNumber")) || null;
+
+  let html;
+
+  try {
+    const window = new JSDOM("").window;
+    const purify = DOMPurify(window);
+    const cleaned = purify.sanitize(raw, { ALLOWED_TAGS: [] });
+    html = await marked.parse(cleaned);
+  } catch (error) {
+    throw new Error("couldn't parse raw");
+  }
+
+  if (!html) {
+    throw new Error(
+      "Don't actually throw an error here, return an error message to the user"
+    );
+  }
+
+  const { apiKey, baseUrl } = discourseEnv();
+  const headers = new Headers();
+  headers.append("Content-Type", "application/json");
+  headers.append("Api-Key", apiKey);
+  headers.append("Api-Username", currentUser.username);
+
+  const postsUrl = `${baseUrl}/posts.json`;
+  const data = {
+    raw: html,
+    topic_id: topicId,
+    reply_to_post_number: replyToPostNumber,
   };
+
+  const response = await fetch(postsUrl, {
+    method: "POST",
+    headers,
+    body: JSON.stringify(data),
+  });
+
+  if (!response.ok) {
+    throw new Error("Bad response returned from Discourse");
+  }
+
+  const apiDiscoursePost: ApiDiscoursePost = await response.json();
+
+  const newComment = transformPost(apiDiscoursePost, baseUrl);
+
+  return json({ newComment });
+}
+
+export async function loader({ request, params }: LoaderFunctionArgs) {
+  const session = await discourseSessionStorage.getSession(
+    request.headers.get("Cookie")
+  );
+  const sessionData = getSessionData(session);
+  const currentUser = validateSession(sessionData);
 
   const slug = params?.slug;
   const topicId = Number(params?.topicId);
@@ -60,7 +134,6 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
     },
   });
 
-  // todo: improve the error boundary
   if (!topic) {
     throw new Response(null, {
       status: 404,
@@ -71,77 +144,30 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
   return json(
     {
       topic,
-      user,
+      currentUser,
     },
     {
       headers: {
-        "Set-Cookie": await discourseSessionStorage.commitSession(userSession),
+        "Set-Cookie": await discourseSessionStorage.commitSession(session),
       },
     }
   );
 }
 
-interface DiscourseData {
-  baseUrl: string;
-}
-
 export default function TopicForSlugAndId() {
   const { topic } = useLoaderData<typeof loader>();
-  const matches = useMatches();
-  const pathEnd: string =
-    matches.slice(-1)?.[0].pathname.split("/").slice(-1).toString() || "";
-  const onCommentRoot = pathEnd === "comments";
-  const discourseData: DiscourseData = useOutletContext();
-
-  const categoryColor = topic?.category?.color
-    ? `#${topic.category.color}`
-    : "#ffffff";
 
   return (
     <div className="relative pt-6 pb-12 mx-auto max-w-screen-md">
-      <header className="pb-3 border-b border-b-cyan-800">
-        <h1 className="text-3xl">{topic.title}</h1>
-        <div className="flex items-center text-sm">
-          <div
-            style={{ backgroundColor: `${categoryColor}` }}
-            className={`inline-block p-2 mr-1`}
-          ></div>
-          <span className="pr-1">{topic.category?.name}</span>
-          <span>
-            {topic?.tags.map((topicTag) => (
-              <span key={topicTag.tagId} className="px-1">
-                {topicTag.tag.text}
-              </span>
-            ))}
-          </span>
-        </div>
-      </header>
-      <div className="flex py-3 border-b discourse-op border-cyan-800">
-        <Avatar
-          user={topic.user}
-          size="48"
-          className="object-contain w-10 h-10 mt-3 rounded-full"
-        />
-        <div className="ml-2">
-          {topic?.post?.cooked && (
-            <div dangerouslySetInnerHTML={{ __html: topic.post.cooked }} />
-          )}
-        </div>
-      </div>
-
-      <Link className={`${onCommentRoot ? "hidden" : "block"}`} to={`comments`}>
-        Comments
-      </Link>
-
-      <Outlet context={discourseData} />
+      <Topic topic={topic} />
+      <Comments topicId={topic.externalId} />
     </div>
   );
 }
 
 export function ErrorBoundary() {
-  const error: any = useRouteError();
+  const error = useRouteError() as RouteError;
   const status = error?.status;
-
   if (isRouteErrorResponse(error) && error?.data) {
     const errorMessage = error?.data;
 

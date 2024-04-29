@@ -1,19 +1,16 @@
 import FetchCommentsError from "./errors/fetchCommentsError.server";
 import { getRedisClient } from "./redisClient.server";
+import {
+  transformParticipant,
+  transformPost,
+} from "./transformDiscourseData.server";
+import { discourseEnv } from "./config.server";
 
 import type {
   ApiDiscoursePost,
   ApiDiscourseTopicWithPostStream,
 } from "~/types/apiDiscourse";
-
 import type { ParsedDiscourseTopicComments } from "~/types/parsedDiscourse";
-
-import {
-  transformParticipant,
-  transformPost,
-} from "./transformDiscourseData.server";
-
-import * as process from "node:process";
 import { RedisClientType, RedisDefaultModules } from "redis";
 
 const CHUNK_SIZE = 20;
@@ -33,15 +30,12 @@ export async function fetchCommentsForUser(
   currentUsername: string | null,
   page = 0
 ) {
-  if (!process.env.DISCOURSE_BASE_URL || !process.env.DISCOURSE_API_KEY) {
-    throw new FetchCommentsError("Env variables not configured", 403);
-  }
+  const { apiKey, baseUrl } = discourseEnv();
 
-  const baseUrl = process.env.DISCOURSE_BASE_URL;
   const headers = new Headers();
   headers.append("Content-Type", "application/json");
   if (currentUsername) {
-    headers.append("Api-Key", process.env.DISCOURSE_API_KEY);
+    headers.append("Api-Key", apiKey);
     headers.append("Api-Username", currentUsername);
   }
 

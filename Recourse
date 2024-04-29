@@ -14,15 +14,21 @@ else
   set shortmess=aoO
 endif
 badd +1 scratch.txt
-badd +0 term://~/remix/discourse/discourse_remix_comments//173207:/bin/bash
-badd +0 term://~/remix/discourse/discourse_remix_comments//173617:/bin/bash
-badd +0 app/routes/t.\$slug.\$topicId.tsx
-badd +0 app/routes/t.\$slug.\$topicId.comments.tsx
+badd +19 term://~/remix/discourse/discourse_remix_comments//173207:/bin/bash
+badd +1 term://~/remix/discourse/discourse_remix_comments//173617:/bin/bash
+badd +168 app/routes/t.\$slug.\$topicId.tsx
+badd +59 app/routes/t.\$slug.\$topicId.comments.tsx
 badd +4 app/types/apiDiscourse.d.ts
-badd +0 app/types/parsedDiscourse.d.ts
+badd +22 app/types/parsedDiscourse.d.ts
+badd +1 scratch.md
+badd +15 app/routes/api.discourseRepliesForPost.tsx
+badd +1 app/services/config.server.ts
+badd +31 app/routes/api.discourseTopicEvent.tsx
+badd +24 ~/.config/nvim/lua/coc.lua
+badd +1 app/routes/scratch.tsx
 argglobal
 %argdel
-edit app/routes/t.\$slug.\$topicId.tsx
+edit ~/.config/nvim/lua/coc.lua
 let s:save_splitbelow = &splitbelow
 let s:save_splitright = &splitright
 set splitbelow splitright
@@ -57,22 +63,22 @@ set winminheight=0
 set winheight=1
 set winminwidth=0
 set winwidth=1
-exe '1resize ' . ((&lines * 49 + 38) / 76)
-exe 'vert 1resize ' . ((&columns * 127 + 191) / 382)
-exe '2resize ' . ((&lines * 49 + 38) / 76)
-exe 'vert 2resize ' . ((&columns * 149 + 191) / 382)
-exe '3resize ' . ((&lines * 24 + 38) / 76)
+exe '1resize ' . ((&lines * 51 + 39) / 79)
+exe 'vert 1resize ' . ((&columns * 154 + 191) / 382)
+exe '2resize ' . ((&lines * 51 + 39) / 79)
+exe 'vert 2resize ' . ((&columns * 122 + 191) / 382)
+exe '3resize ' . ((&lines * 25 + 39) / 79)
 exe 'vert 3resize ' . ((&columns * 104 + 191) / 382)
-exe '4resize ' . ((&lines * 24 + 38) / 76)
+exe '4resize ' . ((&lines * 25 + 39) / 79)
 exe 'vert 4resize ' . ((&columns * 104 + 191) / 382)
-exe '5resize ' . ((&lines * 24 + 38) / 76)
+exe '5resize ' . ((&lines * 25 + 39) / 79)
 exe 'vert 5resize ' . ((&columns * 127 + 191) / 382)
-exe '6resize ' . ((&lines * 24 + 38) / 76)
+exe '6resize ' . ((&lines * 25 + 39) / 79)
 exe 'vert 6resize ' . ((&columns * 127 + 191) / 382)
-exe '7resize ' . ((&lines * 24 + 38) / 76)
+exe '7resize ' . ((&lines * 25 + 39) / 79)
 exe 'vert 7resize ' . ((&columns * 126 + 191) / 382)
 argglobal
-balt scratch.txt
+balt app/routes/t.\$slug.\$topicId.tsx
 setlocal fdm=manual
 setlocal fde=0
 setlocal fmr={{{,}}}
@@ -83,19 +89,19 @@ setlocal fdn=20
 setlocal fen
 silent! normal! zE
 let &fdl = &fdl
-let s:l = 1 - ((0 * winheight(0) + 24) / 49)
+let s:l = 60 - ((34 * winheight(0) + 25) / 51)
 if s:l < 1 | let s:l = 1 | endif
 keepjumps exe s:l
 normal! zt
-keepjumps 1
-normal! 0
+keepjumps 60
+normal! 05|
 wincmd w
 argglobal
-if bufexists(fnamemodify("app/routes/t.\$slug.\$topicId.comments.tsx", ":p")) | buffer app/routes/t.\$slug.\$topicId.comments.tsx | else | edit app/routes/t.\$slug.\$topicId.comments.tsx | endif
+if bufexists(fnamemodify("app/routes/scratch.tsx", ":p")) | buffer app/routes/scratch.tsx | else | edit app/routes/scratch.tsx | endif
 if &buftype ==# 'terminal'
-  silent file app/routes/t.\$slug.\$topicId.comments.tsx
+  silent file app/routes/scratch.tsx
 endif
-balt scratch.txt
+balt app/routes/t.\$slug.\$topicId.comments.tsx
 setlocal fdm=manual
 setlocal fde=0
 setlocal fmr={{{,}}}
@@ -106,7 +112,7 @@ setlocal fdn=20
 setlocal fen
 silent! normal! zE
 let &fdl = &fdl
-let s:l = 1 - ((0 * winheight(0) + 24) / 49)
+let s:l = 1 - ((0 * winheight(0) + 25) / 51)
 if s:l < 1 | let s:l = 1 | endif
 keepjumps exe s:l
 normal! zt
@@ -129,7 +135,7 @@ setlocal fdn=20
 setlocal fen
 silent! normal! zE
 let &fdl = &fdl
-let s:l = 1 - ((0 * winheight(0) + 12) / 24)
+let s:l = 1 - ((0 * winheight(0) + 12) / 25)
 if s:l < 1 | let s:l = 1 | endif
 keepjumps exe s:l
 normal! zt
@@ -137,11 +143,11 @@ keepjumps 1
 normal! 0
 wincmd w
 argglobal
-if bufexists(fnamemodify("app/types/parsedDiscourse.d.ts", ":p")) | buffer app/types/parsedDiscourse.d.ts | else | edit app/types/parsedDiscourse.d.ts | endif
+if bufexists(fnamemodify("app/services/config.server.ts", ":p")) | buffer app/services/config.server.ts | else | edit app/services/config.server.ts | endif
 if &buftype ==# 'terminal'
-  silent file app/types/parsedDiscourse.d.ts
+  silent file app/services/config.server.ts
 endif
-balt app/types/apiDiscourse.d.ts
+balt app/types/parsedDiscourse.d.ts
 setlocal fdm=manual
 setlocal fde=0
 setlocal fmr={{{,}}}
@@ -152,19 +158,19 @@ setlocal fdn=20
 setlocal fen
 silent! normal! zE
 let &fdl = &fdl
-let s:l = 7 - ((6 * winheight(0) + 12) / 24)
+let s:l = 1 - ((0 * winheight(0) + 12) / 25)
 if s:l < 1 | let s:l = 1 | endif
 keepjumps exe s:l
 normal! zt
-keepjumps 7
-normal! 02|
+keepjumps 1
+normal! 0
 wincmd w
 argglobal
-if bufexists(fnamemodify("scratch.txt", ":p")) | buffer scratch.txt | else | edit scratch.txt | endif
+if bufexists(fnamemodify("scratch.md", ":p")) | buffer scratch.md | else | edit scratch.md | endif
 if &buftype ==# 'terminal'
-  silent file scratch.txt
+  silent file scratch.md
 endif
-balt scratch.txt
+balt app/routes/api.discourseRepliesForPost.tsx
 setlocal fdm=manual
 setlocal fde=0
 setlocal fmr={{{,}}}
@@ -175,11 +181,11 @@ setlocal fdn=20
 setlocal fen
 silent! normal! zE
 let &fdl = &fdl
-let s:l = 3 - ((2 * winheight(0) + 12) / 24)
+let s:l = 1 - ((0 * winheight(0) + 12) / 25)
 if s:l < 1 | let s:l = 1 | endif
 keepjumps exe s:l
 normal! zt
-keepjumps 3
+keepjumps 1
 normal! 0
 wincmd w
 argglobal
@@ -196,11 +202,11 @@ setlocal fdl=0
 setlocal fml=1
 setlocal fdn=20
 setlocal fen
-let s:l = 1 - ((0 * winheight(0) + 12) / 24)
+let s:l = 25 - ((24 * winheight(0) + 12) / 25)
 if s:l < 1 | let s:l = 1 | endif
 keepjumps exe s:l
 normal! zt
-keepjumps 1
+keepjumps 25
 normal! 0
 wincmd w
 argglobal
@@ -217,27 +223,27 @@ setlocal fdl=0
 setlocal fml=1
 setlocal fdn=20
 setlocal fen
-let s:l = 9 - ((8 * winheight(0) + 12) / 24)
+let s:l = 25 - ((24 * winheight(0) + 12) / 25)
 if s:l < 1 | let s:l = 1 | endif
 keepjumps exe s:l
 normal! zt
-keepjumps 9
+keepjumps 25
 normal! 0
 wincmd w
-5wincmd w
-exe '1resize ' . ((&lines * 49 + 38) / 76)
-exe 'vert 1resize ' . ((&columns * 127 + 191) / 382)
-exe '2resize ' . ((&lines * 49 + 38) / 76)
-exe 'vert 2resize ' . ((&columns * 149 + 191) / 382)
-exe '3resize ' . ((&lines * 24 + 38) / 76)
+2wincmd w
+exe '1resize ' . ((&lines * 51 + 39) / 79)
+exe 'vert 1resize ' . ((&columns * 154 + 191) / 382)
+exe '2resize ' . ((&lines * 51 + 39) / 79)
+exe 'vert 2resize ' . ((&columns * 122 + 191) / 382)
+exe '3resize ' . ((&lines * 25 + 39) / 79)
 exe 'vert 3resize ' . ((&columns * 104 + 191) / 382)
-exe '4resize ' . ((&lines * 24 + 38) / 76)
+exe '4resize ' . ((&lines * 25 + 39) / 79)
 exe 'vert 4resize ' . ((&columns * 104 + 191) / 382)
-exe '5resize ' . ((&lines * 24 + 38) / 76)
+exe '5resize ' . ((&lines * 25 + 39) / 79)
 exe 'vert 5resize ' . ((&columns * 127 + 191) / 382)
-exe '6resize ' . ((&lines * 24 + 38) / 76)
+exe '6resize ' . ((&lines * 25 + 39) / 79)
 exe 'vert 6resize ' . ((&columns * 127 + 191) / 382)
-exe '7resize ' . ((&lines * 24 + 38) / 76)
+exe '7resize ' . ((&lines * 25 + 39) / 79)
 exe 'vert 7resize ' . ((&columns * 126 + 191) / 382)
 tabnext 1
 if exists('s:wipebuf') && len(win_findbuf(s:wipebuf)) == 0 && getbufvar(s:wipebuf, '&buftype') isnot# 'terminal'
@@ -254,6 +260,7 @@ if filereadable(s:sx)
 endif
 let &g:so = s:so_save | let &g:siso = s:siso_save
 set hlsearch
+nohlsearch
 doautoall SessionLoadPost
 unlet SessionLoad
 " vim: set ft=vim :
