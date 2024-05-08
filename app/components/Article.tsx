@@ -45,7 +45,4 @@ export default function Topic({ topic }: ArticleProps) {
       </article>
     </>
   );
-  console.log(JSON.stringify(topic.user, null, 2));
-}
-}
 }
