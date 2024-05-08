@@ -32,7 +32,7 @@ const Comment = forwardRef<HTMLDivElement, CommentProps>(function Comment(
 
   return (
     <div className="flex flex-col discourse-comment">
-      <div className="flex w-full my-6 bg-red-600" ref={ref}>
+      <div className="flex w-full my-6" ref={ref}>
         <Avatar
           user={{
             username: post.username,
