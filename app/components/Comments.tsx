@@ -80,12 +80,12 @@ export default function Comments({ topicId }: CommentsProps) {
     <div>
       <button onClick={getInitialComments}>Comments</button>
 
-      <div className={`divide-y divide-cyan-800 ${editorOpen && "pb-96"}`}>
+      <div className={`${editorOpen && "pb-96"}`}>
         {renderComments}
         {page && (
           <div>
             <button
-              className="px-2 py-1 text-blue-700 bg-white"
+              className="px-2 py-1 ml-10 text-blue-700 bg-white"
               onClick={loadMoreComments}
             >
               {commentFetcher.state === "idle" ? "Load more" : "Loading..."}
