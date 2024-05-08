@@ -47,14 +47,14 @@ const Comment = forwardRef<HTMLDivElement, CommentProps>(function Comment(
             </span>
             <div dangerouslySetInnerHTML={{ __html: post.cooked }} />
           </div>
-          <div className="flex items-center w-full">
+          {replyCount > 0 && (
             <div className="mr-6">
-              {replyCount > 0 && (
-                <button
-                  onClick={() => getRepliesForPost(post.id)}
-                >{`${replyCount} ${replyText}`}</button>
-              )}
+              <button
+                onClick={() => getRepliesForPost(post.id)}
+              >{`${replyCount} ${replyText}`}</button>
             </div>
+          )}
+          <div className="flex items-center justify-end reply-button">
             <ReplyButton
               handleReplyClick={handleReplyClick}
               postNumber={postNumber}
@@ -62,7 +62,7 @@ const Comment = forwardRef<HTMLDivElement, CommentProps>(function Comment(
           </div>
         </div>
       </div>
-      <div className="flex w-full my-6 bg-green-600">
+      <div className="flex flex-col w-full ml-8 mr-6 bg-cyan-600">
         {replyFetcher.data &&
           replyFetcher.data?.posts &&
           replyFetcher.data.posts.map(
@@ -88,16 +88,16 @@ const Comment = forwardRef<HTMLDivElement, CommentProps>(function Comment(
                         dangerouslySetInnerHTML={{ __html: replyPost.cooked }}
                       />
                     </div>
-                    <div className="flex items-center w-full">
+                    {replyPost.replyCount > 0 && (
                       <div className="mr-6">
-                        {replyPost.replyCount > 0 && (
-                          <button
-                            onClick={() => getRepliesForPost(replyPost.id)}
-                          >{`${replyPost.replyCount} ${
-                            replyPost.replyCount === 1 ? "reply" : "replies"
-                          }`}</button>
-                        )}
+                        <button
+                          onClick={() => getRepliesForPost(replyPost.id)}
+                        >{`${replyPost.replyCount} ${
+                          replyPost.replyCount === 1 ? "reply" : "replies"
+                        }`}</button>
                       </div>
+                    )}
+                    <div className="flex items-center justify-end">
                       <ReplyButton
                         handleReplyClick={handleReplyClick}
                         postNumber={String(replyPost.postNumber)}
