@@ -11,9 +11,7 @@
     "typecheck": "tsc"
   },
   "dependencies": {
-    "@lexical/plain-text": "^0.14.5",
     "@lexical/react": "^0.14.5",
-    "@lexical/rich-text": "^0.14.5",
     "@prisma/client": "^5.12.1",
     "@remix-run/node": "^2.8.1",
     "@remix-run/react": "^2.8.1",
@@ -23,6 +21,7 @@
     "dompurify": "^3.0.11",
     "isbot": "^4.1.0",
     "jsdom": "^24.0.0",
+    "lexical": "^0.14.5",
     "marked": "^12.0.1",
     "postcss": "^8.4.38",
     "react": "^18.2.0",
