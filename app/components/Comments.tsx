@@ -5,8 +5,8 @@ import type {
   ParsedDiscourseTopicComments,
 } from "~/types/parsedDiscourse";
 import Comment from "~/components/Comment";
-import CommentForm from "~/components/CommentForm";
-
+//import CommentForm from "~/components/CommentForm";
+import ZalgEditorClientOnly from "~/components/ZalgEditorClientOnly";
 type CommentFetcherData = { comments: ParsedDiscourseTopicComments };
 
 type CommentsProps = {
@@ -93,20 +93,16 @@ export default function Comments({ topicId }: CommentsProps) {
       )}
       <div
         className={`${
-          editorOpen ? "min-h-52" : "h-8"
-        } bg-red-200 fixed bottom-0 left-0 right-0 w-screen`}
+          editorOpen ? "min-h-52" : "min-h-52"
+        } fixed bottom-0 left-0 right-0 w-screen`}
       >
         <div
           className={`${
-            editorOpen ? "min-h-52" : "h-8"
+            editorOpen ? "min-h-52" : "min-h-52"
           } max-w-screen-md mx-auto bg-slate-50`}
         >
           {" "}
-          <CommentForm
-            replyToPostNumber={replyToPostNumber}
-            handleCreatePostClick={handleCreatePostClick}
-            toggleEditorOpen={toggleEditorOpen}
-          />
+          <ZalgEditorClientOnly />
         </div>
       </div>
     </div>
