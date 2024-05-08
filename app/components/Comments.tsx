@@ -80,7 +80,9 @@ export default function Comments({ topicId }: CommentsProps) {
     <div>
       <button onClick={getInitialComments}>Comments</button>
 
-      <div className="divide-y divide-cyan-800">{renderComments}</div>
+      <div className={`divide-y divide-cyan-800 ${editorOpen && "pb-56"}`}>
+        {renderComments}
+      </div>
       {page && (
         <div>
           <button
@@ -101,7 +103,6 @@ export default function Comments({ topicId }: CommentsProps) {
             editorOpen ? "min-h-52" : "hidden"
           } max-w-screen-md mx-auto bg-slate-50 text-slate-900`}
         >
-          {" "}
           <ZalgEditorClientOnly />
         </div>
       </div>
