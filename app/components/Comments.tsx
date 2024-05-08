@@ -93,13 +93,13 @@ export default function Comments({ topicId }: CommentsProps) {
       )}
       <div
         className={`${
-          editorOpen ? "min-h-52" : "min-h-52"
+          editorOpen ? "min-h-52" : "hidden"
         } fixed bottom-0 left-0 right-0 w-screen`}
       >
         <div
           className={`${
-            editorOpen ? "min-h-52" : "min-h-52"
-          } max-w-screen-md mx-auto bg-slate-50`}
+            editorOpen ? "min-h-52" : "hidden"
+          } max-w-screen-md mx-auto bg-slate-50 text-slate-900`}
         >
           {" "}
           <ZalgEditorClientOnly />
