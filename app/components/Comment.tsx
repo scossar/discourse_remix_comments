@@ -62,7 +62,7 @@ const Comment = forwardRef<HTMLDivElement, CommentProps>(function Comment(
           </div>
         </div>
       </div>
-      <div className="flex flex-col w-full ml-8 mr-6 bg-cyan-600">
+      <div className="flex flex-col w-full pl-6 my-6 border border-cyan-600">
         {replyFetcher.data &&
           replyFetcher.data?.posts &&
           replyFetcher.data.posts.map(
