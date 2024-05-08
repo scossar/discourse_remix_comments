@@ -69,7 +69,7 @@ const Comment = forwardRef<HTMLDivElement, CommentProps>(function Comment(
             (replyPost) =>
               replyPost.replyToPostNumber === post.postNumber && (
                 <div
-                  key={`${post.id}-${replyPost.replyToPostNumber}`}
+                  key={`${replyPost.id}-${replyPost.replyToPostNumber}`}
                   className="flex my-6"
                 >
                   <Avatar
