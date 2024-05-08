@@ -103,7 +103,7 @@ export default function Comments({ topicId }: CommentsProps) {
             editorOpen ? "" : ""
           } h-full max-w-screen-md mx-auto bg-slate-50 text-slate-900`}
         >
-          <ZalgEditorClientOnly />
+          <ZalgEditorClientOnly toggleOpenState={toggleEditorOpen} />
         </div>
       </div>
     </div>

@@ -3,7 +3,11 @@ import { ClientOnly } from "~/components/ClientOnly";
 import Composer from "~/components/ZalgEditor/Composer";
 import { CustomFetcher } from "~/components/ZalgEditor/plugins/SubmitPlugin";
 
-export default function ZalgEditorClientOnly() {
+export default function ZalgEditorClientOnly({
+  toggleOpenState,
+}: {
+  toggleOpenState: () => void;
+}) {
   const submitFetcher = useFetcher({ key: "submit" });
   return (
     <ClientOnly
@@ -12,7 +16,11 @@ export default function ZalgEditorClientOnly() {
       }
     >
       {() => (
-        <Composer submitType="html" fetcher={submitFetcher as CustomFetcher} />
+        <Composer
+          submitType="html"
+          fetcher={submitFetcher as CustomFetcher}
+          toggleOpenState={toggleOpenState}
+        />
       )}
     </ClientOnly>
   );
