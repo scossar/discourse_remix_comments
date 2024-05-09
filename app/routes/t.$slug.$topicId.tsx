@@ -47,24 +47,25 @@ export async function action({ request, params }: ActionFunctionArgs) {
   }
 
   const formData = await request.formData();
-  const raw = String(formData.get("raw"));
+  /* const raw = String(formData.get("raw"));
   if (!raw || raw.length < 2) {
     throw new Error("Todo: all these errors need to be handled");
-  }
+  }*/
+
+  const unsanitizedMarkdown = String(formData.get("markdown")) || "";
   const replyToPostNumber = Number(formData.get("replyToPostNumber")) || null;
 
-  let html;
-
+  let cleaned;
   try {
     const window = new JSDOM("").window;
     const purify = DOMPurify(window);
-    const cleaned = purify.sanitize(raw, { ALLOWED_TAGS: [] });
-    html = await marked.parse(cleaned);
+    cleaned = purify.sanitize(unsanitizedMarkdown, { ALLOWED_TAGS: [] });
+    // html = await marked.parse(cleaned);
   } catch (error) {
-    throw new Error("couldn't parse raw");
+    throw new Error("couldn't sanitize rawMarkdown");
   }
 
-  if (!html) {
+  if (!cleaned) {
     throw new Error(
       "Don't actually throw an error here, return an error message to the user"
     );
@@ -78,7 +79,7 @@ export async function action({ request, params }: ActionFunctionArgs) {
 
   const postsUrl = `${baseUrl}/posts.json`;
   const data = {
-    raw: html,
+    raw: cleaned,
     topic_id: topicId,
     reply_to_post_number: replyToPostNumber,
   };

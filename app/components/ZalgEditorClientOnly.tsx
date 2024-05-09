@@ -8,7 +8,7 @@ export default function ZalgEditorClientOnly({
   replyToPostNumber,
 }: {
   toggleOpenState: () => void;
-  replyToPostNumber?: number;
+  replyToPostNumber?: string;
 }) {
   const submitFetcher = useFetcher({ key: "submit" });
   return (
@@ -19,9 +19,10 @@ export default function ZalgEditorClientOnly({
     >
       {() => (
         <Composer
-          submitType="html"
+          submitType="markdown"
           fetcher={submitFetcher as CustomFetcher}
           toggleOpenState={toggleOpenState}
+          replyToPostNumber={replyToPostNumber}
         />
       )}
     </ClientOnly>
