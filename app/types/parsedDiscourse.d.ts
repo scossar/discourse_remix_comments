@@ -53,5 +53,6 @@ export interface ParsedDiscourseTopicComments {
 }
 
 export interface ParsedDiscourseCommentReplies {
+  repliesForPostId: number;
   posts: ParsedDiscourseReplyPost[];
 }

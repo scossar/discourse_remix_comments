@@ -62,46 +62,32 @@ const Comment = forwardRef<HTMLDivElement, CommentProps>(function Comment(
           </div>
         </div>
       </div>
-      <div className="flex flex-col w-full pl-6 my-6 border border-cyan-600">
-        {replyFetcher.data &&
-          replyFetcher.data?.posts &&
-          replyFetcher.data.posts.map(
-            (replyPost) =>
-              replyPost.replyToPostNumber === post.postNumber && (
-                <div
-                  key={`${replyPost.id}-${replyPost.replyToPostNumber}`}
-                  className="flex my-6"
-                >
-                  <Avatar
-                    user={{
-                      username: replyPost.username,
-                      avatarTemplate: replyPost.avatarUrl,
-                    }}
-                    className="object-contain w-8 h-8 mt-2 rounded-full"
-                  />
-                  <div className="w-full ml-2">
-                    <div className="w-full my-3">
-                      <span className="inline-block p-1 text-sm text-slate-50">
-                        {replyPost.postNumber}
-                      </span>
-                      <div
-                        dangerouslySetInnerHTML={{ __html: replyPost.cooked }}
-                      />
-                    </div>
-                    {replyPost.replyCount > 0 && (
-                      <div className="mr-6">
-                        <button
-                          onClick={() => getRepliesForPost(replyPost.id)}
-                        >{`${replyPost.replyCount} ${
-                          replyPost.replyCount === 1 ? "reply" : "replies"
-                        }`}</button>
-                      </div>
-                    )}
-                  </div>
+      {replyFetcher.data?.repliesForPostId === post.id && (
+        <div className="flex flex-col w-full pl-6 my-6 border border-cyan-600">
+          {replyFetcher.data.posts.map((replyPost) => (
+            <div
+              key={`${replyPost.id}-${replyPost.replyToPostNumber}`}
+              className="flex my-6"
+            >
+              <Avatar
+                user={{
+                  username: replyPost.username,
+                  avatarTemplate: replyPost.avatarUrl,
+                }}
+                className="object-contain w-8 h-8 mt-2 rounded-full"
+              />
+              <div className="w-full ml-2">
+                <div className="w-full my-3">
+                  <span className="inline-block p-1 text-sm text-slate-50">
+                    {replyPost.postNumber}
+                  </span>
+                  <div dangerouslySetInnerHTML={{ __html: replyPost.cooked }} />
                 </div>
-              )
-          )}
-      </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 });

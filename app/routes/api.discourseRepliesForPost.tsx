@@ -35,6 +35,7 @@ export async function loader({
   const postsData: ApiDiscourseReplyPost[] = await response.json();
 
   return {
+    repliesForPostId: postId,
     posts: postsData
       .filter(isRegularPost)
       .map((post) => transformReplyPost(post, baseUrl)),
