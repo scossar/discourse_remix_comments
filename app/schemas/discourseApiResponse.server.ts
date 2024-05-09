@@ -61,16 +61,6 @@ export const DiscourseApiReplyPostSchema = DiscourseApiBasicPostSchema.extend({
 });
 export type DiscourseApiReplyPost = z.infer<typeof DiscourseApiReplyPostSchema>;
 
-export const DiscourseApiWebHookPostSchemaBak =
-  DiscourseApiBasicPostSchema.extend({
-    topic_title: z.string(),
-    category_id: z.number().optional(),
-    category_slug: z.string().optional(),
-    topic_posts_count: z.number(),
-    topic_filtered_posts_count: z.number(),
-    topic_archetype: DiscourseApiTopicArchetypeSchema,
-  });
-
 export const DiscourseApiWebHookPostSchema = z.object({
   post: DiscourseApiBasicPostSchema.extend({
     topic_title: z.string(),

@@ -38,11 +38,13 @@ export const action = async ({ request }: ActionFunctionArgs) => {
   const result = validateDiscourseApiWebHookPost(webHookData);
   if (!result.success) {
     const errorMessage = result.error.flatten();
+    // Todo: this doesn't generate a coherent error message on Discourse.
     return json({ message: errorMessage }, 422);
   }
   const postWebHookJson = result.data;
 
   const eventSignature = discourseHeaders["X-Discourse-Event-Signature"];
+  // Note: webHookData, not the parsed PostWebHookJson data needs to be passed to the verifySig function.
   const validSig = eventSignature
     ? verifyWebhookRequest(JSON.stringify(webHookData), eventSignature)
     : false;
