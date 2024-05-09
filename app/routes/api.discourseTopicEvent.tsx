@@ -1,7 +1,11 @@
 import { json, type ActionFunctionArgs } from "@remix-run/node";
+import { fromError } from "zod-validation-error";
 
 import { db } from "~/services/db.server";
-import type { ApiDiscourseWebHookTopic } from "~/types/apiDiscourse";
+import {
+  type DiscourseApiWebHookTopic,
+  validateDiscourseApiWebHookTopic,
+} from "~/schemas/discourseApiResponse.server";
 import {
   discourseWehbookHeaders,
   verifyWebhookRequest,
@@ -15,13 +19,6 @@ import CategoryCreationError from "~/services/errors/categoryCreationError.serve
 import PostCreationError from "~/services/errors/postCreationError.server";
 import TagCreationError from "~/services/errors/tagCreationError.server";
 import TopicCreationError from "~/services/errors/topicCreationError.server";
-
-// todo: validate with zod
-function isValidTopicWebHookData(
-  data: ApiDiscourseWebHookTopic
-): data is ApiDiscourseWebHookTopic {
-  return typeof data?.topic?.id === "number";
-}
 
 export const action = async ({ request }: ActionFunctionArgs) => {
   if (request.method !== "POST") {
@@ -47,21 +44,19 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     );
   }
 
-  const webhookJson: ApiDiscourseWebHookTopic = await request.json();
+  const webhookData: DiscourseApiWebHookTopic = await request.json();
 
-  if (!isValidTopicWebHookData(webhookJson)) {
-    return json(
-      {
-        message: "The payload is not valid Topic WebHook data",
-      },
-      400
-    );
+  let topicWebHookJson;
+  try {
+    topicWebHookJson = validateDiscourseApiWebHookTopic(webhookData);
+  } catch (error) {
+    return json({ message: fromError(error).toString() }, 422);
   }
 
   const eventSignature = discourseHeaders["X-Discourse-Event-Signature"];
 
   const validSig = eventSignature
-    ? verifyWebhookRequest(JSON.stringify(webhookJson), eventSignature)
+    ? verifyWebhookRequest(JSON.stringify(webhookData), eventSignature)
     : false;
 
   if (!validSig) {
@@ -76,7 +71,8 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     );
   }
 
-  const topicJson = webhookJson.topic;
+  const topicJson = topicWebHookJson.topic;
+  console.log(`topicJson: ${JSON.stringify(topicJson, null, 2)}`);
   const categoryId = topicJson?.category_id;
   if (categoryId) {
     let category = await db.discourseCategory.findUnique({
