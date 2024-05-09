@@ -52,10 +52,6 @@ export default function Comments({ topicId }: CommentsProps) {
     setEditorOpen(true);
   };
 
-  const handleCreatePostClick = () => {
-    setEditorOpen(false);
-  };
-
   const toggleEditorOpen = () => {
     setEditorOpen(!editorOpen);
   };
@@ -95,8 +91,8 @@ export default function Comments({ topicId }: CommentsProps) {
       </div>
       <div
         className={`${
-          editorOpen ? "h-96" : "hidden"
-        } fixed bottom-0 left-0 right-0`}
+          editorOpen ? "block" : "hidden"
+        } fixed bottom-0 left-0 right-0 bg-slate-200 border-t-8 border-t-slate-400`}
       >
         <div
           className={`${
