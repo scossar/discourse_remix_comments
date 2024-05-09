@@ -2,13 +2,9 @@ import type { LoaderFunctionArgs } from "@remix-run/node";
 
 import { discourseEnv } from "~/services/config.server";
 
-import type { ApiDiscourseReplyPost } from "~/types/apiDiscourse";
+import { validateDiscourseApiReplyPosts } from "~/schemas/discourseApiResponse.server";
 import type { ParsedDiscourseCommentReplies } from "~/types/parsedDiscourse";
-import { transformReplyPost } from "~/services/transformDiscourseData.server";
-
-function isRegularPost(post: ApiDiscourseReplyPost) {
-  return post.post_type === 1 && post.post_number > 1;
-}
+import { transformReplyPost } from "~/services/transformDiscourseDataZod.server";
 
 export async function loader({
   request,
@@ -32,12 +28,11 @@ export async function loader({
     throw new Error("An error was returned fetching the replies");
   }
 
-  const postsData: ApiDiscourseReplyPost[] = await response.json();
+  const postsData = await response.json();
+  const validReplyPosts = validateDiscourseApiReplyPosts(postsData);
 
   return {
     repliesForPostId: postId,
-    posts: postsData
-      .filter(isRegularPost)
-      .map((post) => transformReplyPost(post, baseUrl)),
+    posts: validReplyPosts.map((post) => transformReplyPost(post, baseUrl)),
   };
 }

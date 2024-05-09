@@ -12,7 +12,7 @@ export interface ParsedDiscoursePost {
 }
 
 export interface ParsedDiscourseReplyPost extends ParsedDiscoursePost {
-  replyToUser: ParsedDiscourseBasicUser;
+  replyToUser: ParsedDiscourseReplyToUser;
 }
 
 export interface ParsedDiscourseBasicUser {
@@ -23,6 +23,11 @@ export interface ParsedDiscourseBasicUser {
 
 export interface ParsedDiscourseParticipant extends ParsedDiscourseBasicUser {
   postCount: number;
+}
+
+export interface ParsedDiscourseReplyToUser {
+  username: string;
+  avatarUrl: string;
 }
 
 export interface ParsedDiscourseDetails {
