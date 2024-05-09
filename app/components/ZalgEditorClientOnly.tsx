@@ -5,8 +5,10 @@ import { CustomFetcher } from "~/components/ZalgEditor/plugins/SubmitPlugin";
 
 export default function ZalgEditorClientOnly({
   toggleOpenState,
+  replyToPostNumber,
 }: {
   toggleOpenState: () => void;
+  replyToPostNumber?: number;
 }) {
   const submitFetcher = useFetcher({ key: "submit" });
   return (
