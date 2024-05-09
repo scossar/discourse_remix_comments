@@ -5,8 +5,8 @@ export default async function findOrCreateTags(
   tags: string[],
   descriptions?: Record<string, string>
 ) {
-  let foundOrCreatedTags = [];
-  for (let tag of tags) {
+  const foundOrCreatedTags = [];
+  for (const tag of tags) {
     let t = await db.discourseTag.findUnique({
       where: { externalId: tag },
     });
