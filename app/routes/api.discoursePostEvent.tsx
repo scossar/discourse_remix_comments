@@ -1,26 +1,13 @@
 import { json, type ActionFunctionArgs } from "@remix-run/node";
 
-import { db } from "~/services/db.server";
-import type {
-  ApiDiscoursePost,
-  ApiDiscourseWebHookPost,
-} from "~/types/apiDiscourse";
+import {
+  validateDiscourseApiWebHookPost,
+  type DiscourseApiWebHookPost,
+} from "~/schemas/discourseApiResponse.server";
 import {
   discourseWehbookHeaders,
   verifyWebhookRequest,
 } from "~/services/discourseWebhooks.server";
-//import createOrUpdatePost from "~/services/createOrUpdatePost";
-import PostCreationError from "~/services/errors/postCreationError.server";
-
-function isValidPostWebhookData(
-  data: ApiDiscourseWebHookPost
-): data is ApiDiscourseWebHookPost {
-  return (
-    typeof data.post.id === "number" &&
-    typeof data.post.cooked === "string" &&
-    typeof data.post.post_number === "number"
-  );
-}
 
 export const action = async ({ request }: ActionFunctionArgs) => {
   if (request.method !== "POST") {
@@ -46,32 +33,18 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     );
   }
 
-  const webhookJson: ApiDiscourseWebHookPost = await request.json();
-  if (!isValidPostWebhookData(webhookJson)) {
-    return json(
-      {
-        message: "The payload is not valid webhook data",
-      },
-      400
-    );
-  }
+  const webHookData: DiscourseApiWebHookPost = await request.json();
 
-  const postJson: ApiDiscoursePost = webhookJson.post;
-
-  // return now if it's not the OP
-  if (postJson.post_number !== 1) {
-    return json(
-      {
-        message:
-          "No post created. The payload URL is only configured to create posts for post_number 1.",
-      },
-      200
-    );
+  const result = validateDiscourseApiWebHookPost(webHookData);
+  if (!result.success) {
+    const errorMessage = result.error.flatten();
+    return json({ message: errorMessage }, 422);
   }
+  const postWebHookJson = result.data;
 
   const eventSignature = discourseHeaders["X-Discourse-Event-Signature"];
   const validSig = eventSignature
-    ? verifyWebhookRequest(JSON.stringify(webhookJson), eventSignature)
+    ? verifyWebhookRequest(JSON.stringify(webHookData), eventSignature)
     : false;
 
   if (!validSig) {
@@ -86,33 +59,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     );
   }
 
-  const topic = await db.discourseTopic.findUnique({
-    where: { externalId: postJson.topic_id },
-  });
-
-  if (!topic) {
-    return json(
-      {
-        message: `The associated topic does not exist for post. Post Id: ${postJson.id}`,
-      },
-      403
-    );
-  }
-
-  const post = await db.discoursePost.findUnique({
-    where: { externalId: postJson.id },
-  });
-
-  if (!post || discourseHeaders["X-Discourse-Event"] !== "post_edited") {
-    try {
-      // post = await createOrUpdatePost(postJson);
-    } catch (error) {
-      if (error instanceof PostCreationError) {
-        return json({ message: error.message }, error.statusCode);
-      }
-      return json({ message: "An unexpected error occurred" }, 500);
-    }
-  }
+  // TODO: it's valid, do something with the data, or remove this route if it's not being used.
 
   return json({ message: "success" }, 200);
 };

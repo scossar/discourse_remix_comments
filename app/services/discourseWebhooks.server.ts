@@ -24,8 +24,8 @@ export const verifyWebhookRequest = (
   payload: string,
   xDiscourseEventSignature: string
 ) => {
-  const { ssoSecret } = discourseEnv();
-  const computedSig = createHmac("sha256", ssoSecret)
+  const { webhookSecret } = discourseEnv();
+  const computedSig = createHmac("sha256", webhookSecret)
     .update(payload)
     .digest("hex");
   const receivedSig = xDiscourseEventSignature.substring(7);
