@@ -111,6 +111,32 @@ export function validateDiscourseApiReplyPosts(
 }
 
 /**
+ * Category
+ */
+
+export const DiscourseApiBasicCategorySchema = z.object({
+  id: z.number(),
+  parent_category_id: z.number().optional(),
+  name: z.string(),
+  color: z.string(),
+  slug: z.string(),
+  topic_count: z.number(),
+  description_text: z.string().optional().nullable(),
+  has_children: z.boolean(),
+  uploaded_logo: z.string().optional().nullable(),
+  uploaded_logo_dark: z.string().optional().nullable(),
+});
+export type DiscourseApiBasicCategory = z.infer<
+  typeof DiscourseApiBasicCategorySchema
+>;
+
+export function validateDiscourseApiBasicCategory(
+  category: DiscourseApiBasicCategory
+) {
+  return DiscourseApiBasicCategorySchema.parse(category);
+}
+
+/**
  * Topic
  */
 

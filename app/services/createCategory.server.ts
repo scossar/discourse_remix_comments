@@ -1,6 +1,11 @@
+import { fromError } from "zod-validation-error";
 import { db } from "~/services/db.server";
 import { discourseEnv } from "./config.server";
-import { ApiDiscourseCategory } from "~/types/apiDiscourse";
+//import { ApiDiscourseCategory } from "~/types/apiDiscourse";
+import {
+  type DiscourseApiBasicCategory,
+  validateDiscourseApiBasicCategory,
+} from "~/schemas/discourseApiResponse.server";
 import CategoryCreationError from "./errors/categoryCreationError.server";
 import type { Prisma } from "@prisma/client";
 
@@ -29,14 +34,21 @@ export default async function createCategory(id: number) {
     );
   }
 
-  const discourseCategory: ApiDiscourseCategory = categories.find(
-    (category: ApiDiscourseCategory) => category.id === id
+  const foundCategory: DiscourseApiBasicCategory = categories.find(
+    (category: DiscourseApiBasicCategory) => category.id === id
   );
-  if (!discourseCategory) {
+  if (!foundCategory) {
     throw new CategoryCreationError(
       "API request to Discourse failed to return Topic's category data",
       404
     );
+  }
+  let discourseCategory;
+  try {
+    discourseCategory = validateDiscourseApiBasicCategory(foundCategory);
+  } catch (error) {
+    const errorMessage = fromError(error).toString();
+    throw new CategoryCreationError(errorMessage, 422);
   }
 
   const categoryFields: Prisma.DiscourseCategoryCreateInput = {

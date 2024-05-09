@@ -72,7 +72,6 @@ export const action = async ({ request }: ActionFunctionArgs) => {
   }
 
   const topicJson = topicWebHookJson.topic;
-  console.log(`topicJson: ${JSON.stringify(topicJson, null, 2)}`);
   const categoryId = topicJson?.category_id;
   if (categoryId) {
     let category = await db.discourseCategory.findUnique({
