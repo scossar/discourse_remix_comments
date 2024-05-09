@@ -1,5 +1,24 @@
 import { z } from "zod";
 
+/**
+ * General
+ */
+export enum DiscourseApiPostType {
+  Regular = 1,
+  ModeratorAction = 2,
+  SmallAction = 3,
+  Whisper = 4,
+}
+const PostTypeSchema = z.nativeEnum(DiscourseApiPostType);
+
+export const DiscourseApiTopicArchetypeSchema = z.union([
+  z.literal("regular"),
+  z.literal("private_message"),
+]);
+
+/**
+ * User
+ */
 export const DiscourseApiBasicUserSchema = z.object({
   id: z.number(),
   username: z.string(),
@@ -16,6 +35,13 @@ export type DiscourseApiParticipant = z.infer<
   typeof DiscourseApiParticipantSchema
 >;
 
+export const DiscourseApiParticipantsSchema = z.array(
+  DiscourseApiParticipantSchema
+);
+export type DiscourseApiParticipants = z.infer<
+  typeof DiscourseApiParticipantsSchema
+>;
+
 export const DiscourseApiReplyToUserSchema = z.object({
   username: z.string(),
   avatar_template: z.string(),
@@ -24,19 +50,9 @@ export type DiscourseApiReplyToUser = z.infer<
   typeof DiscourseApiReplyToUserSchema
 >;
 
-export enum DiscourseApiPostType {
-  Regular = 1,
-  ModeratorAction = 2,
-  SmallAction = 3,
-  Whisper = 4,
-}
-const PostTypeSchema = z.nativeEnum(DiscourseApiPostType);
-
-export const DiscourseApiTopicArchetypeSchema = z.union([
-  z.literal("regular"),
-  z.literal("private_message"),
-]);
-
+/**
+ * Post
+ */
 export const DiscourseApiBasicPostSchema = z.object({
   id: z.number(),
   username: z.string(),
@@ -60,20 +76,6 @@ export const DiscourseApiReplyPostSchema = DiscourseApiBasicPostSchema.extend({
   reply_to_user: DiscourseApiReplyToUserSchema,
 });
 export type DiscourseApiReplyPost = z.infer<typeof DiscourseApiReplyPostSchema>;
-
-export const DiscourseApiWebHookPostSchema = z.object({
-  post: DiscourseApiBasicPostSchema.extend({
-    topic_title: z.string(),
-    category_id: z.number().optional(),
-    category_slug: z.string().optional(),
-    topic_posts_count: z.number(),
-    topic_filtered_posts_count: z.number(),
-    topic_archetype: DiscourseApiTopicArchetypeSchema,
-  }),
-});
-export type DiscourseApiWebHookPost = z.infer<
-  typeof DiscourseApiWebHookPostSchema
->;
 
 export const DiscourseApiReplyPostsSchema = z.array(
   DiscourseApiReplyPostSchema
@@ -108,8 +110,76 @@ export function validateDiscourseApiReplyPosts(
   }, []);
 }
 
+/**
+ * Topic
+ */
+
+export const DiscourseApiBasicTopicSchema = z.object({
+  tags: z.array(z.string()),
+  tags_descriptions: z.record(z.string(), z.string()),
+  id: z.number(),
+  title: z.string(),
+  fancy_title: z.string(),
+  posts_count: z.number(),
+  created_at: z.string(),
+  visible: z.boolean(),
+  closed: z.boolean(),
+  archived: z.boolean(),
+  archetype: DiscourseApiTopicArchetypeSchema,
+  slug: z.string(),
+  category_id: z.number().optional(),
+  deleted_at: z.string().nullable(),
+  user_id: z.number(),
+  participant_count: z.number(),
+  created_by: DiscourseApiBasicUserSchema,
+  last_poster: DiscourseApiBasicUserSchema,
+});
+export type DiscourseApiBasicTopic = z.infer<
+  typeof DiscourseApiBasicTopicSchema
+>;
+
+export const DiscourseApiTopicDetailsSchema = z.object({
+  can_create_post: z.boolean(),
+  participants: DiscourseApiParticipantsSchema,
+});
+
+export const DiscourseApiFullTopicSchema = DiscourseApiBasicTopicSchema.extend({
+  details: DiscourseApiTopicDetailsSchema,
+});
+export type DiscourseApiFullTopic = z.infer<typeof DiscourseApiFullTopicSchema>;
+
+/**
+ * Webhooks
+ */
+export const DiscourseApiWebHookPostSchema = z.object({
+  post: DiscourseApiBasicPostSchema.extend({
+    topic_title: z.string(),
+    category_id: z.number().optional(),
+    category_slug: z.string().optional(),
+    topic_posts_count: z.number(),
+    topic_filtered_posts_count: z.number(),
+    topic_archetype: DiscourseApiTopicArchetypeSchema,
+  }),
+});
+export type DiscourseApiWebHookPost = z.infer<
+  typeof DiscourseApiWebHookPostSchema
+>;
+
+export const DiscourseApiWebHookTopicSchema = z.object({
+  topic: DiscourseApiBasicTopicSchema,
+});
+export type DiscourseApiWebHookTopic = z.infer<
+  typeof DiscourseApiWebHookTopicSchema
+>;
+
 export function validateDiscourseApiWebHookPost(
   webHookPost: DiscourseApiWebHookPost
 ) {
   return DiscourseApiWebHookPostSchema.parse(webHookPost);
+}
+
+export function validateDiscourseApiWebHookTopic(
+  webHookTopic: DiscourseApiWebHookTopic
+) {
+  return DiscourseApiWebHookTopicSchema.parse(webHookTopic);
 }
