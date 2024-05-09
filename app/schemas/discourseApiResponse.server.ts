@@ -32,6 +32,11 @@ export enum DiscourseApiPostType {
 }
 const PostTypeSchema = z.nativeEnum(DiscourseApiPostType);
 
+export const DiscourseApiTopicArchetypeSchema = z.union([
+  z.literal("regular"),
+  z.literal("private_message"),
+]);
+
 export const DiscourseApiBasicPostSchema = z.object({
   id: z.number(),
   username: z.string(),
@@ -55,6 +60,30 @@ export const DiscourseApiReplyPostSchema = DiscourseApiBasicPostSchema.extend({
   reply_to_user: DiscourseApiReplyToUserSchema,
 });
 export type DiscourseApiReplyPost = z.infer<typeof DiscourseApiReplyPostSchema>;
+
+export const DiscourseApiWebHookPostSchemaBak =
+  DiscourseApiBasicPostSchema.extend({
+    topic_title: z.string(),
+    category_id: z.number().optional(),
+    category_slug: z.string().optional(),
+    topic_posts_count: z.number(),
+    topic_filtered_posts_count: z.number(),
+    topic_archetype: DiscourseApiTopicArchetypeSchema,
+  });
+
+export const DiscourseApiWebHookPostSchema = z.object({
+  post: DiscourseApiBasicPostSchema.extend({
+    topic_title: z.string(),
+    category_id: z.number().optional(),
+    category_slug: z.string().optional(),
+    topic_posts_count: z.number(),
+    topic_filtered_posts_count: z.number(),
+    topic_archetype: DiscourseApiTopicArchetypeSchema,
+  }),
+});
+export type DiscourseApiWebHookPost = z.infer<
+  typeof DiscourseApiWebHookPostSchema
+>;
 
 export const DiscourseApiReplyPostsSchema = z.array(
   DiscourseApiReplyPostSchema
@@ -87,4 +116,10 @@ export function validateDiscourseApiReplyPosts(
     }
     return validPosts;
   }, []);
+}
+
+export function validateDiscourseApiWebHookPost(
+  webHookPost: DiscourseApiWebHookPost
+) {
+  return DiscourseApiWebHookPostSchema.safeParse(webHookPost);
 }
