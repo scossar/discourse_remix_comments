@@ -111,5 +111,5 @@ export function validateDiscourseApiReplyPosts(
 export function validateDiscourseApiWebHookPost(
   webHookPost: DiscourseApiWebHookPost
 ) {
-  return DiscourseApiWebHookPostSchema.safeParse(webHookPost);
+  return DiscourseApiWebHookPostSchema.parse(webHookPost);
 }

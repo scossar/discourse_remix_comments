@@ -1,4 +1,5 @@
 import { json, type ActionFunctionArgs } from "@remix-run/node";
+import { fromError } from "zod-validation-error";
 
 import {
   validateDiscourseApiWebHookPost,
@@ -35,13 +36,16 @@ export const action = async ({ request }: ActionFunctionArgs) => {
 
   const webHookData: DiscourseApiWebHookPost = await request.json();
 
-  const result = validateDiscourseApiWebHookPost(webHookData);
-  if (!result.success) {
-    const errorMessage = result.error.flatten();
-    // Todo: this doesn't generate a coherent error message on Discourse.
-    return json({ message: errorMessage }, 422);
+  let postWebHookJson;
+  try {
+    postWebHookJson = validateDiscourseApiWebHookPost(webHookData);
+  } catch (error) {
+    const message = fromError(error);
+    return json({ message: message.toString() }, 422);
   }
-  const postWebHookJson = result.data;
+
+  // This route isn't currently being used!
+  console.log(`postWebHookJson.post.id: ${postWebHookJson.post.id}`);
 
   const eventSignature = discourseHeaders["X-Discourse-Event-Signature"];
   // Note: webHookData, not the parsed PostWebHookJson data needs to be passed to the verifySig function.
