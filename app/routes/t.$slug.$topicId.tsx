@@ -59,8 +59,8 @@ export async function action({ request, params }: ActionFunctionArgs) {
   try {
     const window = new JSDOM("").window;
     const purify = DOMPurify(window);
+    // this works, but is it needed?
     cleaned = purify.sanitize(unsanitizedMarkdown, { ALLOWED_TAGS: [] });
-    // html = await marked.parse(cleaned);
   } catch (error) {
     throw new Error("couldn't sanitize rawMarkdown");
   }

@@ -97,12 +97,6 @@ const Comment = forwardRef<HTMLDivElement, CommentProps>(function Comment(
                         }`}</button>
                       </div>
                     )}
-                    <div className="flex items-center justify-end">
-                      <ReplyButton
-                        handleReplyClick={handleReplyClick}
-                        postNumber={String(replyPost.postNumber)}
-                      />
-                    </div>
                   </div>
                 </div>
               )
