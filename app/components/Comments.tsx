@@ -92,7 +92,7 @@ export default function Comments({ topicId }: CommentsProps) {
       <div
         className={`${
           editorOpen ? "block" : "hidden"
-        } fixed bottom-0 left-0 right-0 bg-slate-200 border-t-8 border-t-slate-400`}
+        } fixed bottom-0 left-0 right-0`}
       >
         <div
           className={`${
