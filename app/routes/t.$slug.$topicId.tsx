@@ -9,7 +9,6 @@ import {
   useLoaderData,
   useRouteError,
 } from "@remix-run/react";
-import { marked } from "marked";
 import { JSDOM } from "jsdom";
 import DOMPurify from "dompurify";
 
