@@ -13,25 +13,60 @@ if &shortmess =~ 'A'
 else
   set shortmess=aoO
 endif
-badd +0 ../lexical-playground/package.json
-badd +0 term://~/remix/discourse/discourse_remix_comments//30275:/bin/bash
-badd +0 term://~/remix/discourse/discourse_remix_comments//30685:/bin/bash
+badd +42 ~/remix/discourse/lexical-playground/package.json
+badd +186 term://~/remix/discourse/discourse_remix_comments//30275:/bin/bash
+badd +1 term://~/remix/discourse/discourse_remix_comments//30685:/bin/bash
 badd +28 package.json
-badd +36 app/routes/lexical-test.tsx
-badd +48 app/components/Article.tsx
+badd +19 app/routes/lexical-test.tsx
+badd +35 app/components/Article.tsx
 badd +1 app/components/Avatar.tsx
-badd +1 app/components/Comment.tsx
-badd +47 app/components/CommentForm.tsx
-badd +1 app/components/Comments.tsx
+badd +71 app/components/Comment.tsx
+badd +141 app/components/CommentForm.tsx
+badd +92 app/components/Comments.tsx
 badd +1 app/components/Header.tsx
 badd +1 app/components/Icon.tsx
 badd +13 public/sprite.svg
-badd +18 app/hooks/useHydrated.ts
+badd +1 app/hooks/useHydrated.ts
 badd +5 app/components/ClientOnly.tsx
-badd +0 app/routes/t.\$slug.\$topicId.tsx
+badd +165 app/routes/t.\$slug.\$topicId.tsx
+badd +107 app/routes/t.\$slug.\$topicId.comments.tsx
+badd +5 app/components/Editor.tsx
+badd +27 app/components/ZalgEditorClientOnly.tsx
+badd +21 app/components/ZalgEditor/Composer.tsx
+badd +22 app/components/ZalgEditor/Editor.tsx
+badd +1 app/components/ReplyButton.tsx
+badd +1 app/components/MarkdownButton.tsx
+badd +1 app/hooks/useDebouncedPreview.ts
+badd +148 app/hooks/useMarkdownSyntax.ts
+badd +24 app/hooks/useCombinePosts.ts
+badd +56 app/components/Topic.tsx
+badd +27 app/routes/api.discourseRepliesForPost.tsx
+badd +43 app/components/ZalgEditor/plugins/SubmitPlugin.tsx
+badd +1 app/components/ZalgEditor/plugins/ZalgAutoLinkPlugin.tsx
+badd +21 app/routes/api.getTopicComments.tsx
+badd +93 app/services/fetchCommentsForUser.server.ts
+badd +107 app/types/apiDiscourse.d.ts
+badd +7 app/types/parsedDiscourse.d.ts
+badd +27 app/schemas/currentUser.server.ts
+badd +181 app/schemas/discourseApiResponse.server.ts
+badd +5 app/routes/zod-tests.tsx
+badd +0 scratch.json
+badd +25 scratch.ts
+badd +20 app/services/transformDiscourseData.server.ts
+badd +38 app/services/transformDiscourseDataZod.server.ts
+badd +114 app/routes/api.discourseTopicEvent.tsx
+badd +41 app/routes/api.discoursePostEvent.tsx
+badd +15 .env
+badd +40 app/services/discourseWebhooks.server.ts
+badd +32 app/services/config.server.ts
+badd +34 app/services/createOrUpdateTopic.server.ts
+badd +59 app/services/createCategory.server.ts
+badd +28 prisma/schema.prisma
+badd +30 app/services/findOrCreateTags.server.ts
+badd +80 app/services/createOrUpdateOp.server.ts
 argglobal
 %argdel
-edit app/routes/t.\$slug.\$topicId.tsx
+edit app/services/createOrUpdateOp.server.ts
 let s:save_splitbelow = &splitbelow
 let s:save_splitright = &splitright
 set splitbelow splitright
@@ -60,19 +95,18 @@ set winminheight=0
 set winheight=1
 set winminwidth=0
 set winwidth=1
-exe 'vert 1resize ' . ((&columns * 31 + 190) / 380)
-exe '2resize ' . ((&lines * 52 + 39) / 79)
-exe 'vert 2resize ' . ((&columns * 174 + 190) / 380)
-exe '3resize ' . ((&lines * 52 + 39) / 79)
-exe 'vert 3resize ' . ((&columns * 173 + 190) / 380)
-exe '4resize ' . ((&lines * 24 + 39) / 79)
-exe 'vert 4resize ' . ((&columns * 174 + 190) / 380)
-exe '5resize ' . ((&lines * 24 + 39) / 79)
-exe 'vert 5resize ' . ((&columns * 173 + 190) / 380)
+exe 'vert 1resize ' . ((&columns * 38 + 191) / 382)
+exe '2resize ' . ((&lines * 36 + 37) / 75)
+exe 'vert 2resize ' . ((&columns * 171 + 191) / 382)
+exe '3resize ' . ((&lines * 36 + 37) / 75)
+exe 'vert 3resize ' . ((&columns * 171 + 191) / 382)
+exe '4resize ' . ((&lines * 36 + 37) / 75)
+exe 'vert 4resize ' . ((&columns * 171 + 191) / 382)
+exe '5resize ' . ((&lines * 36 + 37) / 75)
+exe 'vert 5resize ' . ((&columns * 171 + 191) / 382)
 argglobal
 enew
 file NERD_tree_tab_1
-balt ../lexical-playground/package.json
 setlocal fdm=manual
 setlocal fde=0
 setlocal fmr={{{,}}}
@@ -83,7 +117,7 @@ setlocal fdn=20
 setlocal nofen
 wincmd w
 argglobal
-balt app/components/ClientOnly.tsx
+balt app/schemas/discourseApiResponse.server.ts
 setlocal fdm=manual
 setlocal fde=0
 setlocal fmr={{{,}}}
@@ -94,19 +128,19 @@ setlocal fdn=20
 setlocal fen
 silent! normal! zE
 let &fdl = &fdl
-let s:l = 138 - ((41 * winheight(0) + 26) / 52)
+let s:l = 68 - ((35 * winheight(0) + 18) / 36)
 if s:l < 1 | let s:l = 1 | endif
 keepjumps exe s:l
 normal! zt
-keepjumps 138
-normal! 030|
+keepjumps 68
+normal! 0
 wincmd w
 argglobal
-if bufexists(fnamemodify("../lexical-playground/package.json", ":p")) | buffer ../lexical-playground/package.json | else | edit ../lexical-playground/package.json | endif
+if bufexists(fnamemodify("app/schemas/discourseApiResponse.server.ts", ":p")) | buffer app/schemas/discourseApiResponse.server.ts | else | edit app/schemas/discourseApiResponse.server.ts | endif
 if &buftype ==# 'terminal'
-  silent file ../lexical-playground/package.json
+  silent file app/schemas/discourseApiResponse.server.ts
 endif
-balt ../lexical-playground/package.json
+balt app/services/createOrUpdateOp.server.ts
 setlocal fdm=manual
 setlocal fde=0
 setlocal fmr={{{,}}}
@@ -117,19 +151,19 @@ setlocal fdn=20
 setlocal fen
 silent! normal! zE
 let &fdl = &fdl
-let s:l = 45 - ((44 * winheight(0) + 26) / 52)
+let s:l = 171 - ((20 * winheight(0) + 18) / 36)
 if s:l < 1 | let s:l = 1 | endif
 keepjumps exe s:l
 normal! zt
-keepjumps 45
-normal! 0
+keepjumps 171
+normal! 04|
 wincmd w
 argglobal
 if bufexists(fnamemodify("term://~/remix/discourse/discourse_remix_comments//30275:/bin/bash", ":p")) | buffer term://~/remix/discourse/discourse_remix_comments//30275:/bin/bash | else | edit term://~/remix/discourse/discourse_remix_comments//30275:/bin/bash | endif
 if &buftype ==# 'terminal'
   silent file term://~/remix/discourse/discourse_remix_comments//30275:/bin/bash
 endif
-balt ../lexical-playground/package.json
+balt ~/remix/discourse/lexical-playground/package.json
 setlocal fdm=manual
 setlocal fde=0
 setlocal fmr={{{,}}}
@@ -138,19 +172,19 @@ setlocal fdl=0
 setlocal fml=1
 setlocal fdn=20
 setlocal fen
-let s:l = 1249 - ((14 * winheight(0) + 12) / 24)
+let s:l = 599 - ((28 * winheight(0) + 18) / 36)
 if s:l < 1 | let s:l = 1 | endif
 keepjumps exe s:l
 normal! zt
-keepjumps 1249
-normal! 064|
+keepjumps 599
+normal! 033|
 wincmd w
 argglobal
 if bufexists(fnamemodify("term://~/remix/discourse/discourse_remix_comments//30685:/bin/bash", ":p")) | buffer term://~/remix/discourse/discourse_remix_comments//30685:/bin/bash | else | edit term://~/remix/discourse/discourse_remix_comments//30685:/bin/bash | endif
 if &buftype ==# 'terminal'
   silent file term://~/remix/discourse/discourse_remix_comments//30685:/bin/bash
 endif
-balt ../lexical-playground/package.json
+balt ~/remix/discourse/lexical-playground/package.json
 setlocal fdm=manual
 setlocal fde=0
 setlocal fmr={{{,}}}
@@ -159,23 +193,23 @@ setlocal fdl=0
 setlocal fml=1
 setlocal fdn=20
 setlocal fen
-let s:l = 17 - ((13 * winheight(0) + 12) / 24)
+let s:l = 3429 - ((22 * winheight(0) + 18) / 36)
 if s:l < 1 | let s:l = 1 | endif
 keepjumps exe s:l
 normal! zt
-keepjumps 17
-normal! 0
+keepjumps 3429
+normal! 064|
 wincmd w
 4wincmd w
-exe 'vert 1resize ' . ((&columns * 31 + 190) / 380)
-exe '2resize ' . ((&lines * 52 + 39) / 79)
-exe 'vert 2resize ' . ((&columns * 174 + 190) / 380)
-exe '3resize ' . ((&lines * 52 + 39) / 79)
-exe 'vert 3resize ' . ((&columns * 173 + 190) / 380)
-exe '4resize ' . ((&lines * 24 + 39) / 79)
-exe 'vert 4resize ' . ((&columns * 174 + 190) / 380)
-exe '5resize ' . ((&lines * 24 + 39) / 79)
-exe 'vert 5resize ' . ((&columns * 173 + 190) / 380)
+exe 'vert 1resize ' . ((&columns * 38 + 191) / 382)
+exe '2resize ' . ((&lines * 36 + 37) / 75)
+exe 'vert 2resize ' . ((&columns * 171 + 191) / 382)
+exe '3resize ' . ((&lines * 36 + 37) / 75)
+exe 'vert 3resize ' . ((&columns * 171 + 191) / 382)
+exe '4resize ' . ((&lines * 36 + 37) / 75)
+exe 'vert 4resize ' . ((&columns * 171 + 191) / 382)
+exe '5resize ' . ((&lines * 36 + 37) / 75)
+exe 'vert 5resize ' . ((&columns * 171 + 191) / 382)
 tabnext 1
 if exists('s:wipebuf') && len(win_findbuf(s:wipebuf)) == 0 && getbufvar(s:wipebuf, '&buftype') isnot# 'terminal'
   silent exe 'bwipe ' . s:wipebuf
@@ -191,7 +225,6 @@ if filereadable(s:sx)
 endif
 let &g:so = s:so_save | let &g:siso = s:siso_save
 set hlsearch
-nohlsearch
 doautoall SessionLoadPost
 unlet SessionLoad
 " vim: set ft=vim :

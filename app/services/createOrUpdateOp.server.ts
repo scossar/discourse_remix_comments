@@ -5,10 +5,9 @@ import PostCreationError from "./errors/postCreationError.server";
 import type { DiscoursePost, Prisma } from "@prisma/client";
 
 import {
-  type DiscourseApiBasicPost,
   DiscourseApiFullTopicWithPostStream,
-  validateDiscourseApiFullTopicWithPostStream,
   validateDiscourseApiBasicPost,
+  validateDiscourseAPiTopicStream,
 } from "~/schemas/discourseApiResponse.server";
 import { getRedisClient } from "./redisClient.server";
 import { generateAvatarUrl } from "./transformDiscourseData.server";
@@ -39,16 +38,22 @@ export default async function createOrUpdateOp(topicId: number) {
   const topicResponse: DiscourseApiFullTopicWithPostStream =
     await response.json();
 
-  let topicJson;
+  let post;
   try {
-    topicJson = validateDiscourseApiFullTopicWithPostStream(topicResponse);
+    post = validateDiscourseApiBasicPost(
+      topicResponse?.post_stream?.posts?.[0]
+    );
   } catch (error) {
-    console.error(JSON.stringify(error, null, 2));
     throw new PostCreationError(fromError(error).toString(), 422);
   }
-
-  const post: DiscourseApiBasicPost = topicJson.post_stream.posts[0];
-  const stream: number[] = topicJson.post_stream.stream;
+  let stream;
+  try {
+    stream = validateDiscourseAPiTopicStream(
+      topicResponse?.post_stream?.stream
+    );
+  } catch (error) {
+    throw new PostCreationError(fromError(error).toString(), 422);
+  }
 
   const postFields: Prisma.DiscoursePostCreateInput = {
     externalId: post.id,

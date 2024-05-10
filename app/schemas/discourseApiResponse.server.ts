@@ -188,19 +188,26 @@ export const DiscourseApiFullTopicSchema = DiscourseApiBasicTopicSchema.extend({
 });
 export type DiscourseApiFullTopic = z.infer<typeof DiscourseApiFullTopicSchema>;
 
-export const DiscourseApiTopicPostStream = z.object({
+export const DiscourseApiTopicPostStreamSchema = z.object({
   posts: DiscourseApiBasicPostsSchema,
   stream: z.array(z.number()),
 });
+export type DiscourseApiTopicPostStream = z.infer<
+  typeof DiscourseApiTopicPostStreamSchema
+>;
 
 export const DiscourseApiFullTopicWithPostStreamSchema =
   DiscourseApiFullTopicSchema.extend({
-    post_stream: DiscourseApiTopicPostStream,
+    post_stream: DiscourseApiTopicPostStreamSchema,
   });
 
 export type DiscourseApiFullTopicWithPostStream = z.infer<
   typeof DiscourseApiFullTopicWithPostStreamSchema
 >;
+
+export function validateDiscourseAPiTopicStream(stream: number[]) {
+  return z.array(z.number()).parse(stream);
+}
 
 export function validateDiscourseApiFullTopicWithPostStream(
   topic: DiscourseApiFullTopicWithPostStream
