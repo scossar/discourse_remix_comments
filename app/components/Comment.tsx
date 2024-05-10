@@ -1,7 +1,8 @@
-import { forwardRef } from "react";
+import { forwardRef, useRef, useState } from "react";
 import { useFetcher } from "@remix-run/react";
 
 import ReplyButton from "./ReplyButton";
+import EditorIcon from "./ZalgEditor/EditorIcon";
 
 import type {
   ParsedDiscoursePost,
@@ -25,9 +26,19 @@ const Comment = forwardRef<HTMLDivElement, CommentProps>(function Comment(
   const postNumber = String(post.postNumber) || "";
   const replyCount = post.replyCount;
   const replyText = replyCount === 1 ? "reply" : "replies";
+  const [postRepliesOpen, setPostRepliesOpen] = useState(false);
+  const repliesLoadedRef = useRef(false);
 
   function getRepliesForPost(postId: number) {
-    replyFetcher.load(`/api/discourseRepliesForPost?postId=${postId}`);
+    if (!repliesLoadedRef.current) {
+      replyFetcher.load(`/api/discourseRepliesForPost?postId=${postId}`);
+    }
+    repliesLoadedRef.current = true;
+  }
+
+  function handleCommentRepliesClick(postId: number) {
+    setPostRepliesOpen(!postRepliesOpen);
+    getRepliesForPost(postId);
   }
 
   return (
@@ -49,9 +60,13 @@ const Comment = forwardRef<HTMLDivElement, CommentProps>(function Comment(
           </div>
           {replyCount > 0 && (
             <div className="mr-6">
-              <button
-                onClick={() => getRepliesForPost(post.id)}
-              >{`${replyCount} ${replyText}`}</button>
+              <button onClick={() => handleCommentRepliesClick(post.id)}>
+                {`${replyCount} ${replyText}`}
+                <EditorIcon
+                  id={postRepliesOpen ? "caret-up" : "caret-down"}
+                  className="inline-block w-4 h-4"
+                />
+              </button>
             </div>
           )}
           <div className="flex items-center justify-end reply-button">
@@ -63,7 +78,11 @@ const Comment = forwardRef<HTMLDivElement, CommentProps>(function Comment(
         </div>
       </div>
       {replyFetcher.data?.repliesForPostId === post.id && (
-        <div className="flex flex-col w-full pl-6 my-6 border border-cyan-600">
+        <div
+          className={`flex flex-col w-full pl-6 my-6 border border-cyan-600 ${
+            postRepliesOpen ? "block" : "hidden"
+          }`}
+        >
           {replyFetcher.data.posts.map((replyPost) => (
             <div
               key={`${replyPost.id}-${replyPost.replyToPostNumber}`}
