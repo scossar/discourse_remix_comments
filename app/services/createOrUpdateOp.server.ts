@@ -1,11 +1,15 @@
+import { fromError } from "zod-validation-error";
 import { db } from "./db.server";
 import { discourseEnv } from "~/services/config.server";
 import PostCreationError from "./errors/postCreationError.server";
 import type { DiscoursePost, Prisma } from "@prisma/client";
-import type {
-  ApiDiscoursePost,
-  ApiDiscourseTopicWithPostStream,
-} from "~/types/apiDiscourse";
+
+import {
+  type DiscourseApiBasicPost,
+  DiscourseApiFullTopicWithPostStream,
+  validateDiscourseApiFullTopicWithPostStream,
+  validateDiscourseApiBasicPost,
+} from "~/schemas/discourseApiResponse.server";
 import { getRedisClient } from "./redisClient.server";
 import { generateAvatarUrl } from "./transformDiscourseData.server";
 
@@ -32,10 +36,19 @@ export default async function createOrUpdateOp(topicId: number) {
     );
   }
 
-  const data: ApiDiscourseTopicWithPostStream = await response.json();
-  const post: ApiDiscoursePost = data.post_stream.posts[0];
-  // make sure there are no errors creating the post before saving the stream to redis
-  const stream: number[] = data.post_stream.stream;
+  const topicResponse: DiscourseApiFullTopicWithPostStream =
+    await response.json();
+
+  let topicJson;
+  try {
+    topicJson = validateDiscourseApiFullTopicWithPostStream(topicResponse);
+  } catch (error) {
+    console.error(JSON.stringify(error, null, 2));
+    throw new PostCreationError(fromError(error).toString(), 422);
+  }
+
+  const post: DiscourseApiBasicPost = topicJson.post_stream.posts[0];
+  const stream: number[] = topicJson.post_stream.stream;
 
   const postFields: Prisma.DiscoursePostCreateInput = {
     externalId: post.id,
@@ -87,7 +100,6 @@ export default async function createOrUpdateOp(topicId: number) {
   const client = await getRedisClient();
   const stringifiedStream = stream.map(String);
   try {
-    // delete the key before setting it, otherwise chaos will ensue
     await client.del(streamKey);
     await client.rPush(streamKey, stringifiedStream);
   } catch (error) {

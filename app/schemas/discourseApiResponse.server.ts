@@ -72,6 +72,13 @@ export const DiscourseApiBasicPostSchema = z.object({
 });
 export type DiscourseApiBasicPost = z.infer<typeof DiscourseApiBasicPostSchema>;
 
+export const DiscourseApiBasicPostsSchema = z.array(
+  DiscourseApiBasicPostSchema
+);
+export type DiscourseApiBasicPosts = z.infer<
+  typeof DiscourseApiBasicPostsSchema
+>;
+
 export const DiscourseApiReplyPostSchema = DiscourseApiBasicPostSchema.extend({
   reply_to_user: DiscourseApiReplyToUserSchema,
 });
@@ -97,6 +104,10 @@ export const ValidDiscourseApiReplyPostsSchema = z.array(
 export type ValidDiscourseApiReplyPosts = z.infer<
   typeof ValidDiscourseApiReplyPostsSchema
 >;
+
+export function validateDiscourseApiBasicPost(post: DiscourseApiBasicPost) {
+  return DiscourseApiBasicPostSchema.parse(post);
+}
 
 export function validateDiscourseApiReplyPosts(
   replyPosts: DiscourseApiReplyPosts
@@ -160,8 +171,6 @@ export const DiscourseApiBasicTopicSchema = z.object({
   deleted_at: z.string().nullable(),
   user_id: z.number(),
   participant_count: z.number(),
-  created_by: DiscourseApiBasicUserSchema,
-  last_poster: DiscourseApiBasicUserSchema,
 });
 export type DiscourseApiBasicTopic = z.infer<
   typeof DiscourseApiBasicTopicSchema
@@ -170,12 +179,34 @@ export type DiscourseApiBasicTopic = z.infer<
 export const DiscourseApiTopicDetailsSchema = z.object({
   can_create_post: z.boolean(),
   participants: DiscourseApiParticipantsSchema,
+  created_by: DiscourseApiBasicUserSchema,
+  last_poster: DiscourseApiBasicUserSchema,
 });
 
 export const DiscourseApiFullTopicSchema = DiscourseApiBasicTopicSchema.extend({
   details: DiscourseApiTopicDetailsSchema,
 });
 export type DiscourseApiFullTopic = z.infer<typeof DiscourseApiFullTopicSchema>;
+
+export const DiscourseApiTopicPostStream = z.object({
+  posts: DiscourseApiBasicPostsSchema,
+  stream: z.array(z.number()),
+});
+
+export const DiscourseApiFullTopicWithPostStreamSchema =
+  DiscourseApiFullTopicSchema.extend({
+    post_stream: DiscourseApiTopicPostStream,
+  });
+
+export type DiscourseApiFullTopicWithPostStream = z.infer<
+  typeof DiscourseApiFullTopicWithPostStreamSchema
+>;
+
+export function validateDiscourseApiFullTopicWithPostStream(
+  topic: DiscourseApiFullTopicWithPostStream
+) {
+  return DiscourseApiFullTopicWithPostStreamSchema.parse(topic);
+}
 
 /**
  * Webhooks
@@ -195,7 +226,10 @@ export type DiscourseApiWebHookPost = z.infer<
 >;
 
 export const DiscourseApiWebHookTopicSchema = z.object({
-  topic: DiscourseApiBasicTopicSchema,
+  topic: DiscourseApiBasicTopicSchema.extend({
+    created_by: DiscourseApiBasicUserSchema,
+    last_poster: DiscourseApiBasicUserSchema,
+  }),
 });
 export type DiscourseApiWebHookTopic = z.infer<
   typeof DiscourseApiWebHookTopicSchema
