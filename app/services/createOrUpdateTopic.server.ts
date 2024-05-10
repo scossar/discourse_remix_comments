@@ -1,13 +1,12 @@
 import { db } from "./db.server";
-//import type { ApiDiscourseBasicTopic } from "~/types/apiDiscourse";
-import type { DiscourseApiBasicTopic } from "~/schemas/discourseApiResponse.server";
-import TopicCreationError from "./errors/topicCreationError.server";
-import { generateAvatarUrl } from "./transformDiscourseDataZod.server";
-import { discourseEnv } from "./config.server";
+import type { DiscourseAPiWebHookTopic } from "~/schemas/discourseApiResponse.server";
+import TopicCreationError from "~/services/errors/topicCreationError.server";
+import { generateAvatarUrl } from "~/services/transformDiscourseDataZod.server";
+import { discourseEnv } from "~/services/config.server";
 import { DiscourseTopic, Prisma } from "@prisma/client";
 
 export default async function createOrUpdateTopic(
-  topicJson: DiscourseApiBasicTopic
+  topicJson: DiscourseAPiWebHookTopic
 ) {
   const env = discourseEnv();
   const topicFields: Prisma.DiscourseTopicCreateInput = {

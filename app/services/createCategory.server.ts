@@ -1,12 +1,11 @@
 import { fromError } from "zod-validation-error";
 import { db } from "~/services/db.server";
-import { discourseEnv } from "./config.server";
-//import { ApiDiscourseCategory } from "~/types/apiDiscourse";
+import { discourseEnv } from "~/services/config.server";
 import {
   type DiscourseApiBasicCategory,
   validateDiscourseApiBasicCategory,
 } from "~/schemas/discourseApiResponse.server";
-import CategoryCreationError from "./errors/categoryCreationError.server";
+import CategoryCreationError from "~/services/errors/categoryCreationError.server";
 import type { Prisma } from "@prisma/client";
 
 export default async function createCategory(id: number) {

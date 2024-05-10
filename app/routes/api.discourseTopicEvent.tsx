@@ -3,8 +3,8 @@ import { fromError } from "zod-validation-error";
 
 import { db } from "~/services/db.server";
 import {
-  type DiscourseApiWebHookTopic,
-  validateDiscourseApiWebHookTopic,
+  DiscourseApiWebHookTopicPayload,
+  validateDiscourseApiWebHookTopicPayload,
 } from "~/schemas/discourseApiResponse.server";
 import {
   discourseWehbookHeaders,
@@ -44,11 +44,11 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     );
   }
 
-  const webhookData: DiscourseApiWebHookTopic = await request.json();
+  const webhookData: DiscourseApiWebHookTopicPayload = await request.json();
 
   let topicWebHookJson;
   try {
-    topicWebHookJson = validateDiscourseApiWebHookTopic(webhookData);
+    topicWebHookJson = validateDiscourseApiWebHookTopicPayload(webhookData);
   } catch (error) {
     return json({ message: fromError(error).toString() }, 422);
   }

@@ -232,14 +232,20 @@ export type DiscourseApiWebHookPost = z.infer<
   typeof DiscourseApiWebHookPostSchema
 >;
 
-export const DiscourseApiWebHookTopicSchema = z.object({
-  topic: DiscourseApiBasicTopicSchema.extend({
+export const DiscourseApiWebHookTopicSchema =
+  DiscourseApiBasicTopicSchema.extend({
     created_by: DiscourseApiBasicUserSchema,
     last_poster: DiscourseApiBasicUserSchema,
-  }),
-});
-export type DiscourseApiWebHookTopic = z.infer<
+  });
+export type DiscourseAPiWebHookTopic = z.infer<
   typeof DiscourseApiWebHookTopicSchema
+>;
+
+export const DiscourseApiWebHookTopicPayloadSchema = z.object({
+  topic: DiscourseApiWebHookTopicSchema,
+});
+export type DiscourseApiWebHookTopicPayload = z.infer<
+  typeof DiscourseApiWebHookTopicPayloadSchema
 >;
 
 export function validateDiscourseApiWebHookPost(
@@ -248,8 +254,8 @@ export function validateDiscourseApiWebHookPost(
   return DiscourseApiWebHookPostSchema.parse(webHookPost);
 }
 
-export function validateDiscourseApiWebHookTopic(
-  webHookTopic: DiscourseApiWebHookTopic
+export function validateDiscourseApiWebHookTopicPayload(
+  webHookTopic: DiscourseApiWebHookTopicPayload
 ) {
-  return DiscourseApiWebHookTopicSchema.parse(webHookTopic);
+  return DiscourseApiWebHookTopicPayloadSchema.parse(webHookTopic);
 }
