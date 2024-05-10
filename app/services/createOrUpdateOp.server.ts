@@ -7,7 +7,7 @@ import type { DiscoursePost, Prisma } from "@prisma/client";
 import {
   DiscourseApiFullTopicWithPostStream,
   validateDiscourseApiBasicPost,
-  validateDiscourseAPiTopicStream,
+  validateDiscourseApiTopicStream,
 } from "~/schemas/discourseApiResponse.server";
 import { getRedisClient } from "~/services/redisClient.server";
 import { generateAvatarUrl } from "~/services/transformDiscourseDataZod.server";
@@ -48,7 +48,7 @@ export default async function createOrUpdateOp(topicId: number) {
   }
   let stream;
   try {
-    stream = validateDiscourseAPiTopicStream(
+    stream = validateDiscourseApiTopicStream(
       topicResponse?.post_stream?.stream
     );
   } catch (error) {

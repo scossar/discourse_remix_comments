@@ -1,5 +1,5 @@
 import { db } from "~/services/db.server";
-import TagCreationError from "./errors/tagCreationError.server";
+import TagCreationError from "~/services/errors/tagCreationError.server";
 
 export default async function findOrCreateTags(
   tags: string[],

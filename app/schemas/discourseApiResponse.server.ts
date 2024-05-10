@@ -79,6 +79,36 @@ export type DiscourseApiBasicPosts = z.infer<
   typeof DiscourseApiBasicPostsSchema
 >;
 
+export const ValidDiscourseApiCommentPostSchema =
+  DiscourseApiBasicPostSchema.refine(
+    (post) => post.post_type === 1 && post.post_number > 1
+  );
+export type ValidDiscourseApiCommentPost = z.infer<
+  typeof ValidDiscourseApiCommentPostSchema
+>;
+
+export const ValidDiscourseApiCommentPostsSchema = z.array(
+  ValidDiscourseApiCommentPostSchema
+);
+export type ValidDiscourseApiCommentPosts = z.infer<
+  typeof ValidDiscourseApiCommentPostsSchema
+>;
+
+export function validateDiscourseApiCommentPosts(
+  commentPosts: DiscourseApiBasicPosts
+): ValidDiscourseApiCommentPosts {
+  return commentPosts.reduce(
+    (validPosts: ValidDiscourseApiCommentPosts, post) => {
+      const result = ValidDiscourseApiCommentPostSchema.safeParse(post);
+      if (result.success) {
+        validPosts.push(result.data);
+      }
+      return validPosts;
+    },
+    []
+  );
+}
+
 export const DiscourseApiReplyPostSchema = DiscourseApiBasicPostSchema.extend({
   reply_to_user: DiscourseApiReplyToUserSchema,
 });
@@ -98,16 +128,13 @@ export const ValidDiscourseApiReplyPostSchema =
 export type ValidDiscourseApiReplyPost = z.infer<
   typeof ValidDiscourseApiReplyPostSchema
 >;
+
 export const ValidDiscourseApiReplyPostsSchema = z.array(
   ValidDiscourseApiReplyPostSchema
 );
 export type ValidDiscourseApiReplyPosts = z.infer<
   typeof ValidDiscourseApiReplyPostsSchema
 >;
-
-export function validateDiscourseApiBasicPost(post: DiscourseApiBasicPost) {
-  return DiscourseApiBasicPostSchema.parse(post);
-}
 
 export function validateDiscourseApiReplyPosts(
   replyPosts: DiscourseApiReplyPosts
@@ -119,6 +146,10 @@ export function validateDiscourseApiReplyPosts(
     }
     return validPosts;
   }, []);
+}
+
+export function validateDiscourseApiBasicPost(post: DiscourseApiBasicPost) {
+  return DiscourseApiBasicPostSchema.parse(post);
 }
 
 /**
@@ -200,12 +231,11 @@ export const DiscourseApiFullTopicWithPostStreamSchema =
   DiscourseApiFullTopicSchema.extend({
     post_stream: DiscourseApiTopicPostStreamSchema,
   });
-
 export type DiscourseApiFullTopicWithPostStream = z.infer<
   typeof DiscourseApiFullTopicWithPostStreamSchema
 >;
 
-export function validateDiscourseAPiTopicStream(stream: number[]) {
+export function validateDiscourseApiTopicStream(stream: number[]) {
   return z.array(z.number()).parse(stream);
 }
 

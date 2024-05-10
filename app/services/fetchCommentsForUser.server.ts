@@ -1,23 +1,20 @@
-import FetchCommentsError from "./errors/fetchCommentsError.server";
-import { getRedisClient } from "./redisClient.server";
+import FetchCommentsError from "~/services/errors/fetchCommentsError.server";
+import { getRedisClient } from "~/services/redisClient.server";
 import {
   transformParticipant,
   transformPost,
-} from "./transformDiscourseData.server";
-import { discourseEnv } from "./config.server";
+} from "~/services/transformDiscourseDataZod.server";
+import { discourseEnv } from "~/services/config.server";
 
-import type {
-  ApiDiscoursePost,
-  ApiDiscourseTopicWithPostStream,
-} from "~/types/apiDiscourse";
+import {
+  type DiscourseApiFullTopicWithPostStream,
+  validateDiscourseApiCommentPosts,
+  validateDiscourseApiTopicStream,
+} from "~/schemas/discourseApiResponse.server";
 import type { ParsedDiscourseTopicComments } from "~/types/parsedDiscourse";
 import { RedisClientType, RedisDefaultModules } from "redis";
 
 const CHUNK_SIZE = 20;
-
-function isRegularReplyPost(post: ApiDiscoursePost) {
-  return post.post_type === 1 && post.post_number > 1;
-}
 
 interface FetchContext {
   baseUrl: string;
@@ -69,8 +66,16 @@ async function fetchInitialComments(
     );
   }
 
-  const postsData: ApiDiscourseTopicWithPostStream = await response.json();
-  const stream = postsData.post_stream.stream;
+  const postsData: DiscourseApiFullTopicWithPostStream = await response.json();
+  const posts = validateDiscourseApiCommentPosts(postsData?.post_stream?.posts);
+  // TODO: an empty array for comments is reasonable, but needs to be handled in the UI
+  // an error returning the stream object will trigger the route's errorBoundary.
+  let stream;
+  try {
+    stream = validateDiscourseApiTopicStream(postsData?.post_stream?.stream);
+  } catch (error) {
+    throw new Error("this error needs to be handled");
+  }
   const currentPage = 0;
   const totalPages = Math.ceil(stream.length / CHUNK_SIZE);
   const nextPage = currentPage + 1 < totalPages ? currentPage + 1 : null;
@@ -87,9 +92,7 @@ async function fetchInitialComments(
     topicId: topicId,
     nextPage: nextPage,
     slug: postsData.slug,
-    posts: postsData.post_stream.posts
-      .filter(isRegularReplyPost)
-      .map((post) => transformPost(post, context.baseUrl)),
+    posts: posts.map((post) => transformPost(post, context.baseUrl)),
     details: {
       canCreatePost: postsData.details.can_create_post,
       participants: postsData.details.participants.map((participant) =>
@@ -133,7 +136,8 @@ async function fetchSubsequentComments(
       response.status
     );
   }
-  const postsData: ApiDiscourseTopicWithPostStream = await response.json();
+  const postsData: DiscourseApiFullTopicWithPostStream = await response.json();
+  const posts = validateDiscourseApiCommentPosts(postsData?.post_stream?.posts);
   // fudging this for now... shouldn't continue if the stream isn't set
   const totalPages = Math.ceil(stream.length / CHUNK_SIZE) || 1;
   const nextPage = page + 1 < totalPages ? page + 1 : null;
@@ -141,8 +145,6 @@ async function fetchSubsequentComments(
   return {
     topicId: topicId,
     nextPage: nextPage,
-    posts: postsData.post_stream.posts
-      .filter(isRegularReplyPost)
-      .map((post) => transformPost(post, context.baseUrl)),
+    posts: posts.map((post) => transformPost(post, context.baseUrl)),
   };
 }
