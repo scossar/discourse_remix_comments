@@ -1,7 +1,7 @@
 import { fromError } from "zod-validation-error";
-import { db } from "./db.server";
+import { db } from "~/services/db.server";
 import { discourseEnv } from "~/services/config.server";
-import PostCreationError from "./errors/postCreationError.server";
+import PostCreationError from "~/services/errors/postCreationError.server";
 import type { DiscoursePost, Prisma } from "@prisma/client";
 
 import {
@@ -9,8 +9,8 @@ import {
   validateDiscourseApiBasicPost,
   validateDiscourseAPiTopicStream,
 } from "~/schemas/discourseApiResponse.server";
-import { getRedisClient } from "./redisClient.server";
-import { generateAvatarUrl } from "./transformDiscourseData.server";
+import { getRedisClient } from "~/services/redisClient.server";
+import { generateAvatarUrl } from "~/services/transformDiscourseDataZod.server";
 
 export default async function createOrUpdateOp(topicId: number) {
   if (!topicId) {
