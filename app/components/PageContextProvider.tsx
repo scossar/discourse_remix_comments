@@ -8,9 +8,14 @@ interface PageProviderProps {
   children: React.ReactElement<typeof Comments>;
 }
 
-export default function PageContextProvider({ children }: PageProviderProps) {
-  const [page, setPage] = useState<number | null>(null);
-  const value = { page, setPage };
+export default function PageContextProvider({
+  children,
+  value,
+}: PageProviderProps) {
+  const [page, setPage] = useState<number | null>(value.page);
+  const contextValue = { page, setPage };
 
-  return <PageContext.Provider value={value}>{children}</PageContext.Provider>;
+  return (
+    <PageContext.Provider value={contextValue}>{children}</PageContext.Provider>
+  );
 }
