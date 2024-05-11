@@ -1,5 +1,6 @@
 import { useFetcher } from "@remix-run/react";
 import { useEffect, useMemo, useState } from "react";
+import { usePageContext } from "~/hooks/usePageContext";
 import type {
   ParsedDiscoursePost,
   ParsedDiscourseTopicComments,
@@ -14,7 +15,7 @@ type CommentsProps = {
 
 export default function Comments({ topicId }: CommentsProps) {
   const commentFetcher = useFetcher<CommentFetcherData>();
-  const [page, setPage] = useState<number | null>(null);
+  const { page, setPage } = usePageContext();
   const [posts, setPosts] = useState<ParsedDiscoursePost[] | null>(null);
   const [editorOpen, setEditorOpen] = useState(false);
   const [replyToPostNumber, setReplyToPostNumber] = useState("");
@@ -38,7 +39,7 @@ export default function Comments({ topicId }: CommentsProps) {
       setPosts(allPosts);
       setPage(commentFetcher.data.comments.nextPage);
     }
-  }, [commentFetcher.data, page, posts]);
+  }, [commentFetcher.data, page, setPage, posts]);
 
   const handleReplyClick = (postNumber: string) => {
     setReplyToPostNumber(postNumber);
