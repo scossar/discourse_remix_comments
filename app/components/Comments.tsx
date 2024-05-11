@@ -19,18 +19,12 @@ export default function Comments({ topicId }: CommentsProps) {
   const [editorOpen, setEditorOpen] = useState(false);
   const [replyToPostNumber, setReplyToPostNumber] = useState("");
 
-  function getInitialComments() {
-    if (commentFetcher.state === "idle" && page === null) {
-      const page = 0;
-      const commentUrl = `/api/getTopicComments?page=${page}&topicId=${topicId}`;
-      commentFetcher.load(commentUrl);
-    }
-  }
-
-  function loadMoreComments() {
-    if (commentFetcher.state === "idle" && page) {
-      const commentUrl = `/api/getTopicComments?page=${page}&topicId=${topicId}`;
-      commentFetcher.load(commentUrl);
+  function getTopicCommentsForPage() {
+    if (commentFetcher.state === "idle") {
+      const pageParam = page || 0;
+      commentFetcher.load(
+        `/api/getTopicComments?topicId=${topicId}&page=${pageParam}`
+      );
     }
   }
 
@@ -73,7 +67,7 @@ export default function Comments({ topicId }: CommentsProps) {
 
   return (
     <div>
-      <button onClick={getInitialComments}>Comments</button>
+      <button onClick={getTopicCommentsForPage}>Comments</button>
 
       <div className={`${editorOpen && "pb-96"}`}>
         {renderComments}
@@ -81,7 +75,7 @@ export default function Comments({ topicId }: CommentsProps) {
           <div>
             <button
               className="px-2 py-1 ml-10 text-blue-700 bg-white"
-              onClick={loadMoreComments}
+              onClick={getTopicCommentsForPage}
             >
               {commentFetcher.state === "idle" ? "Load more" : "Loading..."}
             </button>
