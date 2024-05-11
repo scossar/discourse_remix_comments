@@ -1,3 +1,4 @@
+import { useState } from "react";
 import type {
   ActionFunctionArgs,
   LoaderFunctionArgs,
@@ -20,6 +21,7 @@ import { transformPost } from "~/services/transformDiscourseData.server";
 import { fetchCommentMapData } from "~/services/fetchCommentMapData.server";
 import type { RouteError } from "~/types/errorTypes";
 import type { ApiDiscoursePost } from "~/types/apiDiscourse";
+import PageContextProvider from "~/components/PageContextProvider";
 import Topic from "~/components/Topic";
 import CommentsMap from "~/components/CommentsMap";
 import Comments from "~/components/Comments";
@@ -161,13 +163,16 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
 
 export default function TopicForSlugAndId() {
   const { topic, topicMapData } = useLoaderData<typeof loader>();
+  const [page, setPage] = useState<number | null>(null);
 
   return (
     <div className="relative pt-6 pb-12 mx-auto max-w-screen-md">
       <Topic topic={topic} />
-      <CommentsMap commentsMapData={topicMapData}>
-        <Comments topicId={topic.externalId} />
-      </CommentsMap>
+      <PageContextProvider value={{ page, setPage }}>
+        <CommentsMap commentsMapData={topicMapData}>
+          <Comments topicId={topic.externalId} />
+        </CommentsMap>
+      </PageContextProvider>
     </div>
   );
 }

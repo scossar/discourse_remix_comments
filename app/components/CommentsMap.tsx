@@ -1,7 +1,7 @@
-import { useState } from "react";
-
+import { useEffect } from "react";
+import { usePageContext } from "~/hooks/usePageContext";
 import Comments from "~/components/Comments";
-import PageContextProvider from "~/components/PageContextProvider";
+//import PageContextProvider from "~/components/PageContextProvider";
 import type { ParsedDiscourseTopicMap } from "~/types/parsedDiscourse";
 
 type CommentsMapProps = {
@@ -13,14 +13,15 @@ export default function CommentsMap({
   commentsMapData,
   children,
 }: CommentsMapProps) {
-  const [page, setPage] = useState<number | null>(null);
+  const { page } = usePageContext();
+  useEffect(() => {
+    console.log(`page from CommentsMap component: ${page}`);
+  }, [page]);
 
   return (
     <div className="comments-map">
       <div>Comment map for topic {commentsMapData.title}</div>
-      <PageContextProvider value={{ page, setPage }}>
-        {children}
-      </PageContextProvider>
+      {children}
     </div>
   );
 }

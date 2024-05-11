@@ -1,11 +1,11 @@
 import { useState } from "react";
 import { PageContext } from "~/hooks/PageContext";
-import Comments from "~/components/Comments";
+// import Comments from "~/components/Comments";
 import type { PageContextType } from "~/hooks/PageContext";
 
 interface PageProviderProps {
   value: PageContextType;
-  children: React.ReactElement<typeof Comments>;
+  children: React.ReactElement;
 }
 
 export default function PageContextProvider({
