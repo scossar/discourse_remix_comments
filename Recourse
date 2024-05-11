@@ -18,17 +18,17 @@ badd +53 term://~/remix/discourse/discourse_remix_comments//30275:/bin/bash
 badd +1 term://~/remix/discourse/discourse_remix_comments//30685:/bin/bash
 badd +28 package.json
 badd +19 app/routes/lexical-test.tsx
-badd +35 app/components/Article.tsx
+badd +1 app/components/Article.tsx
 badd +1 app/components/Avatar.tsx
-badd +71 app/components/Comment.tsx
+badd +50 app/components/Comment.tsx
 badd +141 app/components/CommentForm.tsx
-badd +92 app/components/Comments.tsx
+badd +90 app/components/Comments.tsx
 badd +1 app/components/Header.tsx
 badd +1 app/components/Icon.tsx
 badd +13 public/sprite.svg
 badd +1 app/hooks/useHydrated.ts
 badd +5 app/components/ClientOnly.tsx
-badd +165 app/routes/t.\$slug.\$topicId.tsx
+badd +172 app/routes/t.\$slug.\$topicId.tsx
 badd +107 app/routes/t.\$slug.\$topicId.comments.tsx
 badd +5 app/components/Editor.tsx
 badd +27 app/components/ZalgEditorClientOnly.tsx
@@ -39,38 +39,45 @@ badd +1 app/components/MarkdownButton.tsx
 badd +1 app/hooks/useDebouncedPreview.ts
 badd +148 app/hooks/useMarkdownSyntax.ts
 badd +24 app/hooks/useCombinePosts.ts
-badd +56 app/components/Topic.tsx
+badd +23 app/components/Topic.tsx
 badd +16 app/routes/api.discourseRepliesForPost.tsx
 badd +43 app/components/ZalgEditor/plugins/SubmitPlugin.tsx
 badd +1 app/components/ZalgEditor/plugins/ZalgAutoLinkPlugin.tsx
 badd +21 app/routes/api.getTopicComments.tsx
-badd +10 app/services/fetchCommentsForUser.server.ts
+badd +40 app/services/fetchCommentsForUser.server.ts
 badd +107 app/types/apiDiscourse.d.ts
-badd +7 app/types/parsedDiscourse.d.ts
+badd +74 app/types/parsedDiscourse.d.ts
 badd +27 app/schemas/currentUser.server.ts
-badd +236 app/schemas/discourseApiResponse.server.ts
+badd +265 app/schemas/discourseApiResponse.server.ts
 badd +5 app/routes/zod-tests.tsx
 badd +1 scratch.json
 badd +25 scratch.ts
-badd +1 app/services/transformDiscourseData.server.ts
+badd +33 app/services/transformDiscourseData.server.ts
 badd +15 app/services/transformDiscourseDataZod.server.ts
-badd +6 app/routes/api.discourseTopicEvent.tsx
-badd +41 app/routes/api.discoursePostEvent.tsx
+badd +44 app/routes/api.discourseTopicEvent.tsx
+badd +42 app/routes/api.discoursePostEvent.tsx
 badd +15 .env
 badd +1 app/services/discourseWebhooks.server.ts
 badd +1 app/services/config.server.ts
 badd +34 app/services/createOrUpdateTopic.server.ts
-badd +41 app/services/createCategory.server.ts
-badd +28 prisma/schema.prisma
+badd +33 app/services/createCategory.server.ts
+badd +73 prisma/schema.prisma
 badd +2 app/services/findOrCreateTags.server.ts
-badd +32 app/services/createOrUpdateOp.server.ts
+badd +47 app/services/createOrUpdateOp.server.ts
 badd +1 app/services/getCurrentDiscourseUser.session.ts
 badd +1 app/services/redisClient.server.ts
 badd +1 app/services/session.server.ts
 badd +9 app/services/singleton.server.ts
+badd +7 .gitignore
+badd +15 app/components/CommentsMap.tsx
+badd +42 app/services/fetchCommentMapData.ts
+badd +1 app/services/errors/postCreationError.server.ts
+badd +9 app/services/errors/fetchCommentsError.server.ts
+badd +10 app/services/errors/AppError.server.ts
+badd +31 app/services/fetchCommentMapData.server.ts
 argglobal
 %argdel
-edit app/services/transformDiscourseData.server.ts
+edit app/components/CommentsMap.tsx
 let s:save_splitbelow = &splitbelow
 let s:save_splitright = &splitright
 set splitbelow splitright
@@ -106,9 +113,9 @@ set winwidth=1
 exe 'vert 1resize ' . ((&columns * 38 + 191) / 382)
 exe '2resize ' . ((&lines * 49 + 37) / 75)
 exe 'vert 2resize ' . ((&columns * 171 + 191) / 382)
-exe '3resize ' . ((&lines * 24 + 37) / 75)
+exe '3resize ' . ((&lines * 16 + 37) / 75)
 exe 'vert 3resize ' . ((&columns * 171 + 191) / 382)
-exe '4resize ' . ((&lines * 24 + 37) / 75)
+exe '4resize ' . ((&lines * 32 + 37) / 75)
 exe 'vert 4resize ' . ((&columns * 171 + 191) / 382)
 exe '5resize ' . ((&lines * 23 + 37) / 75)
 exe 'vert 5resize ' . ((&columns * 171 + 191) / 382)
@@ -127,7 +134,7 @@ setlocal fdn=20
 setlocal nofen
 wincmd w
 argglobal
-balt app/services/fetchCommentsForUser.server.ts
+balt app/services/fetchCommentMapData.server.ts
 setlocal fdm=manual
 setlocal fde=0
 setlocal fmr={{{,}}}
@@ -138,19 +145,42 @@ setlocal fdn=20
 setlocal fen
 silent! normal! zE
 let &fdl = &fdl
-let s:l = 1 - ((0 * winheight(0) + 24) / 49)
+let s:l = 5 - ((4 * winheight(0) + 24) / 49)
 if s:l < 1 | let s:l = 1 | endif
 keepjumps exe s:l
 normal! zt
-keepjumps 1
+keepjumps 5
+normal! 017|
+wincmd w
+argglobal
+if bufexists(fnamemodify("app/services/transformDiscourseDataZod.server.ts", ":p")) | buffer app/services/transformDiscourseDataZod.server.ts | else | edit app/services/transformDiscourseDataZod.server.ts | endif
+if &buftype ==# 'terminal'
+  silent file app/services/transformDiscourseDataZod.server.ts
+endif
+balt app/routes/api.discoursePostEvent.tsx
+setlocal fdm=manual
+setlocal fde=0
+setlocal fmr={{{,}}}
+setlocal fdi=#
+setlocal fdl=0
+setlocal fml=1
+setlocal fdn=20
+setlocal fen
+silent! normal! zE
+let &fdl = &fdl
+let s:l = 70 - ((15 * winheight(0) + 8) / 16)
+if s:l < 1 | let s:l = 1 | endif
+keepjumps exe s:l
+normal! zt
+keepjumps 70
 normal! 0
 wincmd w
 argglobal
-if bufexists(fnamemodify("app/routes/api.discourseTopicEvent.tsx", ":p")) | buffer app/routes/api.discourseTopicEvent.tsx | else | edit app/routes/api.discourseTopicEvent.tsx | endif
+if bufexists(fnamemodify("app/types/parsedDiscourse.d.ts", ":p")) | buffer app/types/parsedDiscourse.d.ts | else | edit app/types/parsedDiscourse.d.ts | endif
 if &buftype ==# 'terminal'
-  silent file app/routes/api.discourseTopicEvent.tsx
+  silent file app/types/parsedDiscourse.d.ts
 endif
-balt app/services/transformDiscourseDataZod.server.ts
+balt app/routes/t.\$slug.\$topicId.tsx
 setlocal fdm=manual
 setlocal fde=0
 setlocal fmr={{{,}}}
@@ -161,35 +191,12 @@ setlocal fdn=20
 setlocal fen
 silent! normal! zE
 let &fdl = &fdl
-let s:l = 6 - ((2 * winheight(0) + 12) / 24)
+let s:l = 74 - ((18 * winheight(0) + 16) / 32)
 if s:l < 1 | let s:l = 1 | endif
 keepjumps exe s:l
 normal! zt
-keepjumps 6
-normal! 016|
-wincmd w
-argglobal
-if bufexists(fnamemodify("app/services/createOrUpdateOp.server.ts", ":p")) | buffer app/services/createOrUpdateOp.server.ts | else | edit app/services/createOrUpdateOp.server.ts | endif
-if &buftype ==# 'terminal'
-  silent file app/services/createOrUpdateOp.server.ts
-endif
-balt app/routes/api.discourseRepliesForPost.tsx
-setlocal fdm=manual
-setlocal fde=0
-setlocal fmr={{{,}}}
-setlocal fdi=#
-setlocal fdl=0
-setlocal fml=1
-setlocal fdn=20
-setlocal fen
-silent! normal! zE
-let &fdl = &fdl
-let s:l = 53 - ((13 * winheight(0) + 12) / 24)
-if s:l < 1 | let s:l = 1 | endif
-keepjumps exe s:l
-normal! zt
-keepjumps 53
-normal! 06|
+keepjumps 74
+normal! 015|
 wincmd w
 argglobal
 if bufexists(fnamemodify("term://~/remix/discourse/discourse_remix_comments//30275:/bin/bash", ":p")) | buffer term://~/remix/discourse/discourse_remix_comments//30275:/bin/bash | else | edit term://~/remix/discourse/discourse_remix_comments//30275:/bin/bash | endif
@@ -205,12 +212,12 @@ setlocal fdl=0
 setlocal fml=1
 setlocal fdn=20
 setlocal fen
-let s:l = 46 - ((12 * winheight(0) + 11) / 23)
+let s:l = 111 - ((11 * winheight(0) + 11) / 23)
 if s:l < 1 | let s:l = 1 | endif
 keepjumps exe s:l
 normal! zt
-keepjumps 46
-normal! 064|
+keepjumps 111
+normal! 063|
 wincmd w
 argglobal
 if bufexists(fnamemodify("term://~/remix/discourse/discourse_remix_comments//30685:/bin/bash", ":p")) | buffer term://~/remix/discourse/discourse_remix_comments//30685:/bin/bash | else | edit term://~/remix/discourse/discourse_remix_comments//30685:/bin/bash | endif
@@ -226,20 +233,20 @@ setlocal fdl=0
 setlocal fml=1
 setlocal fdn=20
 setlocal fen
-let s:l = 88 - ((16 * winheight(0) + 11) / 23)
+let s:l = 711 - ((22 * winheight(0) + 11) / 23)
 if s:l < 1 | let s:l = 1 | endif
 keepjumps exe s:l
 normal! zt
-keepjumps 88
+keepjumps 711
 normal! 0
 wincmd w
 5wincmd w
 exe 'vert 1resize ' . ((&columns * 38 + 191) / 382)
 exe '2resize ' . ((&lines * 49 + 37) / 75)
 exe 'vert 2resize ' . ((&columns * 171 + 191) / 382)
-exe '3resize ' . ((&lines * 24 + 37) / 75)
+exe '3resize ' . ((&lines * 16 + 37) / 75)
 exe 'vert 3resize ' . ((&columns * 171 + 191) / 382)
-exe '4resize ' . ((&lines * 24 + 37) / 75)
+exe '4resize ' . ((&lines * 32 + 37) / 75)
 exe 'vert 4resize ' . ((&columns * 171 + 191) / 382)
 exe '5resize ' . ((&lines * 23 + 37) / 75)
 exe 'vert 5resize ' . ((&columns * 171 + 191) / 382)
