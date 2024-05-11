@@ -30,8 +30,9 @@ export interface ParsedDiscourseReplyToUser {
   avatarUrl: string;
 }
 
+// note: the Discourse `can_create_post` field is not set for anonymous topic requests
 export interface ParsedDiscourseDetails {
-  canCreatePost: boolean;
+  canCreatePost?: boolean;
   participants: ParsedDiscourseParticipant[];
 }
 
@@ -60,4 +61,21 @@ export interface ParsedDiscourseTopicComments {
 export interface ParsedDiscourseCommentReplies {
   repliesForPostId: number;
   posts: ParsedDiscourseReplyPost[];
+}
+
+export interface ParsedDiscourseTopicMapDetails extends ParsedDiscourseDetails {
+  createdBy: ParsedDiscourseBasicUser;
+  lastPoster: ParsedDiscourseBasicUser;
+}
+
+export interface ParsedDiscourseTopicMap {
+  topicId: number;
+  title: string;
+  slug: string;
+  postsCount: number;
+  createdAt: string;
+  lastPostedAt: string;
+  likeCount: string;
+  participantCount: number;
+  details: ParsedDiscourseTopicMapDetails;
 }

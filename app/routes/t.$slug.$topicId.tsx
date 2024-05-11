@@ -20,6 +20,7 @@ import { transformPost } from "~/services/transformDiscourseData.server";
 import type { RouteError } from "~/types/errorTypes";
 import type { ApiDiscoursePost } from "~/types/apiDiscourse";
 import Topic from "~/components/Topic";
+import CommentsMap from "~/components/CommentsMap";
 import Comments from "~/components/Comments";
 
 export const meta: MetaFunction = () => {
@@ -160,7 +161,9 @@ export default function TopicForSlugAndId() {
   return (
     <div className="relative pt-6 pb-12 mx-auto max-w-screen-md">
       <Topic topic={topic} />
-      <Comments topicId={topic.externalId} />
+      <CommentsMap topicId={topic.externalId}>
+        <Comments topicId={topic.externalId} />
+      </CommentsMap>
     </div>
   );
 }
