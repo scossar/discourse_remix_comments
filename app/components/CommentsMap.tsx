@@ -2,7 +2,7 @@ import Comments from "~/components/Comments";
 import type { ParsedDiscourseTopicMap } from "~/types/parsedDiscourse";
 
 type CommentsMapProps = {
-  commentsMapData?: ParsedDiscourseTopicMap;
+  commentsMapData: ParsedDiscourseTopicMap;
   children: React.ReactElement<typeof Comments>;
 };
 
@@ -12,7 +12,7 @@ export default function CommentsMap({
 }: CommentsMapProps) {
   return (
     <div className="comments-map">
-      <div>Comment map for topic ID</div>
+      <div>Comment map for topic {commentsMapData.title}</div>
       {children}
     </div>
   );

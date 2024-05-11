@@ -17,6 +17,7 @@ import { discourseEnv } from "~/services/config.server";
 import { discourseSessionStorage } from "~/services/session.server";
 import { getSessionData, validateSession } from "~/schemas/currentUser.server";
 import { transformPost } from "~/services/transformDiscourseData.server";
+import { fetchCommentMapData } from "~/services/fetchCommentMapData.server";
 import type { RouteError } from "~/types/errorTypes";
 import type { ApiDiscoursePost } from "~/types/apiDiscourse";
 import Topic from "~/components/Topic";
@@ -142,9 +143,12 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
     });
   }
 
+  const topicMapData = await fetchCommentMapData(topicId);
+
   return json(
     {
       topic,
+      topicMapData,
       currentUser,
     },
     {
@@ -156,12 +160,12 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
 }
 
 export default function TopicForSlugAndId() {
-  const { topic } = useLoaderData<typeof loader>();
+  const { topic, topicMapData } = useLoaderData<typeof loader>();
 
   return (
     <div className="relative pt-6 pb-12 mx-auto max-w-screen-md">
       <Topic topic={topic} />
-      <CommentsMap topicId={topic.externalId}>
+      <CommentsMap commentsMapData={topicMapData}>
         <Comments topicId={topic.externalId} />
       </CommentsMap>
     </div>

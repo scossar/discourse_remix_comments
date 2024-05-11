@@ -69,13 +69,13 @@ export interface ParsedDiscourseTopicMapDetails extends ParsedDiscourseDetails {
 }
 
 export interface ParsedDiscourseTopicMap {
-  topicId: number;
+  id: number;
   title: string;
   slug: string;
   postsCount: number;
   createdAt: string;
   lastPostedAt: string;
-  likeCount: string;
+  likeCount: number;
   participantCount: number;
   details: ParsedDiscourseTopicMapDetails;
 }

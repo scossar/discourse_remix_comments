@@ -208,7 +208,7 @@ export type DiscourseApiBasicTopic = z.infer<
 >;
 
 export const DiscourseApiTopicDetailsSchema = z.object({
-  can_create_post: z.boolean(),
+  can_create_post: z.boolean().optional(),
   participants: DiscourseApiParticipantsSchema,
   created_by: DiscourseApiBasicUserSchema,
   last_poster: DiscourseApiBasicUserSchema,
@@ -243,6 +243,31 @@ export function validateDiscourseApiFullTopicWithPostStream(
   topic: DiscourseApiFullTopicWithPostStream
 ) {
   return DiscourseApiFullTopicWithPostStreamSchema.parse(topic);
+}
+
+/**
+ * TopicMap
+ * */
+
+export const DiscourseApiBasicTopicMapSchema = z.object({
+  id: z.number(),
+  title: z.string(),
+  slug: z.string(),
+  posts_count: z.number(),
+  created_at: z.string(),
+  last_posted_at: z.string(),
+  like_count: z.number(),
+  participant_count: z.number(),
+  details: DiscourseApiTopicDetailsSchema,
+});
+export type DiscourseApiBasicTopicMap = z.infer<
+  typeof DiscourseApiBasicTopicMapSchema
+>;
+
+export function validateDiscourseApiBasicTopicMap(
+  topicMapData: DiscourseApiBasicTopicMap
+): DiscourseApiBasicTopicMap {
+  return DiscourseApiBasicTopicMapSchema.parse(topicMapData);
 }
 
 /**
