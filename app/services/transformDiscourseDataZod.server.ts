@@ -36,6 +36,7 @@ export function transformPost(
     postNumber: apiPost.post_number,
     replyCount: apiPost.reply_count,
     replyToPostNumber: apiPost.reply_to_post_number,
+    topicId: apiPost.topic_id,
     updatedAt: apiPost.updated_at,
     userId: apiPost.user_id,
   };
@@ -54,6 +55,7 @@ export function transformReplyPost(
     postNumber: apiReplyPost.post_number,
     replyCount: apiReplyPost.reply_count,
     replyToPostNumber: apiReplyPost.reply_to_post_number,
+    topicId: apiReplyPost.topic_id,
     updatedAt: apiReplyPost.updated_at,
     userId: apiReplyPost.user_id,
     replyToUser: transformReplyToUser(apiReplyPost.reply_to_user, baseUrl),

@@ -43,9 +43,14 @@ const Comment = forwardRef<HTMLDivElement, CommentProps>(function Comment(
     getRepliesForPost(postId);
   }
 
-  function handleJumpToPost() {
-    // hardcoded for now
-    commentFetcher.load(`/api/getTopicComments?topicId=505&page=1`);
+  function handleJumpToPost(postNumber: number) {
+    const requiredPage = Math.floor(postNumber / 20);
+    commentFetcher.load(
+      `/api/getTopicComments?topicId=${post.topicId}&page=${requiredPage}`
+    );
+    if (commentFetcher.state !== "idle") {
+      console.log("loading reply page");
+    }
   }
 
   return (
@@ -108,7 +113,11 @@ const Comment = forwardRef<HTMLDivElement, CommentProps>(function Comment(
                     {replyPost.postNumber}
                   </span>
                   <div dangerouslySetInnerHTML={{ __html: replyPost.cooked }} />
-                  <button onClick={handleJumpToPost}>Jump to post</button>
+                  <button
+                    onClick={() => handleJumpToPost(replyPost.postNumber)}
+                  >
+                    Jump to post
+                  </button>
                 </div>
               </div>
             </div>

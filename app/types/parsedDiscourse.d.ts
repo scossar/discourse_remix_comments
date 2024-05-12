@@ -7,6 +7,7 @@ export interface ParsedDiscoursePost {
   postNumber: number;
   replyCount: number;
   replyToPostNumber: number | null;
+  topicId: number;
   updatedAt: string;
   userId: number;
 }
