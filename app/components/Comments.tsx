@@ -68,7 +68,7 @@ export default function Comments({ topicId }: CommentsProps) {
 
   return (
     <div>
-      <button onClick={getTopicCommentsForPage}>Comments</button>
+      <button onClick={getTopicCommentsForPage}>Load Comments</button>
 
       <div className={`${editorOpen && "pb-96"}`}>
         {renderComments}
