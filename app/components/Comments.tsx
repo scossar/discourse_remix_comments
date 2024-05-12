@@ -68,11 +68,22 @@ export default function Comments({ topicId, commentsCount }: CommentsProps) {
   }, [posts]);
 
   return (
-    <div>
-      <div>
+    <div className="pt-6">
+      <div className="flex justify-between">
         {commentsCount > 0 && (
-          <button onClick={getTopicCommentsForPage}>Load Comments</button>
+          <button
+            className="px-2 py-1 text-blue-700 bg-white"
+            onClick={getTopicCommentsForPage}
+          >
+            Load Comments
+          </button>
         )}
+        <button
+          className="px-2 py-1 text-blue-700 bg-white"
+          onClick={() => setEditorOpen(true)}
+        >
+          Comment
+        </button>
       </div>
 
       <div className={`${editorOpen && "pb-96"}`}>
