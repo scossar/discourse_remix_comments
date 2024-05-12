@@ -7,7 +7,7 @@ import type {
 } from "~/types/parsedDiscourse";
 import Comment from "~/components/Comment";
 import ZalgEditorClientOnly from "~/components/ZalgEditorClientOnly";
-type CommentFetcherData = { comments: ParsedDiscourseTopicComments };
+export type CommentFetcherData = { comments: ParsedDiscourseTopicComments };
 
 type CommentsProps = {
   topicId: number;
@@ -15,7 +15,9 @@ type CommentsProps = {
 };
 
 export default function Comments({ topicId, commentsCount }: CommentsProps) {
-  const commentFetcher = useFetcher<CommentFetcherData>();
+  const commentFetcher = useFetcher<CommentFetcherData>({
+    key: "commentFetcher",
+  });
   const { page, setPage } = usePageContext();
   const [posts, setPosts] = useState<ParsedDiscoursePost[] | null>(null);
   const [editorOpen, setEditorOpen] = useState(false);
@@ -60,12 +62,13 @@ export default function Comments({ topicId, commentsCount }: CommentsProps) {
               key={post.id}
               post={post}
               handleReplyClick={handleReplyClick}
+              commentFetcher={commentFetcher}
             />
           );
         })}
       </div>
     );
-  }, [posts]);
+  }, [posts, commentFetcher]);
 
   return (
     <div className="pt-6">

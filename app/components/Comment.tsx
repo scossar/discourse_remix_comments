@@ -1,5 +1,5 @@
 import { forwardRef, useRef, useState } from "react";
-import { useFetcher } from "@remix-run/react";
+import { type FetcherWithComponents, useFetcher } from "@remix-run/react";
 
 import ReplyButton from "./ReplyButton";
 import EditorIcon from "./ZalgEditor/EditorIcon";
@@ -8,15 +8,17 @@ import type {
   ParsedDiscoursePost,
   ParsedDiscourseCommentReplies,
 } from "~/types/parsedDiscourse";
+import type { CommentFetcherData } from "~/components/Comments";
 import Avatar from "~/components/Avatar";
 
 export type CommentProps = {
   post: ParsedDiscoursePost;
   handleReplyClick: (postNumber: string) => void;
+  commentFetcher: FetcherWithComponents<CommentFetcherData>;
 };
 
 const Comment = forwardRef<HTMLDivElement, CommentProps>(function Comment(
-  { post, handleReplyClick },
+  { post, handleReplyClick, commentFetcher },
   ref
 ) {
   const replyKey = String(post.postNumber);
@@ -41,8 +43,13 @@ const Comment = forwardRef<HTMLDivElement, CommentProps>(function Comment(
     getRepliesForPost(postId);
   }
 
+  function handleJumpToPost() {
+    // hardcoded for now
+    commentFetcher.load(`/api/getTopicComments?topicId=505&page=1`);
+  }
+
   return (
-    <div className="flex flex-col discourse-comment">
+    <div className="flex flex-col discourse-comment" id={`post-id-${post.id}`}>
       <div className="flex w-full my-6" ref={ref}>
         <Avatar
           user={{
@@ -101,6 +108,7 @@ const Comment = forwardRef<HTMLDivElement, CommentProps>(function Comment(
                     {replyPost.postNumber}
                   </span>
                   <div dangerouslySetInnerHTML={{ __html: replyPost.cooked }} />
+                  <button onClick={handleJumpToPost}>Jump to post</button>
                 </div>
               </div>
             </div>
