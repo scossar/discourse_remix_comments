@@ -164,13 +164,14 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
 export default function TopicForSlugAndId() {
   const { topic, topicMapData } = useLoaderData<typeof loader>();
   const [page, setPage] = useState<number | null>(0);
+  const commentsCount = topicMapData.postsCount - 1;
 
   return (
     <div className="relative pt-6 pb-12 mx-auto max-w-screen-md">
       <Topic topic={topic} />
       <PageContextProvider value={{ page, setPage }}>
         <CommentsMap commentsMapData={topicMapData}>
-          <Comments topicId={topic.externalId} />
+          <Comments topicId={topic.externalId} commentsCount={commentsCount} />
         </CommentsMap>
       </PageContextProvider>
     </div>

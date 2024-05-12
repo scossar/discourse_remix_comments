@@ -11,9 +11,10 @@ type CommentFetcherData = { comments: ParsedDiscourseTopicComments };
 
 type CommentsProps = {
   topicId: number;
+  commentsCount: number;
 };
 
-export default function Comments({ topicId }: CommentsProps) {
+export default function Comments({ topicId, commentsCount }: CommentsProps) {
   const commentFetcher = useFetcher<CommentFetcherData>();
   const { page, setPage } = usePageContext();
   const [posts, setPosts] = useState<ParsedDiscoursePost[] | null>(null);
