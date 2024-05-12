@@ -1,8 +1,10 @@
-import { useEffect } from "react";
+import { useMemo } from "react";
+import { useFetcher } from "@remix-run/react";
 import { usePageContext } from "~/hooks/usePageContext";
 import Comments from "~/components/Comments";
-//import PageContextProvider from "~/components/PageContextProvider";
 import type { ParsedDiscourseTopicMap } from "~/types/parsedDiscourse";
+
+const chunkSize = 20;
 
 type CommentsMapProps = {
   commentsMapData: ParsedDiscourseTopicMap;
@@ -14,13 +16,24 @@ export default function CommentsMap({
   children,
 }: CommentsMapProps) {
   const { page } = usePageContext();
-  useEffect(() => {
-    console.log(`page from CommentsMap component: ${page}`);
-  }, [page]);
+  const commentsCount = commentsMapData.postsCount - 1;
+  const commentText = commentsCount === 1 ? "comment" : "comments";
+  const totalPages = Math.ceil(commentsMapData.postsCount / chunkSize);
+  // TODO: this needs to be passed from the loader
 
   return (
     <div className="comments-map">
-      <div>Comment map for topic {commentsMapData.title}</div>
+      <div className="flex">
+        {commentsCount > 0 ? (
+          <div className="flex">
+            <div>
+              {commentsCount} {commentText}
+            </div>
+          </div>
+        ) : (
+          <div>Leave a comment</div>
+        )}
+      </div>
       {children}
     </div>
   );

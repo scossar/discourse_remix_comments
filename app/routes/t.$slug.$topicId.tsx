@@ -163,7 +163,7 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
 
 export default function TopicForSlugAndId() {
   const { topic, topicMapData } = useLoaderData<typeof loader>();
-  const [page, setPage] = useState<number | null>(null);
+  const [page, setPage] = useState<number | null>(0);
 
   return (
     <div className="relative pt-6 pb-12 mx-auto max-w-screen-md">

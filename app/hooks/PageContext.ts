@@ -6,7 +6,7 @@ export interface PageContextType {
 }
 
 const defaultPageContextValues: PageContextType = {
-  page: null,
+  page: 0,
   setPage: () => {},
 };
 

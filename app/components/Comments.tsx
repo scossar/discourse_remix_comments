@@ -37,7 +37,6 @@ export default function Comments({ topicId }: CommentsProps) {
       const newPosts = commentFetcher.data.comments.posts;
       const allPosts = posts ? [...posts, ...newPosts] : newPosts;
       setPosts(allPosts);
-      // when setPage is called here, can the new page value be propogated up to the CommentsMap component?
       setPage(commentFetcher.data.comments.nextPage);
     }
   }, [commentFetcher.data, page, setPage, posts]);
@@ -73,7 +72,7 @@ export default function Comments({ topicId }: CommentsProps) {
 
       <div className={`${editorOpen && "pb-96"}`}>
         {renderComments}
-        {page && (
+        {posts && page !== null && (
           <div>
             <button
               className="px-2 py-1 ml-10 text-blue-700 bg-white"
