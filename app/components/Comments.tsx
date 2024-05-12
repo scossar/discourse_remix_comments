@@ -49,6 +49,16 @@ export default function Comments({ topicId, commentsCount }: CommentsProps) {
     setEditorOpen(true);
   };
 
+  function handleJumpToPost(postNumber: number) {
+    const requiredPage = Math.floor(postNumber / 20);
+    commentFetcher.load(
+      `/api/getTopicComments?topicId=${topicId}&page=${requiredPage}`
+    );
+    if (commentFetcher.state !== "idle") {
+      console.log("loading reply page");
+    }
+  }
+
   const toggleEditorOpen = () => {
     setEditorOpen(!editorOpen);
   };
@@ -62,7 +72,7 @@ export default function Comments({ topicId, commentsCount }: CommentsProps) {
               key={post.id}
               post={post}
               handleReplyClick={handleReplyClick}
-              commentFetcher={commentFetcher}
+              handleJumpToPost={handleJumpToPost}
             />
           );
         })}

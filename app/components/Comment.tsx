@@ -1,5 +1,5 @@
 import { forwardRef, useRef, useState } from "react";
-import { type FetcherWithComponents, useFetcher } from "@remix-run/react";
+import { useFetcher } from "@remix-run/react";
 
 import ReplyButton from "./ReplyButton";
 import EditorIcon from "./ZalgEditor/EditorIcon";
@@ -8,17 +8,16 @@ import type {
   ParsedDiscoursePost,
   ParsedDiscourseCommentReplies,
 } from "~/types/parsedDiscourse";
-import type { CommentFetcherData } from "~/components/Comments";
 import Avatar from "~/components/Avatar";
 
 export type CommentProps = {
   post: ParsedDiscoursePost;
   handleReplyClick: (postNumber: string) => void;
-  commentFetcher: FetcherWithComponents<CommentFetcherData>;
+  handleJumpToPost: (postNumber: number) => void;
 };
 
 const Comment = forwardRef<HTMLDivElement, CommentProps>(function Comment(
-  { post, handleReplyClick, commentFetcher },
+  { post, handleReplyClick, handleJumpToPost },
   ref
 ) {
   const replyKey = String(post.postNumber);
@@ -41,16 +40,6 @@ const Comment = forwardRef<HTMLDivElement, CommentProps>(function Comment(
   function handleCommentRepliesClick(postId: number) {
     setPostRepliesOpen(!postRepliesOpen);
     getRepliesForPost(postId);
-  }
-
-  function handleJumpToPost(postNumber: number) {
-    const requiredPage = Math.floor(postNumber / 20);
-    commentFetcher.load(
-      `/api/getTopicComments?topicId=${post.topicId}&page=${requiredPage}`
-    );
-    if (commentFetcher.state !== "idle") {
-      console.log("loading reply page");
-    }
   }
 
   return (
