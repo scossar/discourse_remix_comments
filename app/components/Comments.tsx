@@ -49,21 +49,17 @@ export default function Comments({ topicId, commentsCount }: CommentsProps) {
     setEditorOpen(true);
   };
 
-  function handleJumpToPost(postNumber: number) {
-    const requiredPage = Math.floor(postNumber / 20);
-    commentFetcher.load(
-      `/api/getTopicComments?topicId=${topicId}&page=${requiredPage}`
-    );
-    if (commentFetcher.state !== "idle") {
-      console.log("loading reply page");
-    }
-  }
-
   const toggleEditorOpen = () => {
     setEditorOpen(!editorOpen);
   };
 
   const renderComments = useMemo(() => {
+    function handleJumpToPost(postNumber: number) {
+      const requiredPage = Math.floor(postNumber / 20);
+      commentFetcher.load(
+        `/api/getTopicComments?topicId=${topicId}&page=${requiredPage}`
+      );
+    }
     return (
       <div className="divide-y divide-cyan-800">
         {posts?.map((post) => {
@@ -78,7 +74,7 @@ export default function Comments({ topicId, commentsCount }: CommentsProps) {
         })}
       </div>
     );
-  }, [posts, commentFetcher]);
+  }, [posts, topicId, commentFetcher]);
 
   return (
     <div className="pt-6">
