@@ -32,6 +32,8 @@ export default function Comments({ topicId, commentsCount }: CommentsProps) {
       );
     }
   }
+
+  // TODO: setPage is no longer being called to update the page.
   useEffect(() => {
     if (commentFetcher.data?.comments.pagedPosts) {
       const pagedPosts = commentFetcher.data.comments.pagedPosts;
