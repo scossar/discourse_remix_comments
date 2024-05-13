@@ -55,7 +55,9 @@ export interface ParsedDiscourseTopicComments {
   topicId: number;
   nextPage: number | null;
   slug?: string;
-  posts: ParsedDiscoursePost[];
+  pagedPosts: {
+    [pageNumber: number]: ParsedDiscoursePost[];
+  };
   details?: ParsedDiscourseDetails;
 }
 
