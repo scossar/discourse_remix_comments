@@ -92,7 +92,9 @@ async function fetchInitialComments(
     topicId: topicId,
     nextPage: nextPage,
     slug: postsData.slug,
-    posts: posts.map((post) => transformPost(post, context.baseUrl)),
+    pagedPosts: {
+      [currentPage]: posts.map((post) => transformPost(post, context.baseUrl)),
+    },
     details: {
       canCreatePost: postsData.details.can_create_post,
       participants: postsData.details.participants.map((participant) =>
@@ -145,6 +147,8 @@ async function fetchSubsequentComments(
   return {
     topicId: topicId,
     nextPage: nextPage,
-    posts: posts.map((post) => transformPost(post, context.baseUrl)),
+    pagedPosts: {
+      [page]: posts.map((post) => transformPost(post, context.baseUrl)),
+    },
   };
 }
