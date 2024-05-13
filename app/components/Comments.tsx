@@ -1,7 +1,7 @@
 import { useFetcher } from "@remix-run/react";
 import { useEffect, useMemo, useState } from "react";
 import { useInView } from "react-intersection-observer";
-import { usePageContext } from "~/hooks/usePageContext";
+//import { usePageContext } from "~/hooks/usePageContext";
 import type {
   ParsedDiscoursePost,
   ParsedPagedDiscoursePosts,
@@ -27,7 +27,7 @@ export default function Comments({ topicId, commentsCount }: CommentsProps) {
   const commentFetcher = useFetcher<CommentFetcherData>({
     key: "commentFetcher",
   });
-  const { page, setPage } = usePageContext();
+  //const { page, setPage } = usePageContext();
   const [loadedPages, setLoadedPages] = useState<LoadedPages>({});
   const [nextRef, lastPostInView] = useInView({ threshold: 0 });
   const [prevRef, firstPostInView] = useInView({ threshold: 0 });
@@ -35,9 +35,10 @@ export default function Comments({ topicId, commentsCount }: CommentsProps) {
   const [editorOpen, setEditorOpen] = useState(false);
   const [replyToPostNumber, setReplyToPostNumber] = useState("");
 
-  function getTopicCommentsForPage() {
+  function getInitialComments() {
     if (commentFetcher.state === "idle") {
-      const pageParam = page || 0;
+      //const pageParam = page || 0;
+      const pageParam = 0;
       commentFetcher.load(
         `/api/getTopicComments?topicId=${topicId}&page=${pageParam}`
       );
@@ -45,13 +46,46 @@ export default function Comments({ topicId, commentsCount }: CommentsProps) {
   }
 
   useEffect(() => {
-    if (lastPostInView) {
-      console.log("last post of page in view");
+    function getTopicCommentsForPage(page: number) {
+      if (commentFetcher.state === "idle") {
+        commentFetcher.load(
+          `/api/getTopicComments?topicId=${topicId}&page=${page}`
+        );
+      }
     }
-    if (firstPostInView) {
-      console.log("first post of page in view");
+
+    if (lastPostInView && posts) {
+      console.log(
+        `lastPostInView, loadedPages: ${JSON.stringify(loadedPages, null, 2)}`
+      );
+      const lastPageLoaded = Number(
+        Object.keys(posts).sort((a, b) => Number(b) - Number(a))[0]
+      );
+      const nextPage = loadedPages[lastPageLoaded]?.nextPage;
+      if (nextPage !== null && !posts[nextPage]) {
+        getTopicCommentsForPage(nextPage);
+      }
     }
-  }, [lastPostInView, firstPostInView]);
+    if (firstPostInView && posts) {
+      console.log(
+        `firstPostInView, loadedPages: ${JSON.stringify(loadedPages, null, 2)}`
+      );
+      const firstPageLoaded = Number(
+        Object.keys(posts).sort((a, b) => Number(a) - Number(b))[0]
+      );
+      const prevPage = loadedPages[firstPageLoaded]?.previousPage;
+      if (prevPage !== null && !posts[prevPage]) {
+        getTopicCommentsForPage(prevPage);
+      }
+    }
+  }, [
+    lastPostInView,
+    firstPostInView,
+    posts,
+    loadedPages,
+    commentFetcher,
+    topicId,
+  ]);
 
   useEffect(() => {
     if (commentFetcher.data?.comments.pagedPosts) {
@@ -71,9 +105,9 @@ export default function Comments({ topicId, commentsCount }: CommentsProps) {
         });
         return updatedPosts;
       });
-      setPage(commentFetcher.data.comments.nextPage);
+      //setPage(commentFetcher.data.comments.nextPage);
     }
-  }, [commentFetcher.data, setPage, loadedPages]);
+  }, [commentFetcher.data, setLoadedPages]);
 
   const toggleEditorOpen = () => {
     setEditorOpen(!editorOpen);
@@ -129,7 +163,7 @@ export default function Comments({ topicId, commentsCount }: CommentsProps) {
         {commentsCount > 0 && (
           <button
             className="px-2 py-1 text-blue-700 bg-white"
-            onClick={getTopicCommentsForPage}
+            onClick={getInitialComments}
           >
             Load Comments
           </button>
@@ -142,19 +176,7 @@ export default function Comments({ topicId, commentsCount }: CommentsProps) {
         </button>
       </div>
 
-      <div className={`${editorOpen && "pb-96"}`}>
-        {renderComments}
-        {posts && page !== null && (
-          <div>
-            <button
-              className="px-2 py-1 ml-10 text-blue-700 bg-white"
-              onClick={getTopicCommentsForPage}
-            >
-              {commentFetcher.state === "idle" ? "Load more" : "Loading..."}
-            </button>
-          </div>
-        )}
-      </div>
+      <div className={`${editorOpen && "pb-96"}`}>{renderComments}</div>
       <div
         className={`${
           editorOpen ? "block" : "hidden"
