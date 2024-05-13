@@ -1,5 +1,6 @@
 import { useFetcher } from "@remix-run/react";
 import { useEffect, useMemo, useState } from "react";
+import { useInView } from "react-intersection-observer";
 import { usePageContext } from "~/hooks/usePageContext";
 import type {
   ParsedDiscoursePost,
@@ -9,6 +10,13 @@ import type {
 import Comment from "~/components/Comment";
 import ZalgEditorClientOnly from "~/components/ZalgEditorClientOnly";
 export type CommentFetcherData = { comments: ParsedDiscourseTopicComments };
+
+type LoadedPages = {
+  [page: number]: {
+    nextPage: number | null;
+    previousPage: number | null;
+  };
+};
 
 type CommentsProps = {
   topicId: number;
@@ -20,11 +28,9 @@ export default function Comments({ topicId, commentsCount }: CommentsProps) {
     key: "commentFetcher",
   });
   const { page, setPage } = usePageContext();
-  // loadedPages will track what pages have been loaded.
-  // probably add a previousPage param to ParsedDiscourseTopicComments
-  // then use intersectional-observer to load pages...
-  // page can be null. this might be a problem:
-  const [loadedPages, setLoadedPages] = useState<number[]>([page ? page : 0]);
+  const [loadedPages, setLoadedPages] = useState<LoadedPages>({});
+  const [nextRef, lastPostInView] = useInView({ threshold: 0 });
+  const [prevRef, firstPostInView] = useInView({ threshold: 0 });
   const [posts, setPosts] = useState<ParsedPagedDiscoursePosts | null>(null);
   const [editorOpen, setEditorOpen] = useState(false);
   const [replyToPostNumber, setReplyToPostNumber] = useState("");
@@ -38,9 +44,22 @@ export default function Comments({ topicId, commentsCount }: CommentsProps) {
     }
   }
 
-  // TODO: setPage is no longer being called to update the page.
+  useEffect(() => {
+    if (lastPostInView) {
+      console.log("last post of page in view");
+    }
+    if (firstPostInView) {
+      console.log("first post of page in view");
+    }
+  }, [lastPostInView, firstPostInView]);
+
   useEffect(() => {
     if (commentFetcher.data?.comments.pagedPosts) {
+      const { page, previousPage, nextPage } = commentFetcher.data.comments;
+      setLoadedPages((prevLoadedPages) => ({
+        ...prevLoadedPages,
+        [page]: { nextPage: nextPage, previousPage: previousPage },
+      }));
       const pagedPosts = commentFetcher.data.comments.pagedPosts;
       setPosts((prevPosts) => {
         const updatedPosts = { ...prevPosts };
@@ -54,7 +73,7 @@ export default function Comments({ topicId, commentsCount }: CommentsProps) {
       });
       setPage(commentFetcher.data.comments.nextPage);
     }
-  }, [commentFetcher.data, setPage]);
+  }, [commentFetcher.data, setPage, loadedPages]);
 
   const toggleEditorOpen = () => {
     setEditorOpen(!editorOpen);
@@ -91,6 +110,9 @@ export default function Comments({ topicId, commentsCount }: CommentsProps) {
                         post={post}
                         handleReplyClick={handleReplyClick}
                         handleJumpToPost={handleJumpToPost}
+                        ref={
+                          lastOfPage ? nextRef : firstOfPage ? prevRef : null
+                        }
                       />
                     );
                   }
@@ -99,7 +121,7 @@ export default function Comments({ topicId, commentsCount }: CommentsProps) {
             })}
       </div>
     );
-  }, [posts, commentFetcher, topicId]);
+  }, [posts, commentFetcher, topicId, nextRef, prevRef]);
 
   return (
     <div className="pt-6">

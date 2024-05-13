@@ -79,6 +79,7 @@ async function fetchInitialComments(
   const currentPage = 0;
   const totalPages = Math.ceil(stream.length / CHUNK_SIZE);
   const nextPage = currentPage + 1 < totalPages ? currentPage + 1 : null;
+  const previousPage = currentPage - 1 >= 0 ? currentPage - 1 : null;
   const streamKey = `postStream:${topicId}`;
   const redisStream = stream.map(String);
   try {
@@ -90,7 +91,9 @@ async function fetchInitialComments(
 
   return {
     topicId: topicId,
+    page: currentPage,
     nextPage: nextPage,
+    previousPage: previousPage,
     slug: postsData.slug,
     pagedPosts: {
       [currentPage]: posts.map((post) => transformPost(post, context.baseUrl)),
@@ -143,10 +146,13 @@ async function fetchSubsequentComments(
   // fudging this for now... shouldn't continue if the stream isn't set
   const totalPages = Math.ceil(stream.length / CHUNK_SIZE) || 1;
   const nextPage = page + 1 < totalPages ? page + 1 : null;
+  const previousPage = page - 1 >= 0 ? page - 1 : null;
 
   return {
     topicId: topicId,
+    page: page,
     nextPage: nextPage,
+    previousPage: previousPage,
     pagedPosts: {
       [page]: posts.map((post) => transformPost(post, context.baseUrl)),
     },
