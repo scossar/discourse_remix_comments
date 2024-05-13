@@ -20,6 +20,11 @@ export default function Comments({ topicId, commentsCount }: CommentsProps) {
     key: "commentFetcher",
   });
   const { page, setPage } = usePageContext();
+  // loadedPages will track what pages have been loaded.
+  // probably add a previousPage param to ParsedDiscourseTopicComments
+  // then use intersectional-observer to load pages...
+  // page can be null. this might be a problem:
+  const [loadedPages, setLoadedPages] = useState<number[]>([page ? page : 0]);
   const [posts, setPosts] = useState<ParsedPagedDiscoursePosts | null>(null);
   const [editorOpen, setEditorOpen] = useState(false);
   const [replyToPostNumber, setReplyToPostNumber] = useState("");
