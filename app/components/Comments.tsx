@@ -47,20 +47,9 @@ export default function Comments({ topicId, commentsCount }: CommentsProps) {
         });
         return updatedPosts;
       });
-    }
-  }, [commentFetcher.data]);
-
-  /* useEffect(() => {
-    if (
-      commentFetcher.data?.comments.posts &&
-      commentFetcher.data.comments.nextPage !== page
-    ) {
-      const newPosts = commentFetcher.data.comments.posts;
-      const allPosts = posts ? [...posts, ...newPosts] : newPosts;
-      setPosts(allPosts);
       setPage(commentFetcher.data.comments.nextPage);
     }
-  }, [commentFetcher.data, page, setPage, posts]); */
+  }, [commentFetcher.data, setPage]);
 
   const toggleEditorOpen = () => {
     setEditorOpen(!editorOpen);
@@ -87,14 +76,20 @@ export default function Comments({ topicId, commentsCount }: CommentsProps) {
             .map((page) => {
               const pageKey = Number(page);
               if (!isNaN(pageKey)) {
-                return posts[pageKey].map((post: ParsedDiscoursePost) => (
-                  <Comment
-                    key={post.id}
-                    post={post}
-                    handleReplyClick={handleReplyClick}
-                    handleJumpToPost={handleJumpToPost}
-                  />
-                ));
+                return posts[pageKey].map(
+                  (post: ParsedDiscoursePost, index: number) => {
+                    const firstOfPage = index === 0;
+                    const lastOfPage = index === posts[pageKey].length - 1;
+                    return (
+                      <Comment
+                        key={post.id}
+                        post={post}
+                        handleReplyClick={handleReplyClick}
+                        handleJumpToPost={handleJumpToPost}
+                      />
+                    );
+                  }
+                );
               }
             })}
       </div>
