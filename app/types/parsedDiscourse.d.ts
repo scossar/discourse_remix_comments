@@ -51,13 +51,15 @@ export type ParsedPagedDiscourseTopic = {
   [currentPage: number]: ParsedDiscourseTopic;
 };
 
+export type ParsedPagedDiscoursePosts = {
+  [pageNumber: number]: ParsedDiscoursePost[];
+};
+
 export interface ParsedDiscourseTopicComments {
   topicId: number;
   nextPage: number | null;
   slug?: string;
-  pagedPosts: {
-    [pageNumber: number]: ParsedDiscoursePost[];
-  };
+  pagedPosts: ParsedPagedDiscoursePosts;
   details?: ParsedDiscourseDetails;
 }
 

@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import { usePageContext } from "~/hooks/usePageContext";
 import type {
   ParsedDiscoursePost,
+  ParsedPagedDiscoursePosts,
   ParsedDiscourseTopicComments,
 } from "~/types/parsedDiscourse";
 import Comment from "~/components/Comment";
@@ -19,7 +20,7 @@ export default function Comments({ topicId, commentsCount }: CommentsProps) {
     key: "commentFetcher",
   });
   const { page, setPage } = usePageContext();
-  const [posts, setPosts] = useState<ParsedDiscoursePost[] | null>(null);
+  const [posts, setPosts] = useState<ParsedPagedDiscoursePosts | null>(null);
   const [editorOpen, setEditorOpen] = useState(false);
   const [replyToPostNumber, setReplyToPostNumber] = useState("");
 
@@ -31,8 +32,23 @@ export default function Comments({ topicId, commentsCount }: CommentsProps) {
       );
     }
   }
-
   useEffect(() => {
+    if (commentFetcher.data?.comments.pagedPosts) {
+      const pagedPosts = commentFetcher.data.comments.pagedPosts;
+      setPosts((prevPosts) => {
+        const updatedPosts = { ...prevPosts };
+        Object.entries(pagedPosts).forEach(([page, posts]) => {
+          const pageKey = Number(page);
+          if (!isNaN(pageKey)) {
+            updatedPosts[pageKey] = posts;
+          }
+        });
+        return updatedPosts;
+      });
+    }
+  }, [commentFetcher.data]);
+
+  /* useEffect(() => {
     if (
       commentFetcher.data?.comments.posts &&
       commentFetcher.data.comments.nextPage !== page
@@ -42,12 +58,7 @@ export default function Comments({ topicId, commentsCount }: CommentsProps) {
       setPosts(allPosts);
       setPage(commentFetcher.data.comments.nextPage);
     }
-  }, [commentFetcher.data, page, setPage, posts]);
-
-  const handleReplyClick = (postNumber: string) => {
-    setReplyToPostNumber(postNumber);
-    setEditorOpen(true);
-  };
+  }, [commentFetcher.data, page, setPage, posts]); */
 
   const toggleEditorOpen = () => {
     setEditorOpen(!editorOpen);
@@ -60,21 +71,33 @@ export default function Comments({ topicId, commentsCount }: CommentsProps) {
         `/api/getTopicComments?topicId=${topicId}&page=${requiredPage}`
       );
     }
+
+    const handleReplyClick = (postNumber: string) => {
+      setReplyToPostNumber(postNumber);
+      setEditorOpen(true);
+    };
+
     return (
       <div className="divide-y divide-cyan-800">
-        {posts?.map((post) => {
-          return (
-            <Comment
-              key={post.id}
-              post={post}
-              handleReplyClick={handleReplyClick}
-              handleJumpToPost={handleJumpToPost}
-            />
-          );
-        })}
+        {posts &&
+          Object.keys(posts)
+            .sort((a, b) => Number(a) - Number(b))
+            .map((page) => {
+              const pageKey = Number(page);
+              if (!isNaN(pageKey)) {
+                return posts[pageKey].map((post: ParsedDiscoursePost) => (
+                  <Comment
+                    key={post.id}
+                    post={post}
+                    handleReplyClick={handleReplyClick}
+                    handleJumpToPost={handleJumpToPost}
+                  />
+                ));
+              }
+            })}
       </div>
     );
-  }, [posts, topicId, commentFetcher]);
+  }, [posts, commentFetcher, topicId]);
 
   return (
     <div className="pt-6">
