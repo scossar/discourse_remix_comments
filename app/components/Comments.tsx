@@ -1,7 +1,7 @@
 import { useFetcher } from "@remix-run/react";
 import { useEffect, useMemo, useState } from "react";
 import { useInView } from "react-intersection-observer";
-//import { usePageContext } from "~/hooks/usePageContext";
+import { usePageContext } from "~/hooks/usePageContext";
 import type {
   ParsedDiscoursePost,
   ParsedPagedDiscoursePosts,
@@ -12,7 +12,7 @@ import ZalgEditorClientOnly from "~/components/ZalgEditorClientOnly";
 export type CommentFetcherData = { comments: ParsedDiscourseTopicComments };
 
 type LoadedPages = {
-  [page: number]: {
+  [currentPage: number]: {
     nextPage: number | null;
     previousPage: number | null;
   };
@@ -27,18 +27,29 @@ export default function Comments({ topicId, commentsCount }: CommentsProps) {
   const commentFetcher = useFetcher<CommentFetcherData>({
     key: "commentFetcher",
   });
-  //const { page, setPage } = usePageContext();
+  const { page, setPage } = usePageContext();
   const [loadedPages, setLoadedPages] = useState<LoadedPages>({});
-  const [nextRef, lastPostInView] = useInView({ threshold: 0 });
-  const [prevRef, firstPostInView] = useInView({ threshold: 0 });
+  const [nextRef, lastPostInView, lastPostEntry] = useInView({ threshold: 0 });
+  const [prevRef, firstPostInView, firstPostEntry] = useInView({
+    threshold: 0,
+  });
   const [posts, setPosts] = useState<ParsedPagedDiscoursePosts | null>(null);
   const [editorOpen, setEditorOpen] = useState(false);
   const [replyToPostNumber, setReplyToPostNumber] = useState("");
 
-  function getInitialComments() {
+  /*function getInitialComments() {
     if (commentFetcher.state === "idle") {
-      //const pageParam = page || 0;
-      const pageParam = 0;
+      const pageParam = page || 0;
+      // const pageParam = 0;
+      commentFetcher.load(
+        `/api/getTopicComments?topicId=${topicId}&page=${pageParam}`
+      );
+    }
+  } */
+
+  function getTopicCommentsForPage() {
+    if (commentFetcher.state === "idle") {
+      const pageParam = page || 0;
       commentFetcher.load(
         `/api/getTopicComments?topicId=${topicId}&page=${pageParam}`
       );
@@ -46,7 +57,8 @@ export default function Comments({ topicId, commentsCount }: CommentsProps) {
   }
 
   useEffect(() => {
-    function getTopicCommentsForPage(page: number) {
+    function loadTopicCommentsForPage(page: number) {
+      console.log(JSON.stringify(loadedPages, null, 2));
       if (commentFetcher.state === "idle") {
         commentFetcher.load(
           `/api/getTopicComments?topicId=${topicId}&page=${page}`
@@ -54,45 +66,68 @@ export default function Comments({ topicId, commentsCount }: CommentsProps) {
       }
     }
 
-    if (lastPostInView && posts) {
+    const handleIntersection = (
+      entry: IntersectionObserverEntry,
+      isLastPost: boolean
+    ) => {
+      const pageInView = Number(entry.target.getAttribute("data-page"));
+      const pageData = loadedPages[pageInView];
+      console.log(`loadedPages: ${JSON.stringify(loadedPages, null, 2)}`);
       console.log(
-        `lastPostInView, loadedPages: ${JSON.stringify(loadedPages, null, 2)}`
+        `pageData: ${JSON.stringify(
+          pageData,
+          null,
+          2
+        )}, pageInView: ${pageInView}`
       );
-      const lastPageLoaded = Number(
-        Object.keys(posts).sort((a, b) => Number(b) - Number(a))[0]
-      );
-      const nextPage = loadedPages[lastPageLoaded]?.nextPage;
-      if (nextPage !== null && !posts[nextPage]) {
-        getTopicCommentsForPage(nextPage);
+
+      if (
+        isLastPost &&
+        pageData &&
+        pageData.nextPage !== null &&
+        !posts[pageData.nextPage]
+      ) {
+        console.log(`nextPage: ${pageData.nextPage}`);
+        loadTopicCommentsForPage(pageData.nextPage);
+      } else if (
+        !isLastPost &&
+        pageData &&
+        pageData.previousPage !== null &&
+        !posts[pageData.previousPage]
+      ) {
+        loadTopicCommentsForPage(pageData.previousPage);
       }
+    };
+
+    if (lastPostInView && lastPostEntry) {
+      console.log("last post in view");
+      handleIntersection(lastPostEntry, true);
     }
-    if (firstPostInView && posts) {
-      console.log(
-        `firstPostInView, loadedPages: ${JSON.stringify(loadedPages, null, 2)}`
-      );
-      const firstPageLoaded = Number(
-        Object.keys(posts).sort((a, b) => Number(a) - Number(b))[0]
-      );
-      const prevPage = loadedPages[firstPageLoaded]?.previousPage;
-      if (prevPage !== null && !posts[prevPage]) {
-        getTopicCommentsForPage(prevPage);
-      }
+    if (firstPostInView && firstPostEntry) {
+      console.log("first post in view");
+      handleIntersection(firstPostEntry, false);
     }
   }, [
     lastPostInView,
     firstPostInView,
-    posts,
+    lastPostEntry,
+    firstPostEntry,
     loadedPages,
+    posts,
     commentFetcher,
     topicId,
   ]);
 
   useEffect(() => {
     if (commentFetcher.data?.comments.pagedPosts) {
-      const { page, previousPage, nextPage } = commentFetcher.data.comments;
+      const { currentPage, previousPage, nextPage } =
+        commentFetcher.data.comments;
+      console.log(
+        `currentPage: ${currentPage}, previousPage: ${previousPage}, nextPage: ${nextPage}`
+      );
       setLoadedPages((prevLoadedPages) => ({
         ...prevLoadedPages,
-        [page]: { nextPage: nextPage, previousPage: previousPage },
+        [currentPage]: { nextPage: nextPage, previousPage: previousPage },
       }));
       const pagedPosts = commentFetcher.data.comments.pagedPosts;
       setPosts((prevPosts) => {
@@ -105,9 +140,9 @@ export default function Comments({ topicId, commentsCount }: CommentsProps) {
         });
         return updatedPosts;
       });
-      //setPage(commentFetcher.data.comments.nextPage);
+      setPage(commentFetcher.data.comments.nextPage);
     }
-  }, [commentFetcher.data, setLoadedPages]);
+  }, [commentFetcher.data, setLoadedPages, setPosts, setPage]);
 
   const toggleEditorOpen = () => {
     setEditorOpen(!editorOpen);
@@ -139,15 +174,19 @@ export default function Comments({ topicId, commentsCount }: CommentsProps) {
                     const firstOfPage = index === 0;
                     const lastOfPage = index === posts[pageKey].length - 1;
                     return (
-                      <Comment
+                      <div
                         key={post.id}
-                        post={post}
-                        handleReplyClick={handleReplyClick}
-                        handleJumpToPost={handleJumpToPost}
+                        data-page={pageKey}
                         ref={
                           lastOfPage ? nextRef : firstOfPage ? prevRef : null
                         }
-                      />
+                      >
+                        <Comment
+                          post={post}
+                          handleReplyClick={handleReplyClick}
+                          handleJumpToPost={handleJumpToPost}
+                        />
+                      </div>
                     );
                   }
                 );
@@ -163,7 +202,7 @@ export default function Comments({ topicId, commentsCount }: CommentsProps) {
         {commentsCount > 0 && (
           <button
             className="px-2 py-1 text-blue-700 bg-white"
-            onClick={getInitialComments}
+            onClick={getTopicCommentsForPage}
           >
             Load Comments
           </button>
@@ -176,7 +215,19 @@ export default function Comments({ topicId, commentsCount }: CommentsProps) {
         </button>
       </div>
 
-      <div className={`${editorOpen && "pb-96"}`}>{renderComments}</div>
+      <div className={`${editorOpen && "pb-96"}`}>
+        {renderComments}
+        {posts && page !== null && (
+          <div>
+            <button
+              className="px-2 py-1 ml-10 text-blue-700 bg-white"
+              onClick={getTopicCommentsForPage}
+            >
+              {commentFetcher.state === "idle" ? "Load more" : "Loading..."}
+            </button>
+          </div>
+        )}
+      </div>
       <div
         className={`${
           editorOpen ? "block" : "hidden"

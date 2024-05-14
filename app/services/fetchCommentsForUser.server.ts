@@ -91,7 +91,7 @@ async function fetchInitialComments(
 
   return {
     topicId: topicId,
-    page: currentPage,
+    currentPage: currentPage,
     nextPage: nextPage,
     previousPage: previousPage,
     slug: postsData.slug,
@@ -150,7 +150,7 @@ async function fetchSubsequentComments(
 
   return {
     topicId: topicId,
-    page: page,
+    currentPage: page,
     nextPage: nextPage,
     previousPage: previousPage,
     pagedPosts: {
