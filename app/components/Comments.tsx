@@ -174,6 +174,7 @@ export default function Comments({ topicId, commentsCount }: CommentsProps) {
                     key={`gap-${pageKey}`}
                     missingPage={pageKey}
                     getCommentsForPage={getCommentsForPage}
+                    state={commentFetcher.state}
                   />
                 );
               }
