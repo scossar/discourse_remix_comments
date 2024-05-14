@@ -30,9 +30,13 @@ export default function Comments({ topicId, commentsCount }: CommentsProps) {
   });
   const { page, setPage } = usePageContext();
   const [loadedPages, setLoadedPages] = useState<LoadedPages>({});
-  const [nextRef, lastPostInView, lastPostEntry] = useInView({ threshold: 0 });
+  const [nextRef, lastPostInView, lastPostEntry] = useInView({
+    threshold: 0,
+    onChange: handleLastPostInView,
+  });
   const [prevRef, firstPostInView, firstPostEntry] = useInView({
     threshold: 0,
+    onChange: handleFirstPostInView,
   });
   const [posts, setPosts] = useState<ParsedPagedDiscoursePosts | null>(null);
   const [editorOpen, setEditorOpen] = useState(false);
@@ -49,6 +53,59 @@ export default function Comments({ topicId, commentsCount }: CommentsProps) {
     }
   }
 
+  function handleFirstPostInView(
+    inView: boolean,
+    entry: IntersectionObserverEntry
+  ) {
+    if (inView) {
+      const pageInView = Number(entry.target.getAttribute("data-page"));
+      console.log(`first post in view for page ${pageInView}`);
+      const pageData = loadedPages[pageInView];
+      console.log(
+        `pageData for first post in view: ${JSON.stringify(pageData, null, 2)}`
+      );
+      if (
+        pageData &&
+        pageData.previousPage &&
+        !posts?.[pageData.previousPage]
+      ) {
+        const previousPage = pageData.previousPage;
+        if (commentFetcher.state === "idle") {
+          commentFetcher.load(
+            `/api/getTopicComments?topicId=${topicId}&page=${previousPage}`
+          );
+        }
+      }
+    }
+  }
+
+  function handleLastPostInView(
+    inView: boolean,
+    entry: IntersectionObserverEntry
+  ) {
+    if (inView) {
+      const pageInView = Number(entry.target.getAttribute("data-page"));
+      console.log(`last post in view for page: ${pageInView}`);
+      const pageData = loadedPages[pageInView];
+      console.log(
+        `pageData for last post in view: ${JSON.stringify(pageData, null, 2)}`
+      );
+      if (
+        pageData &&
+        pageData.nextPage !== null &&
+        !posts?.[pageData.nextPage]
+      ) {
+        const nextPage = pageData.nextPage;
+        if (commentFetcher.state === "idle") {
+          commentFetcher.load(
+            `/api/getTopicComments?topicId=${topicId}&page=${nextPage}`
+          );
+        }
+      }
+    }
+  }
+
+  /*
   useEffect(() => {
     function loadTopicCommentsForPage(page: number) {
       if (commentFetcher.state === "idle") {
@@ -84,11 +141,10 @@ export default function Comments({ topicId, commentsCount }: CommentsProps) {
 
     const debouncedHandleIntersection = debounce(handleIntersection, 100);
 
-    if (lastPostInView && lastPostEntry) {
-      debouncedHandleIntersection(lastPostEntry, true);
-    }
     if (firstPostInView && firstPostEntry) {
-      debouncedHandleIntersection(firstPostEntry, false);
+      //  handleIntersection(firstPostEntry, false);
+    } else if (lastPostInView && lastPostEntry) {
+      // handleIntersection(lastPostEntry, true);
     }
   }, [
     lastPostInView,
@@ -100,6 +156,7 @@ export default function Comments({ topicId, commentsCount }: CommentsProps) {
     commentFetcher,
     topicId,
   ]);
+     */
 
   useEffect(() => {
     if (commentFetcher.data?.comments.pagedPosts) {
@@ -163,6 +220,13 @@ export default function Comments({ topicId, commentsCount }: CommentsProps) {
                     const lastOfPage = index === posts[pageKey].length - 1;
                     return (
                       <div
+                        className={`${
+                          lastOfPage
+                            ? "lastOfPage"
+                            : firstOfPage
+                            ? "firstOfPage"
+                            : ""
+                        }`}
                         key={post.id}
                         id={`post-${post.id}`}
                         data-page={pageKey}
@@ -204,7 +268,16 @@ export default function Comments({ topicId, commentsCount }: CommentsProps) {
         </button>
       </div>
 
-      <div className={`${editorOpen && "pb-96"}`}>{renderComments}</div>
+      <div className={`${editorOpen && "pb-96"}`}>
+        {renderComments}
+        <div
+          className={`w-full ${
+            commentFetcher.state === "loading" ? "h-6 block" : "hidden"
+          }`}
+        >
+          Loading...
+        </div>
+      </div>
       <div
         className={`${
           editorOpen ? "block" : "hidden"

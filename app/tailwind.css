@@ -17,13 +17,13 @@
       @apply my-2;
     }
     ul {
-      @apply list-inside list-disc;
+      @apply list-disc list-inside;
     }
     img {
-      @apply max-w-md h-auto;
+      @apply h-auto max-w-md;
     }
     pre code {
-      @apply bg-slate-200 block w-full my-2;
+      @apply block w-full my-2 bg-slate-200;
     }
     li > p {
       @apply inline-block;
@@ -54,13 +54,13 @@
       @apply flex w-full pl-6;
     }
     aside .title img {
-      @apply rounded-full w-6 h-6 object-contain mr-2;
+      @apply object-contain w-6 h-6 mr-2 rounded-full;
     }
     aside blockquote {
       @apply w-full pl-6;
     }
     pre[data-code-wrap] {
-      @apply border-cyan-300 border overflow-scroll max-h-96 p-2;
+      @apply p-2 overflow-scroll border border-cyan-300 max-h-96;
     }
   }
 }
