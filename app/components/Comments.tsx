@@ -43,7 +43,6 @@ export default function Comments({ topicId, commentsCount }: CommentsProps) {
   const [replyToPostNumber, setReplyToPostNumber] = useState("");
   const [scrollToPost, setScrollToPost] = useState<number | null>(null);
   const scrollToRef = useRef<HTMLDivElement | null>(null);
-  const navigate = useNavigate();
 
   function getInitialComments() {
     if (commentFetcher.state === "idle") {
@@ -59,7 +58,6 @@ export default function Comments({ topicId, commentsCount }: CommentsProps) {
     entry: IntersectionObserverEntry
   ) {
     if (inView) {
-      console.log("first post in view");
       const pageInView = Number(entry.target.getAttribute("data-page"));
       const pageData = loadedPages[pageInView];
       if (
@@ -69,13 +67,12 @@ export default function Comments({ topicId, commentsCount }: CommentsProps) {
       ) {
         const previousPage = pageData.previousPage;
         if (commentFetcher.state === "idle") {
-          commentFetcher.load(
+          console.log(`previousPage: ${previousPage}`);
+          /*commentFetcher.load(
             `/api/getTopicComments?topicId=${topicId}&page=${previousPage}`
-          );
+          ); */
         }
       }
-    } else {
-      console.log("first post not in view");
     }
   }
 
@@ -184,7 +181,6 @@ export default function Comments({ topicId, commentsCount }: CommentsProps) {
       scrollToRef?.current &&
       posts
     ) {
-      console.log("scrollIntoView is about to be called");
       scrollToRef.current.scrollIntoView();
       setScrollToPost(null);
     }
@@ -215,6 +211,7 @@ export default function Comments({ topicId, commentsCount }: CommentsProps) {
             .sort((a, b) => Number(a) - Number(b))
             .map((page) => {
               const pageKey = Number(page);
+              console.log(`pageKey: ${pageKey}`);
               if (!isNaN(pageKey)) {
                 return posts[pageKey].map(
                   (post: ParsedDiscoursePost, index: number) => {
@@ -222,15 +219,7 @@ export default function Comments({ topicId, commentsCount }: CommentsProps) {
                     const lastOfPage = index === posts[pageKey].length - 1;
                     return (
                       <div
-                        className={`${
-                          lastOfPage
-                            ? "lastOfPage"
-                            : firstOfPage
-                            ? "firstOfPage"
-                            : ""
-                        }`}
                         key={post.id}
-                        id={`post-${post.id}`}
                         ref={
                           scrollToPost && scrollToPost === post.id
                             ? scrollToRef
