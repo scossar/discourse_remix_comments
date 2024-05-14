@@ -33,14 +33,10 @@ export default function Comments({ topicId, commentsCount }: CommentsProps) {
   const [nextRef, lastPostInView, lastPostEntry] = useInView({
     threshold: 0,
     onChange: handleLastPostInView,
-    root: null,
-    triggerOnce: false,
   });
   const [prevRef, firstPostInView, firstPostEntry] = useInView({
     threshold: 0,
     onChange: handleFirstPostInView,
-    root: null,
-    triggerOnce: false,
   });
   const [posts, setPosts] = useState<ParsedPagedDiscoursePosts | null>(null);
   const [editorOpen, setEditorOpen] = useState(false);
@@ -63,12 +59,9 @@ export default function Comments({ topicId, commentsCount }: CommentsProps) {
     entry: IntersectionObserverEntry
   ) {
     if (inView) {
+      console.log("first post in view");
       const pageInView = Number(entry.target.getAttribute("data-page"));
-      console.log(`first post in view for page ${pageInView}`);
       const pageData = loadedPages[pageInView];
-      console.log(
-        `pageData for first post in view: ${JSON.stringify(pageData, null, 2)}`
-      );
       if (
         pageData &&
         pageData.previousPage !== null &&
@@ -82,7 +75,7 @@ export default function Comments({ topicId, commentsCount }: CommentsProps) {
         }
       }
     } else {
-      console.log("first post out of view");
+      console.log("first post not in view");
     }
   }
 
@@ -92,15 +85,7 @@ export default function Comments({ topicId, commentsCount }: CommentsProps) {
   ) {
     if (inView) {
       const pageInView = Number(entry.target.getAttribute("data-page"));
-      console.log(`last post in view for page: ${pageInView}`);
       const pageData = loadedPages[pageInView];
-      console.log(
-        `pageData for last post in view: ${JSON.stringify(
-          pageData,
-          null,
-          2
-        )}, loadedPages: ${JSON.stringify(loadedPages, null, 2)}`
-      );
       if (
         pageData &&
         pageData.nextPage !== null &&
@@ -113,8 +98,6 @@ export default function Comments({ topicId, commentsCount }: CommentsProps) {
           );
         }
       }
-    } else {
-      console.log("last post out of view");
     }
   }
 
@@ -198,12 +181,14 @@ export default function Comments({ topicId, commentsCount }: CommentsProps) {
     if (
       scrollToPost &&
       commentFetcher.state === "idle" &&
-      scrollToRef?.current
+      scrollToRef?.current &&
+      posts
     ) {
+      console.log("scrollIntoView is about to be called");
       scrollToRef.current.scrollIntoView();
       setScrollToPost(null);
     }
-  }, [scrollToPost, setScrollToPost, commentFetcher.state]);
+  }, [scrollToPost, setScrollToPost, commentFetcher.state, posts]);
 
   const toggleEditorOpen = () => {
     setEditorOpen(!editorOpen);
