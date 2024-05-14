@@ -72,20 +72,12 @@ export default function Comments({ topicId, commentsCount }: CommentsProps) {
     ) => {
       const pageInView = Number(entry.target.getAttribute("data-page"));
       const pageData = loadedPages[pageInView];
-      console.log(`loadedPages: ${JSON.stringify(loadedPages, null, 2)}`);
-      console.log(
-        `pageData: ${JSON.stringify(
-          pageData,
-          null,
-          2
-        )}, pageInView: ${pageInView}`
-      );
 
       if (
         isLastPost &&
         pageData &&
         pageData.nextPage !== null &&
-        !posts[pageData.nextPage]
+        !posts?.[pageData.nextPage]
       ) {
         console.log(`nextPage: ${pageData.nextPage}`);
         loadTopicCommentsForPage(pageData.nextPage);
@@ -93,18 +85,16 @@ export default function Comments({ topicId, commentsCount }: CommentsProps) {
         !isLastPost &&
         pageData &&
         pageData.previousPage !== null &&
-        !posts[pageData.previousPage]
+        !posts?.[pageData.previousPage]
       ) {
         loadTopicCommentsForPage(pageData.previousPage);
       }
     };
 
     if (lastPostInView && lastPostEntry) {
-      console.log("last post in view");
       handleIntersection(lastPostEntry, true);
     }
     if (firstPostInView && firstPostEntry) {
-      console.log("first post in view");
       handleIntersection(firstPostEntry, false);
     }
   }, [
@@ -122,9 +112,6 @@ export default function Comments({ topicId, commentsCount }: CommentsProps) {
     if (commentFetcher.data?.comments.pagedPosts) {
       const { currentPage, previousPage, nextPage } =
         commentFetcher.data.comments;
-      console.log(
-        `currentPage: ${currentPage}, previousPage: ${previousPage}, nextPage: ${nextPage}`
-      );
       setLoadedPages((prevLoadedPages) => ({
         ...prevLoadedPages,
         [currentPage]: { nextPage: nextPage, previousPage: previousPage },
