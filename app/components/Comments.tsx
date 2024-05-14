@@ -1,5 +1,5 @@
 import { useFetcher, useNavigate } from "@remix-run/react";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useInView } from "react-intersection-observer";
 import debounce from "debounce";
 import { usePageContext } from "~/hooks/usePageContext";
@@ -33,15 +33,20 @@ export default function Comments({ topicId, commentsCount }: CommentsProps) {
   const [nextRef, lastPostInView, lastPostEntry] = useInView({
     threshold: 0,
     onChange: handleLastPostInView,
+    root: null,
+    triggerOnce: false,
   });
   const [prevRef, firstPostInView, firstPostEntry] = useInView({
     threshold: 0,
     onChange: handleFirstPostInView,
+    root: null,
+    triggerOnce: false,
   });
   const [posts, setPosts] = useState<ParsedPagedDiscoursePosts | null>(null);
   const [editorOpen, setEditorOpen] = useState(false);
   const [replyToPostNumber, setReplyToPostNumber] = useState("");
-  const [scrollToPost, setScrollToPost] = useState<string | null>(null);
+  const [scrollToPost, setScrollToPost] = useState<number | null>(null);
+  const scrollToRef = useRef<HTMLDivElement | null>(null);
   const navigate = useNavigate();
 
   function getInitialComments() {
@@ -66,7 +71,7 @@ export default function Comments({ topicId, commentsCount }: CommentsProps) {
       );
       if (
         pageData &&
-        pageData.previousPage &&
+        pageData.previousPage !== null &&
         !posts?.[pageData.previousPage]
       ) {
         const previousPage = pageData.previousPage;
@@ -76,6 +81,8 @@ export default function Comments({ topicId, commentsCount }: CommentsProps) {
           );
         }
       }
+    } else {
+      console.log("first post out of view");
     }
   }
 
@@ -88,7 +95,11 @@ export default function Comments({ topicId, commentsCount }: CommentsProps) {
       console.log(`last post in view for page: ${pageInView}`);
       const pageData = loadedPages[pageInView];
       console.log(
-        `pageData for last post in view: ${JSON.stringify(pageData, null, 2)}`
+        `pageData for last post in view: ${JSON.stringify(
+          pageData,
+          null,
+          2
+        )}, loadedPages: ${JSON.stringify(loadedPages, null, 2)}`
       );
       if (
         pageData &&
@@ -102,6 +113,8 @@ export default function Comments({ topicId, commentsCount }: CommentsProps) {
           );
         }
       }
+    } else {
+      console.log("last post out of view");
     }
   }
 
@@ -182,11 +195,15 @@ export default function Comments({ topicId, commentsCount }: CommentsProps) {
   }, [commentFetcher.data, setLoadedPages, setPosts, setPage]);
 
   useEffect(() => {
-    if (scrollToPost && commentFetcher.state === "idle") {
-      navigate({ hash: `#${scrollToPost}` }, { replace: true });
+    if (
+      scrollToPost &&
+      commentFetcher.state === "idle" &&
+      scrollToRef?.current
+    ) {
+      scrollToRef.current.scrollIntoView();
       setScrollToPost(null);
     }
-  }, [navigate, scrollToPost, setScrollToPost, commentFetcher.state]);
+  }, [scrollToPost, setScrollToPost, commentFetcher.state]);
 
   const toggleEditorOpen = () => {
     setEditorOpen(!editorOpen);
@@ -198,7 +215,7 @@ export default function Comments({ topicId, commentsCount }: CommentsProps) {
       commentFetcher.load(
         `/api/getTopicComments?topicId=${topicId}&page=${requiredPage}`
       );
-      setScrollToPost(`post-${postId}`);
+      setScrollToPost(postId);
     }
 
     const handleReplyClick = (postNumber: string) => {
@@ -229,11 +246,19 @@ export default function Comments({ topicId, commentsCount }: CommentsProps) {
                         }`}
                         key={post.id}
                         id={`post-${post.id}`}
-                        data-page={pageKey}
                         ref={
-                          lastOfPage ? nextRef : firstOfPage ? prevRef : null
+                          scrollToPost && scrollToPost === post.id
+                            ? scrollToRef
+                            : null
                         }
                       >
+                        <div
+                          className="w-full h-1"
+                          data-page={pageKey}
+                          ref={
+                            lastOfPage ? nextRef : firstOfPage ? prevRef : null
+                          }
+                        ></div>
                         <Comment
                           post={post}
                           handleReplyClick={handleReplyClick}
@@ -247,7 +272,15 @@ export default function Comments({ topicId, commentsCount }: CommentsProps) {
             })}
       </div>
     );
-  }, [posts, commentFetcher, topicId, nextRef, prevRef, setScrollToPost]);
+  }, [
+    posts,
+    commentFetcher,
+    topicId,
+    nextRef,
+    prevRef,
+    scrollToPost,
+    setScrollToPost,
+  ]);
 
   return (
     <div className="pt-6">
