@@ -33,6 +33,7 @@ export default function Comments({ topicId, commentsCount }: CommentsProps) {
   const [loadedPages, setLoadedPages] = useState<LoadedPages>({});
   const [nextRef] = useInView({
     threshold: 0,
+    delay: 250,
     onChange: handleLastPostInView,
   });
   const [posts, setPosts] = useState<ParsedPagedDiscoursePosts | null>(null);
@@ -42,12 +43,10 @@ export default function Comments({ topicId, commentsCount }: CommentsProps) {
   const scrollToRef = useRef<HTMLDivElement | null>(null);
 
   function getInitialComments() {
-    if (commentFetcher.state === "idle") {
-      const pageParam = page || 0;
-      commentFetcher.load(
-        `/api/getTopicComments?topicId=${topicId}&page=${pageParam}`
-      );
-    }
+    const pageParam = page || 0;
+    commentFetcher.load(
+      `/api/getTopicComments?topicId=${topicId}&page=${pageParam}`
+    );
   }
 
   function handleLastPostInView(
@@ -120,6 +119,14 @@ export default function Comments({ topicId, commentsCount }: CommentsProps) {
       setScrollToPost(postId);
     }
 
+    function getCommentsForPage(commentPage: number) {
+      if (commentFetcher.state === "idle") {
+        commentFetcher.load(
+          `/api/getTopicComments?topicId=${topicId}&page=${commentPage}`
+        );
+      }
+    }
+
     const handleReplyClick = (postNumber: string) => {
       setReplyToPostNumber(postNumber);
       setEditorOpen(true);
@@ -163,7 +170,11 @@ export default function Comments({ topicId, commentsCount }: CommentsProps) {
                 );
               } else {
                 elements.push(
-                  <CommentsGap key={`gap-${pageKey}`} missingPage={pageKey} />
+                  <CommentsGap
+                    key={`gap-${pageKey}`}
+                    missingPage={pageKey}
+                    getCommentsForPage={getCommentsForPage}
+                  />
                 );
               }
             }
