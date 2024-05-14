@@ -1,4 +1,4 @@
-import { useFetcher } from "@remix-run/react";
+import { useFetcher, useNavigate } from "@remix-run/react";
 import { useEffect, useMemo, useState } from "react";
 import { useInView } from "react-intersection-observer";
 import { usePageContext } from "~/hooks/usePageContext";
@@ -36,18 +36,10 @@ export default function Comments({ topicId, commentsCount }: CommentsProps) {
   const [posts, setPosts] = useState<ParsedPagedDiscoursePosts | null>(null);
   const [editorOpen, setEditorOpen] = useState(false);
   const [replyToPostNumber, setReplyToPostNumber] = useState("");
+  const [scrollToPost, setScrollToPost] = useState<string | null>(null);
+  const navigate = useNavigate();
 
-  /*function getInitialComments() {
-    if (commentFetcher.state === "idle") {
-      const pageParam = page || 0;
-      // const pageParam = 0;
-      commentFetcher.load(
-        `/api/getTopicComments?topicId=${topicId}&page=${pageParam}`
-      );
-    }
-  } */
-
-  function getTopicCommentsForPage() {
+  function getInitialComments() {
     if (commentFetcher.state === "idle") {
       const pageParam = page || 0;
       commentFetcher.load(
@@ -58,7 +50,6 @@ export default function Comments({ topicId, commentsCount }: CommentsProps) {
 
   useEffect(() => {
     function loadTopicCommentsForPage(page: number) {
-      console.log(JSON.stringify(loadedPages, null, 2));
       if (commentFetcher.state === "idle") {
         commentFetcher.load(
           `/api/getTopicComments?topicId=${topicId}&page=${page}`
@@ -131,16 +122,24 @@ export default function Comments({ topicId, commentsCount }: CommentsProps) {
     }
   }, [commentFetcher.data, setLoadedPages, setPosts, setPage]);
 
+  useEffect(() => {
+    if (scrollToPost && commentFetcher.state === "idle") {
+      navigate({ hash: `#${scrollToPost}` }, { replace: true });
+      setScrollToPost(null);
+    }
+  }, [navigate, scrollToPost, setScrollToPost, commentFetcher.state]);
+
   const toggleEditorOpen = () => {
     setEditorOpen(!editorOpen);
   };
 
   const renderComments = useMemo(() => {
-    function handleJumpToPost(postNumber: number) {
+    function handleJumpToPost(postNumber: number, postId: number) {
       const requiredPage = Math.floor(postNumber / 20);
       commentFetcher.load(
         `/api/getTopicComments?topicId=${topicId}&page=${requiredPage}`
       );
+      setScrollToPost(`post-${postId}`);
     }
 
     const handleReplyClick = (postNumber: string) => {
@@ -163,6 +162,7 @@ export default function Comments({ topicId, commentsCount }: CommentsProps) {
                     return (
                       <div
                         key={post.id}
+                        id={`post-${post.id}`}
                         data-page={pageKey}
                         ref={
                           lastOfPage ? nextRef : firstOfPage ? prevRef : null
@@ -181,7 +181,7 @@ export default function Comments({ topicId, commentsCount }: CommentsProps) {
             })}
       </div>
     );
-  }, [posts, commentFetcher, topicId, nextRef, prevRef]);
+  }, [posts, commentFetcher, topicId, nextRef, prevRef, setScrollToPost]);
 
   return (
     <div className="pt-6">
@@ -189,7 +189,7 @@ export default function Comments({ topicId, commentsCount }: CommentsProps) {
         {commentsCount > 0 && (
           <button
             className="px-2 py-1 text-blue-700 bg-white"
-            onClick={getTopicCommentsForPage}
+            onClick={getInitialComments}
           >
             Load Comments
           </button>
@@ -202,19 +202,7 @@ export default function Comments({ topicId, commentsCount }: CommentsProps) {
         </button>
       </div>
 
-      <div className={`${editorOpen && "pb-96"}`}>
-        {renderComments}
-        {posts && page !== null && (
-          <div>
-            <button
-              className="px-2 py-1 ml-10 text-blue-700 bg-white"
-              onClick={getTopicCommentsForPage}
-            >
-              {commentFetcher.state === "idle" ? "Load more" : "Loading..."}
-            </button>
-          </div>
-        )}
-      </div>
+      <div className={`${editorOpen && "pb-96"}`}>{renderComments}</div>
       <div
         className={`${
           editorOpen ? "block" : "hidden"

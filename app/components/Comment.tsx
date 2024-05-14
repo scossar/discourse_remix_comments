@@ -13,7 +13,7 @@ import Avatar from "~/components/Avatar";
 export type CommentProps = {
   post: ParsedDiscoursePost;
   handleReplyClick: (postNumber: string) => void;
-  handleJumpToPost: (postNumber: number) => void;
+  handleJumpToPost: (postNumber: number, postId: number) => void;
 };
 
 const Comment = forwardRef<HTMLDivElement, CommentProps>(function Comment(
@@ -103,7 +103,9 @@ const Comment = forwardRef<HTMLDivElement, CommentProps>(function Comment(
                   </span>
                   <div dangerouslySetInnerHTML={{ __html: replyPost.cooked }} />
                   <button
-                    onClick={() => handleJumpToPost(replyPost.postNumber)}
+                    onClick={() =>
+                      handleJumpToPost(replyPost.postNumber, replyPost.id)
+                    }
                   >
                     Jump to post
                   </button>
