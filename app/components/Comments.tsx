@@ -1,7 +1,7 @@
-import { useFetcher, useNavigate } from "@remix-run/react";
+import { useFetcher } from "@remix-run/react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useInView } from "react-intersection-observer";
-import debounce from "debounce";
+//import debounce from "debounce";
 import { usePageContext } from "~/hooks/usePageContext";
 import type {
   ParsedDiscoursePost,
@@ -31,13 +31,9 @@ export default function Comments({ topicId, commentsCount }: CommentsProps) {
   });
   const { page, setPage } = usePageContext();
   const [loadedPages, setLoadedPages] = useState<LoadedPages>({});
-  const [nextRef, lastPostInView, lastPostEntry] = useInView({
+  const [nextRef] = useInView({
     threshold: 0,
     onChange: handleLastPostInView,
-  });
-  const [prevRef, firstPostInView, firstPostEntry] = useInView({
-    threshold: 0,
-    onChange: handleFirstPostInView,
   });
   const [posts, setPosts] = useState<ParsedPagedDiscoursePosts | null>(null);
   const [editorOpen, setEditorOpen] = useState(false);
@@ -51,29 +47,6 @@ export default function Comments({ topicId, commentsCount }: CommentsProps) {
       commentFetcher.load(
         `/api/getTopicComments?topicId=${topicId}&page=${pageParam}`
       );
-    }
-  }
-
-  function handleFirstPostInView(
-    inView: boolean,
-    entry: IntersectionObserverEntry
-  ) {
-    if (inView) {
-      const pageInView = Number(entry.target.getAttribute("data-page"));
-      const pageData = loadedPages[pageInView];
-      if (
-        pageData &&
-        pageData.previousPage !== null &&
-        !posts?.[pageData.previousPage]
-      ) {
-        const previousPage = pageData.previousPage;
-        if (commentFetcher.state === "idle") {
-          console.log(`previousPage: ${previousPage}`);
-          /*commentFetcher.load(
-            `/api/getTopicComments?topicId=${topicId}&page=${previousPage}`
-          ); */
-        }
-      }
     }
   }
 
@@ -98,59 +71,6 @@ export default function Comments({ topicId, commentsCount }: CommentsProps) {
       }
     }
   }
-
-  /*
-  useEffect(() => {
-    function loadTopicCommentsForPage(page: number) {
-      if (commentFetcher.state === "idle") {
-        commentFetcher.load(
-          `/api/getTopicComments?topicId=${topicId}&page=${page}`
-        );
-      }
-    }
-
-    const handleIntersection = (
-      entry: IntersectionObserverEntry,
-      isLastPost: boolean
-    ) => {
-      const pageInView = Number(entry.target.getAttribute("data-page"));
-      const pageData = loadedPages[pageInView];
-
-      if (
-        isLastPost &&
-        pageData &&
-        pageData.nextPage !== null &&
-        !posts?.[pageData.nextPage]
-      ) {
-        loadTopicCommentsForPage(pageData.nextPage);
-      } else if (
-        !isLastPost &&
-        pageData &&
-        pageData.previousPage !== null &&
-        !posts?.[pageData.previousPage]
-      ) {
-        loadTopicCommentsForPage(pageData.previousPage);
-      }
-    };
-
-    const debouncedHandleIntersection = debounce(handleIntersection, 100);
-
-    if (firstPostInView && firstPostEntry) {
-      //  handleIntersection(firstPostEntry, false);
-    } else if (lastPostInView && lastPostEntry) {
-      // handleIntersection(lastPostEntry, true);
-    }
-  }, [
-    lastPostInView,
-    firstPostInView,
-    lastPostEntry,
-    firstPostEntry,
-    loadedPages,
-    posts,
-    commentFetcher,
-    topicId,
-  ]);
-     */
 
   useEffect(() => {
     if (commentFetcher.data?.comments.pagedPosts) {
@@ -205,49 +125,6 @@ export default function Comments({ topicId, commentsCount }: CommentsProps) {
       setEditorOpen(true);
     };
 
-    /*return (
-      <div className="divide-y divide-cyan-800">
-        {posts &&
-          Object.keys(posts)
-            .sort((a, b) => Number(a) - Number(b))
-            .map((page) => {
-              const pageKey = Number(page);
-              console.log(`pageKey: ${pageKey}`);
-              if (!isNaN(pageKey)) {
-                return posts[pageKey].map(
-                  (post: ParsedDiscoursePost, index: number) => {
-                    const firstOfPage = index === 0;
-                    const lastOfPage = index === posts[pageKey].length - 1;
-                    return (
-                      <div
-                        key={post.id}
-                        ref={
-                          scrollToPost && scrollToPost === post.id
-                            ? scrollToRef
-                            : null
-                        }
-                      >
-                        <div
-                          className="w-full h-1"
-                          data-page={pageKey}
-                          ref={
-                            lastOfPage ? nextRef : firstOfPage ? prevRef : null
-                          }
-                        ></div>
-                        <Comment
-                          post={post}
-                          handleReplyClick={handleReplyClick}
-                          handleJumpToPost={handleJumpToPost}
-                        />
-                      </div>
-                    );
-                  }
-                );
-              }
-            })}
-      </div>
-    ); */
-
     return (
       <div className="divide-y divide-cyan-800">
         {posts &&
@@ -259,7 +136,6 @@ export default function Comments({ topicId, commentsCount }: CommentsProps) {
                 elements.push(
                   posts[pageKey].map(
                     (post: ParsedDiscoursePost, index: number) => {
-                      const firstOfPage = index === 0;
                       const lastOfPage = index === posts[pageKey].length - 1;
                       return (
                         <div
@@ -273,13 +149,7 @@ export default function Comments({ topicId, commentsCount }: CommentsProps) {
                           <div
                             className="w-full h-1"
                             data-page={pageKey}
-                            ref={
-                              lastOfPage
-                                ? nextRef
-                                : firstOfPage
-                                ? prevRef
-                                : null
-                            }
+                            ref={lastOfPage ? nextRef : null}
                           ></div>
                           <Comment
                             post={post}
@@ -301,15 +171,7 @@ export default function Comments({ topicId, commentsCount }: CommentsProps) {
           })()}
       </div>
     );
-  }, [
-    posts,
-    commentFetcher,
-    topicId,
-    nextRef,
-    prevRef,
-    scrollToPost,
-    setScrollToPost,
-  ]);
+  }, [posts, commentFetcher, topicId, nextRef, scrollToPost, setScrollToPost]);
 
   return (
     <div className="pt-6">
