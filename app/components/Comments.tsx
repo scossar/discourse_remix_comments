@@ -1,6 +1,7 @@
 import { useFetcher, useNavigate } from "@remix-run/react";
 import { useEffect, useMemo, useState } from "react";
 import { useInView } from "react-intersection-observer";
+import debounce from "debounce";
 import { usePageContext } from "~/hooks/usePageContext";
 import type {
   ParsedDiscoursePost,
@@ -70,7 +71,6 @@ export default function Comments({ topicId, commentsCount }: CommentsProps) {
         pageData.nextPage !== null &&
         !posts?.[pageData.nextPage]
       ) {
-        console.log(`nextPage: ${pageData.nextPage}`);
         loadTopicCommentsForPage(pageData.nextPage);
       } else if (
         !isLastPost &&
@@ -82,11 +82,13 @@ export default function Comments({ topicId, commentsCount }: CommentsProps) {
       }
     };
 
+    const debouncedHandleIntersection = debounce(handleIntersection, 100);
+
     if (lastPostInView && lastPostEntry) {
-      handleIntersection(lastPostEntry, true);
+      debouncedHandleIntersection(lastPostEntry, true);
     }
     if (firstPostInView && firstPostEntry) {
-      handleIntersection(firstPostEntry, false);
+      debouncedHandleIntersection(firstPostEntry, false);
     }
   }, [
     lastPostInView,
