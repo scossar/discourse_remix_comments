@@ -10,6 +10,7 @@ import type {
 } from "~/types/parsedDiscourse";
 import Comment from "~/components/Comment";
 import ZalgEditorClientOnly from "~/components/ZalgEditorClientOnly";
+import CommentsGap from "~/components/CommentsGap";
 export type CommentFetcherData = { comments: ParsedDiscourseTopicComments };
 
 type LoadedPages = {
@@ -204,7 +205,7 @@ export default function Comments({ topicId, commentsCount }: CommentsProps) {
       setEditorOpen(true);
     };
 
-    return (
+    /*return (
       <div className="divide-y divide-cyan-800">
         {posts &&
           Object.keys(posts)
@@ -244,6 +245,60 @@ export default function Comments({ topicId, commentsCount }: CommentsProps) {
                 );
               }
             })}
+      </div>
+    ); */
+
+    return (
+      <div className="divide-y divide-cyan-800">
+        {posts &&
+          (() => {
+            const maxPageKey = Math.max(...Object.keys(posts).map(Number));
+            const elements = [];
+            for (let pageKey = 0; pageKey <= maxPageKey; pageKey++) {
+              if (posts[pageKey]) {
+                elements.push(
+                  posts[pageKey].map(
+                    (post: ParsedDiscoursePost, index: number) => {
+                      const firstOfPage = index === 0;
+                      const lastOfPage = index === posts[pageKey].length - 1;
+                      return (
+                        <div
+                          key={post.id}
+                          ref={
+                            scrollToPost && scrollToPost === post.id
+                              ? scrollToRef
+                              : null
+                          }
+                        >
+                          <div
+                            className="w-full h-1"
+                            data-page={pageKey}
+                            ref={
+                              lastOfPage
+                                ? nextRef
+                                : firstOfPage
+                                ? prevRef
+                                : null
+                            }
+                          ></div>
+                          <Comment
+                            post={post}
+                            handleReplyClick={handleReplyClick}
+                            handleJumpToPost={handleJumpToPost}
+                          />
+                        </div>
+                      );
+                    }
+                  )
+                );
+              } else {
+                elements.push(
+                  <CommentsGap key={`gap-${pageKey}`} missingPage={pageKey} />
+                );
+              }
+            }
+            return elements;
+          })()}
       </div>
     );
   }, [
