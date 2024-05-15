@@ -1,9 +1,6 @@
 import { Worker, Job } from "bullmq";
-import { apiRequestQueue } from "~/services/bullmq.server";
-import { getRedisClient } from "~/services/redisClient.server";
-const connection = {
-  db: 1,
-};
+import { apiRequestQueue } from "~/services/jobs/bullmq.server";
+import { connection, getRedisClient } from "~/services/redisClient.server";
 
 type ApiRequestQueueArgs = {
   cacheKey: string;
