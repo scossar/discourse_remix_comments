@@ -11,14 +11,12 @@ export async function loader() {
   headers.append("Api-Key", apiKey);
   headers.append("Api-Username", "system");
 
-  const response = await addRequestToQueue({
+  /* const response = await addRequestToQueue({
     cacheKey: "topic:524",
     endpoint: latestUrl,
     method: "GET",
     headers: headers,
-  });
-
-  console.log(response);
+  }); */
 
   return null;
 }
