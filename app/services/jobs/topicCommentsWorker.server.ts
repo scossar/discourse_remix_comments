@@ -9,7 +9,7 @@ type TopicCommentsQueueArgs = {
 };
 
 export const topicCommentsWorker = new Worker(
-  apiRequestQueue.name,
+  "cacheTopicComments",
   async (job: Job) => {
     const { endpoint, headers, cacheKey } = job.data;
 
@@ -25,7 +25,7 @@ export const topicCommentsWorker = new Worker(
         `response from topicCommentsWorker: ${JSON.stringify(json, null, 2)}`
       );
     } catch (error) {
-      console.error(`Failed to process job: ${error}`);
+      console.error(`Failed to process topicComments job: ${error}`);
       throw new Error("Failed to process job");
     }
   },
@@ -37,7 +37,7 @@ export async function addRequestToQueue({
   headers,
   cachKey,
 }: TopicCommentsQueueArgs) {
-  await apiRequestQueue.add(apiRequestQueue.name, {
+  await apiRequestQueue.add("cacheTopicComments", {
     endpoint,
     headers,
     cachKey,
