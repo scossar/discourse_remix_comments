@@ -1,9 +1,4 @@
-import { Job } from "bullmq";
-import {
-  addRequestToQueue,
-  apiRequestWorker,
-  queueEvents,
-} from "~/services/jobs/worker.server";
+import { addRequestToQueue } from "~/services/jobs/worker.server";
 
 import { discourseEnv } from "~/services/config.server";
 
@@ -17,6 +12,7 @@ export async function loader() {
   headers.append("Api-Username", "system");
 
   const response = await addRequestToQueue({
+    cacheKey: "topic:524",
     endpoint: latestUrl,
     method: "GET",
     headers: headers,

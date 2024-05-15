@@ -1,11 +1,12 @@
-import { Worker, Job, QueueEvents } from "bullmq";
-import { apiRequestQueue } from "../bullmq.server";
-
+import { Worker, Job } from "bullmq";
+import { apiRequestQueue } from "~/services/bullmq.server";
+import { getRedisClient } from "~/services/redisClient.server";
 const connection = {
   db: 1,
 };
 
 type ApiRequestQueueArgs = {
+  cacheKey: string;
   endpoint: string;
   method: "GET" | "PUT" | "POST" | "DELETE";
   headers: Headers;
@@ -25,11 +26,9 @@ export const apiRequestWorker = new Worker(
       if (!response.ok) {
         throw new Error(`HTTP error ${response.status}`);
       }
-
       const jsonResponse = await response.json();
-      console.log(
-        `response from worker: ${JSON.stringify(jsonResponse, null, 2)}`
-      );
+      const client = await getRedisClient();
+      await client.set(job.data.cacheKey, JSON.stringify(jsonResponse));
     } catch (error) {
       throw new Error("Failed to process job");
     }
@@ -38,12 +37,17 @@ export const apiRequestWorker = new Worker(
 );
 
 export async function addRequestToQueue({
+  cacheKey,
   endpoint,
   method,
   headers,
   body,
 }: ApiRequestQueueArgs) {
-  await apiRequestQueue.add("api-request", { endpoint, method, headers, body });
+  await apiRequestQueue.add("api-request", {
+    cacheKey,
+    endpoint,
+    method,
+    headers,
+    body,
+  });
 }
-
-export const queueEvents = new QueueEvents("api-request");

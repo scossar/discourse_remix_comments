@@ -1,5 +1,3 @@
-//import { type RedisClientType, createClient } from "redis";
-
 import Redis from "ioredis";
 
 let client: Redis | null = null;
