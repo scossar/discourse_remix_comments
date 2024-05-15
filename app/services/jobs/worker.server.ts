@@ -16,20 +16,23 @@ type ApiRequestQueueArgs = {
 export const apiRequestWorker = new Worker(
   "api-request",
   async (job: Job) => {
+    const { cacheKey, endpoint, method, headers, body } = job.data;
     try {
-      const response = await fetch(job.data.endpoint, {
-        method: job.data.method,
-        headers: job.data.headers,
-        body: job.data?.body,
-      });
+      const response = await fetch(endpoint, { method, headers, body });
 
       if (!response.ok) {
         throw new Error(`HTTP error ${response.status}`);
       }
       const jsonResponse = await response.json();
       const client = await getRedisClient();
-      await client.set(job.data.cacheKey, JSON.stringify(jsonResponse));
+      await client.set(
+        cacheKey,
+        JSON.stringify(jsonResponse),
+        "EX",
+        60 * 60 * 24
+      );
     } catch (error) {
+      console.error(`Failed to process job: ${error}`);
       throw new Error("Failed to process job");
     }
   },
