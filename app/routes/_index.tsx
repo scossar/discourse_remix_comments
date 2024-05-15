@@ -4,7 +4,6 @@ import { Link, useLoaderData } from "@remix-run/react";
 
 import { discourseSessionStorage } from "~/services/session.server";
 import { getSessionData, validateSession } from "~/schemas/currentUser.server";
-import type { ApiDiscourseConnectUser } from "~/types/apiDiscourse";
 import { db } from "~/services/db.server";
 
 export const meta: MetaFunction = () => {
