@@ -12,14 +12,14 @@ import {
   validateDiscourseApiTopicStream,
 } from "~/schemas/discourseApiResponse.server";
 import type { ParsedDiscourseTopicComments } from "~/types/parsedDiscourse";
-import { RedisClientType, RedisDefaultModules } from "redis";
+import type { Redis } from "ioredis";
 
 const CHUNK_SIZE = 20;
 
 interface FetchContext {
   baseUrl: string;
   headers: Headers;
-  client: RedisClientType<RedisDefaultModules>;
+  client: Redis;
 }
 
 export async function fetchCommentsForUser(
@@ -81,10 +81,9 @@ async function fetchInitialComments(
   const nextPage = currentPage + 1 < totalPages ? currentPage + 1 : null;
   const previousPage = currentPage - 1 >= 0 ? currentPage - 1 : null;
   const streamKey = `postStream:${topicId}`;
-  const redisStream = stream.map(String);
   try {
     await context.client.del(streamKey);
-    await context.client.rPush(streamKey, redisStream);
+    await context.client.rpush(streamKey, ...stream);
   } catch (error) {
     throw new FetchCommentsError("Redis error", 500);
   }
@@ -119,8 +118,8 @@ async function fetchSubsequentComments(
 
   let nextPostIds, stream;
   try {
-    stream = await context.client.lRange(streamKey, 0, -1);
-    nextPostIds = await context.client.lRange(streamKey, start, end);
+    stream = await context.client.lrange(streamKey, 0, -1);
+    nextPostIds = await context.client.lrange(streamKey, start, end);
   } catch (error) {
     throw new FetchCommentsError("Redis error", 500);
   }

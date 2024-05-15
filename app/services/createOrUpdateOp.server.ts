@@ -103,10 +103,9 @@ export default async function createOrUpdateOp(topicId: number) {
 
   const streamKey = `postStream:${topicId}`;
   const client = await getRedisClient();
-  const stringifiedStream = stream.map(String);
   try {
     await client.del(streamKey);
-    await client.rPush(streamKey, stringifiedStream);
+    await client.rpush(streamKey, ...stream);
   } catch (error) {
     throw new PostCreationError(
       `there was an error writing the postStream ${streamKey} to Redis`,
