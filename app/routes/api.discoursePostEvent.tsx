@@ -45,7 +45,6 @@ export const action = async ({ request }: ActionFunctionArgs) => {
   }
 
   // This route isn't currently being used!
-  console.log(`postWebHookJson.post.id: ${postWebHookJson.post.id}`);
 
   const eventSignature = discourseHeaders["X-Discourse-Event-Signature"];
   // Note: webHookData, not the parsed PostWebHookJson data needs to be passed to the verifySig function.

@@ -20,10 +20,6 @@ export const topicCommentsWorker = new Worker(
       }
 
       const json = await response.json();
-
-      console.log(
-        `response from topicCommentsWorker: ${JSON.stringify(json, null, 2)}`
-      );
     } catch (error) {
       console.error(`Failed to process topicComments job: ${error}`);
       throw new Error("Failed to process job");

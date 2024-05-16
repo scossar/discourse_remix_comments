@@ -1,6 +1,7 @@
-import { addRequestToQueue } from "~/services/jobs/worker.server";
+//import { addRequestToQueue } from "~/services/jobs/worker.server";
 
-import { parseAndCacheTopicComments } from "~/services/parseAndCacheTopicComments.server";
+//import { parseAndCacheTopicComments } from "~/services/parseAndCacheTopicComments.server";
+import { addTopicStreamRequest } from "~/services/jobs/postStreamWorker.server";
 
 import { discourseEnv } from "~/services/config.server";
 
@@ -13,7 +14,7 @@ export async function loader() {
   headers.append("Api-Key", apiKey);
   headers.append("Api-Username", "system");
 
-  await parseAndCacheTopicComments(454);
+  await addTopicStreamRequest({ topicId: 454 });
 
   /*  const response = await addRequestToQueue({
     cacheKey: "topic:454",
