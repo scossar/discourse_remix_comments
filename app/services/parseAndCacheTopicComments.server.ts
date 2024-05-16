@@ -1,4 +1,4 @@
-import { addTopicStreamRequest } from "~/services/jobs/topicStreamWorker.server";
+import { addTopicStreamRequest } from "~/services/jobs/postStreamWorker.server";
 export async function parseAndCacheTopicComments(topicId: number) {
   try {
     await addTopicStreamRequest({ topicId: topicId });

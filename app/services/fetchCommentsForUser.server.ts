@@ -9,9 +9,10 @@ import { discourseEnv } from "~/services/config.server";
 import {
   type DiscourseApiFullTopicWithPostStream,
   validateDiscourseApiCommentPosts,
-  validateDiscourseApiTopicStream,
+  validateDiscourseApiPostStream,
 } from "~/schemas/discourseApiResponse.server";
 import type { ParsedDiscourseTopicComments } from "~/types/parsedDiscourse";
+import { getPostStreamKey } from "~/services/redisKeys.server";
 import type { Redis } from "ioredis";
 
 const CHUNK_SIZE = 20;
@@ -72,7 +73,7 @@ async function fetchInitialComments(
   // an error returning the stream object will trigger the route's errorBoundary.
   let stream;
   try {
-    stream = validateDiscourseApiTopicStream(postsData?.post_stream?.stream);
+    stream = validateDiscourseApiPostStream(postsData?.post_stream?.stream);
   } catch (error) {
     throw new Error("this error needs to be handled");
   }
@@ -80,7 +81,7 @@ async function fetchInitialComments(
   const totalPages = Math.ceil(stream.length / CHUNK_SIZE);
   const nextPage = currentPage + 1 < totalPages ? currentPage + 1 : null;
   const previousPage = currentPage - 1 >= 0 ? currentPage - 1 : null;
-  const streamKey = `postStream:${topicId}`;
+  const streamKey = getPostStreamKey(topicId);
   try {
     await context.client.del(streamKey);
     await context.client.rpush(streamKey, ...stream);
@@ -111,7 +112,7 @@ async function fetchSubsequentComments(
   page: number,
   context: FetchContext
 ): Promise<ParsedDiscourseTopicComments> {
-  const streamKey = `postStream:${topicId}`;
+  const streamKey = getPostStreamKey(topicId);
   const chunkSize = CHUNK_SIZE;
   const start: number = page * chunkSize;
   const end: number = start + chunkSize - 1;

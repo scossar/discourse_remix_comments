@@ -235,7 +235,7 @@ export type DiscourseApiFullTopicWithPostStream = z.infer<
   typeof DiscourseApiFullTopicWithPostStreamSchema
 >;
 
-export function validateDiscourseApiTopicStream(stream: number[]) {
+export function validateDiscourseApiPostStream(stream: number[]) {
   return z.array(z.number()).parse(stream);
 }
 
