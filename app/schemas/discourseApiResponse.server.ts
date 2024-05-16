@@ -227,6 +227,16 @@ export type DiscourseApiTopicPostStream = z.infer<
   typeof DiscourseApiTopicPostStreamSchema
 >;
 
+export const DiscourseApiPostStreamPostsSchema = z.object({
+  posts: DiscourseApiBasicPostsSchema,
+});
+export const DiscourseApiTopicPostsOnlySchema = z.object({
+  post_stream: DiscourseApiPostStreamPostsSchema,
+});
+export type DiscourseApiTopicPostsOnly = z.infer<
+  typeof DiscourseApiTopicPostsOnlySchema
+>;
+
 export const DiscourseApiFullTopicWithPostStreamSchema =
   DiscourseApiFullTopicSchema.extend({
     post_stream: DiscourseApiTopicPostStreamSchema,

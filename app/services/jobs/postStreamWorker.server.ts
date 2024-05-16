@@ -10,7 +10,7 @@ export type TopicStreamQueueArgs = {
 export const topicStreamWorker = new Worker(
   apiRequestQueue.name,
   async (job: Job) => {
-    if (job.name === "cacheTopicStream") {
+    if (job.name === "cacheTopicPostStream") {
       const { topicId } = job.data;
       try {
         await postStreamProcessor(topicId);
@@ -25,5 +25,5 @@ export const topicStreamWorker = new Worker(
 );
 
 export async function addTopicStreamRequest({ topicId }: TopicStreamQueueArgs) {
-  await apiRequestQueue.add("cacheTopicStream", { topicId });
+  await apiRequestQueue.add("cacheTopicPostStream", { topicId });
 }

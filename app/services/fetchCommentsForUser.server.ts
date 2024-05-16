@@ -141,6 +141,7 @@ async function fetchSubsequentComments(
       response.status
     );
   }
+  // this isn't correct. try DiscourseApiTopicPostsOnly
   const postsData: DiscourseApiFullTopicWithPostStream = await response.json();
   const posts = validateDiscourseApiCommentPosts(postsData?.post_stream?.posts);
   // fudging this for now... shouldn't continue if the stream isn't set
