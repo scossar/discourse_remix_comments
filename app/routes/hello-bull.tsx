@@ -37,7 +37,6 @@ export async function loader() {
 export default function HelloBull() {
   const { comments } = useLoaderData<typeof loader>();
   const posts = comments.pagedPosts?.[comments.currentPage];
-  console.log(JSON.stringify(posts, null, 2));
   return (
     <div className="mx-auto max-w-prose">
       <h1>JSON stringify and unstringify test</h1>

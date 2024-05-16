@@ -12,7 +12,7 @@ import {
 import type { ParsedDiscourseTopicComments } from "~/types/parsedDiscourse";
 import { transformPost } from "~/services/transformDiscourseDataZod.server";
 
-// TODO: handle first page differently
+// TODO: maybe handle first page differently?
 export async function topicCommentsProcessor(
   topicId: number,
   page: number,
@@ -59,6 +59,7 @@ export async function topicCommentsProcessor(
   }
 
   const json: DiscourseApiTopicPostsOnly = await response.json();
+  // note: if there are no valid posts, an empty array will be returned
   const posts = validateDiscourseApiCommentPosts(json.post_stream.posts);
   const totalPages = Math.ceil(streamLength / chunkSize);
   const nextPage = page + 1 < totalPages ? page + 1 : null;

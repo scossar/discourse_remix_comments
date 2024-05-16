@@ -25,7 +25,7 @@ export const topicStreamWorker = new Worker(
       } catch (error) {
         console.error(`Failed to process topicStream job: ${error}`);
         await job.remove();
-        throw new Error("Failed to process cacheTopicPostStream job");
+        throw new QueueError("Failed to process cacheTopicPostStream job");
       }
     }
 
@@ -34,6 +34,8 @@ export const topicStreamWorker = new Worker(
       try {
         await topicCommentsProcessor(topicId, page, username);
       } catch (error) {
+        console.error(`Failed to process cacheTopicComments job: ${error}`);
+        await job.remove();
         throw new QueueError("Failed to process cacheTopicComments job");
       }
     }
