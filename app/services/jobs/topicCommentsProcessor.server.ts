@@ -16,9 +16,9 @@ import { transformPost } from "~/services/transformDiscourseDataZod.server";
 export async function topicCommentsProcessor(
   topicId: number,
   page: number,
-  username?: string,
-  chunkSize = 20
+  username?: string
 ) {
+  const chunkSize = 20;
   const { apiKey, baseUrl } = discourseEnv();
   const headers = new Headers();
   headers.append("Content-Type", "application/json");
