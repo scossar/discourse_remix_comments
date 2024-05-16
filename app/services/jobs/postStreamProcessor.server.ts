@@ -34,6 +34,8 @@ export async function postStreamProcessor(topicId: number) {
       const streamKey = getPostStreamKey(topicId);
       await client.del(streamKey);
       await client.rpush(streamKey, ...stream);
+
+      return stream;
     } catch (error) {
       throw new Error("Redis error");
     }

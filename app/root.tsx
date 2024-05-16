@@ -1,5 +1,4 @@
 import type { LinksFunction } from "@remix-run/node";
-import { json } from "@remix-run/node";
 import {
   isRouteErrorResponse,
   Links,

@@ -33,7 +33,7 @@ export async function topicCommentsProcessor(
   }
 
   const start = page * chunkSize;
-  const end = start - 1;
+  const end = start + chunkSize - 1;
   let nextPostIds, streamLength;
   try {
     const streamKey = getPostStreamKey(topicId);

@@ -20,7 +20,7 @@ export async function loader() {
   headers.append("Api-Key", apiKey);
   headers.append("Api-Username", "system");
 
-  //await addTopicStreamRequest({ topicId: 454 });
+  await addTopicStreamRequest({ topicId: 505 });
   //await addTopicCommentsRequest({ topicId: 454, page: 0 });
 
   const client = await getRedisClient();

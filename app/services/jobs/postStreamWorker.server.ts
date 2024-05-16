@@ -1,9 +1,10 @@
 import { Job, Worker } from "bullmq";
 import { apiRequestQueue } from "~/services/jobs/bullmq.server";
-import { connection } from "~/services/redisClient.server";
+import { connection, getRedisClient } from "~/services/redisClient.server";
 import { postStreamProcessor } from "~/services/jobs/postStreamProcessor.server";
 import { topicCommentsProcessor } from "~/services/jobs/topicCommentsProcessor.server";
 import QueueError from "~/services/errors/queueError.server";
+import { getPostStreamKey } from "~/services/redisKeys.server";
 
 export type TopicStreamQueueArgs = {
   topicId: number;
@@ -22,6 +23,8 @@ export const topicStreamWorker = new Worker(
       const { topicId } = job.data;
       try {
         await postStreamProcessor(topicId);
+
+        return topicId;
       } catch (error) {
         console.error(`Failed to process topicStream job: ${error}`);
         await job.remove();
@@ -58,3 +61,21 @@ export async function addTopicCommentsRequest({
     username,
   });
 }
+
+topicStreamWorker.on("completed", async (job: Job) => {
+  const topicId = job.returnvalue;
+  try {
+    const client = await getRedisClient();
+    const streamLength = await client.llen(getPostStreamKey(topicId));
+    console.log(`topicId: ${topicId}, streamLength: ${streamLength}`);
+    // TODO: validate before proceeding
+    if (topicId && streamLength) {
+      const totalPages = Math.ceil(streamLength / 20);
+      for (let page = 0; page < totalPages; page++) {
+        await addTopicCommentsRequest({ topicId: topicId, page: page });
+      }
+    }
+  } catch (error) {
+    throw new QueueError("Error initializing Redis client");
+  }
+});
