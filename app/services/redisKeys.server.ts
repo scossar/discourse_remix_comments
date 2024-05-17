@@ -3,7 +3,7 @@
  * @param {number} topicId - The unique identifier for the topic.
  * @returns {string} The Redis key for the post stream.
  */
-function getPostStreamKey(topicId: number): string {
+export function getPostStreamKey(topicId: number): string {
   return `postStream:${topicId}`;
 }
 
@@ -13,8 +13,15 @@ function getPostStreamKey(topicId: number): string {
  * @param {number} page - The page number of comments.
  * @returns {string} The Redis key for the topic comments.
  */
-function getTopicCommentsKey(topicId: number, page: number): string {
+export function getTopicCommentsKey(topicId: number, page: number): string {
   return `comments:${topicId}:${page}`;
 }
 
-export { getPostStreamKey, getTopicCommentsKey };
+/**
+ * Generates a Redis key for commentsMap data.
+ * @param {number} topicId - The unique identifier for the topic.
+ * @returns {string} The Redis key for commentsMap data.
+ */
+export function getCommentsMapKey(topicId: number): string {
+  return `commentsMap:${topicId}`;
+}
