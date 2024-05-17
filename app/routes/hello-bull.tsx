@@ -1,60 +1,67 @@
-import {
-  addTopicStreamRequest,
-  addTopicCommentsRequest,
-} from "~/services/jobs/rateLimitedApiWorker.server";
-
-import { useLoaderData } from "@remix-run/react";
+import { useEffect, useState } from "react";
+import { useFetcher, useLoaderData } from "@remix-run/react";
 import { json } from "@remix-run/node";
-
-import { discourseEnv } from "~/services/config.server";
+import { addTopicCommentsRequest } from "~/services/jobs/rateLimitedApiWorker.server";
 import { getRedisClient } from "~/services/redisClient.server";
 import { getTopicCommentsKey } from "~/services/redisKeys.server";
-import type { ParsedDiscourseTopicComments } from "~/types/parsedDiscourse";
+import type {
+  ParsedDiscourseTopicComments,
+  ParsedDiscoursePost,
+} from "~/types/parsedDiscourse";
 
 export async function loader() {
-  const { apiKey, baseUrl } = discourseEnv();
-
-  const latestUrl = `${baseUrl}/t/-/454.json`;
-  const headers = new Headers();
-  headers.append("Content-Type", "application/json");
-  headers.append("Api-Key", apiKey);
-  headers.append("Api-Username", "system");
-
-  await addTopicStreamRequest({ topicId: 505 });
-  //await addTopicCommentsRequest({ topicId: 454, page: 0 });
-
-  const client = await getRedisClient();
-  let parsed: ParsedDiscourseTopicComments;
-  const stringifiedJson = await client.get(getTopicCommentsKey(505, 0));
-  if (stringifiedJson) {
-    parsed = JSON.parse(stringifiedJson);
-  } else {
-    throw new Error("this is lazy");
+  const page = 0;
+  const topicId = 505;
+  let comments;
+  try {
+    const client = await getRedisClient();
+    const cacheKey = getTopicCommentsKey(topicId, page);
+    comments = await client.get(cacheKey);
+  } catch (error) {
+    throw new Error("this will eventually be handled");
   }
-  return json({ comments: parsed });
+
+  if (!comments) {
+    await addTopicCommentsRequest({
+      topicId: topicId,
+      page: page,
+    });
+    return json({ comments: null, topicId, page });
+  }
+
+  return json({ comments: JSON.parse(comments), topicId, page });
 }
 
 export default function HelloBull() {
-  const { comments } = useLoaderData<typeof loader>();
-  const posts = comments.pagedPosts?.[comments.currentPage];
+  const { comments, topicId, page } = useLoaderData<typeof loader>();
+  const fetcher = useFetcher<ParsedDiscourseTopicComments>();
+  const [liveComments, setLiveComments] = useState<
+    ParsedDiscoursePost[] | null
+  >(comments?.pagedPosts?.[page]);
+
+  useEffect(() => {
+    if (!liveComments) {
+      const interval = setInterval(async () => {
+        fetcher.load(
+          `/api/cachedTopicCommentsForPage?topicId=${topicId}&page=${page}`
+        );
+      }, 5000);
+      return () => clearInterval(interval);
+    }
+  }, [liveComments, fetcher, page, topicId]);
+
+  useEffect(() => {
+    if (fetcher && fetcher.data) {
+      setLiveComments(fetcher.data?.pagedPosts?.[page]);
+    }
+  }, [fetcher, page]);
+
   return (
     <div className="mx-auto max-w-prose">
-      <h1>JSON stringify and unstringify test</h1>
-      <ul>
-        <li>Topic ID: {comments.topicId}</li>
-        <li>currentPage: {comments.currentPage}</li>
-        <li>nextPage: {comments.nextPage}</li>
-        <li>
-          previousPage: {comments.previousPage ? comments.previousPage : "null"}
-        </li>
-      </ul>
-      <div>
-        {posts.map((post) => (
-          <div key={post.id}>
-            <div dangerouslySetInnerHTML={{ __html: post.cooked }} />
-          </div>
+      {liveComments &&
+        liveComments.map((comment) => (
+          <div key={comment.id}>{comment.username}</div>
         ))}
-      </div>
     </div>
   );
 }

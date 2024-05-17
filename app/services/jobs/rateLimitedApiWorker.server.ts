@@ -1,11 +1,10 @@
 import { Job, Worker } from "bullmq";
 import { apiRequestQueue } from "~/services/jobs/bullmq.server";
-import { connection, getRedisClient } from "~/services/redisClient.server";
+import { connection } from "~/services/redisClient.server";
 import { postStreamProcessor } from "~/services/jobs/postStreamProcessor.server";
 import { topicCommentsProcessor } from "~/services/jobs/topicCommentsProcessor.server";
 import { commentsMapProcessor } from "~/services/jobs/commentsMapProcessor.server";
 import QueueError from "~/services/errors/queueError.server";
-import { getPostStreamKey } from "~/services/redisKeys.server";
 
 export type TopicStreamQueueArgs = {
   topicId: number;
@@ -41,7 +40,13 @@ export const rateLimitedApiWorker = new Worker(
     if (job.name === "cacheTopicComments") {
       const { topicId, page, username } = job.data;
       try {
-        await topicCommentsProcessor(topicId, page, username);
+        const stringifiedComments = await topicCommentsProcessor(
+          topicId,
+          page,
+          username
+        );
+
+        return { topicId, page, stringifiedComments };
       } catch (error) {
         console.error(`Failed to process cacheTopicComments job: ${error}`);
         await job.remove();
@@ -89,7 +94,6 @@ export async function addCommentsMapRequest({
 rateLimitedApiWorker.on("completed", async (job: Job) => {
   if (job.name === "cacheTopicPostStream") {
     const { stream, topicId } = job.returnvalue;
-    console.log(stream);
     if (stream.length && Number(topicId)) {
       try {
         const streamLength = stream.length;
@@ -98,11 +102,18 @@ rateLimitedApiWorker.on("completed", async (job: Job) => {
           console.log(
             `addTopicCommentsRequest for topicId: ${topicId}, page: ${page}`
           );
-          //await addTopicCommentsRequest({ topicId: topicId, page: page });
+          await addTopicCommentsRequest({ topicId: topicId, page: page });
         }
       } catch (error) {
         throw new QueueError("Error initializing Redis client");
       }
     }
+  }
+
+  if (job.name === "cacheTopicComments") {
+    const { topicId, page, stringifiedComments } = job.returnvalue;
+    console.log(
+      `return values from cacheTopicComments. topicId: ${topicId}, page: ${page}`
+    );
   }
 });

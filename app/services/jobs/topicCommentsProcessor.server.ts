@@ -75,14 +75,15 @@ export async function topicCommentsProcessor(
     },
   };
 
+  const stringifiedComments = JSON.stringify(parsedTopicComments);
+
   try {
-    await client.set(
-      getTopicCommentsKey(topicId, page),
-      JSON.stringify(parsedTopicComments)
-    );
+    await client.set(getTopicCommentsKey(topicId, page), stringifiedComments);
   } catch (error) {
     throw new QueueError(
       `Unable to set Redis key for topicId: ${topicId}, page: ${page}`
     );
   }
+
+  return stringifiedComments;
 }
