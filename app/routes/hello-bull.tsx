@@ -40,16 +40,22 @@ export default function HelloBull() {
   >(comments?.pagedPosts?.[page]);
 
   useEffect(() => {
+    let intervalId: ReturnType<typeof setInterval>;
     if (!liveComments) {
-      const interval = setInterval(async () => {
+      intervalId = setInterval(async () => {
         fetcher.load(
           `/api/cachedTopicCommentsForPage?topicId=${topicId}&page=${page}`
         );
-      }, 5000);
-      return () => clearInterval(interval);
+      }, 1000);
+      return () => clearInterval(intervalId);
     }
+
+    return () => {
+      if (intervalId) clearInterval(intervalId);
+    };
   }, [liveComments, fetcher, page, topicId]);
 
+  // TODO: see if this can be moved into the setInterval callback, that way the interval can be cleared on errors?
   useEffect(() => {
     if (fetcher && fetcher.data) {
       setLiveComments(fetcher.data?.pagedPosts?.[page]);
