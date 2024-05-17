@@ -3,7 +3,7 @@ import AppError from "~/services/errors/AppError.server";
 import { discourseEnv } from "./config.server";
 
 import type { ParsedDiscourseCommentsMap } from "~/types/parsedDiscourse";
-import { validateDiscourseApiBasicTopicMap } from "~/schemas/discourseApiResponse.server";
+import { validateDiscourseApiBasicCommentsMap } from "~/schemas/discourseApiResponse.server";
 import {
   transformParticipant,
   transformUser,
@@ -33,7 +33,7 @@ export async function fetchCommentMapData(
 
   let topicMapJson;
   try {
-    topicMapJson = validateDiscourseApiBasicTopicMap(responseJson);
+    topicMapJson = validateDiscourseApiBasicCommentsMap(responseJson);
   } catch (error) {
     const errorMessage = fromError(error).toString();
     throw new AppError(errorMessage, "TopicMapDataError", 422);

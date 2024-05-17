@@ -259,7 +259,7 @@ export function validateDiscourseApiFullTopicWithPostStream(
  * TopicMap
  * */
 
-export const DiscourseApiBasicTopicMapSchema = z.object({
+export const DiscourseApiBasicCommentsMapSchema = z.object({
   id: z.number(),
   title: z.string(),
   slug: z.string(),
@@ -270,14 +270,14 @@ export const DiscourseApiBasicTopicMapSchema = z.object({
   participant_count: z.number(),
   details: DiscourseApiTopicDetailsSchema,
 });
-export type DiscourseApiBasicTopicMap = z.infer<
-  typeof DiscourseApiBasicTopicMapSchema
+export type DiscourseApiBasicCommentsMap = z.infer<
+  typeof DiscourseApiBasicCommentsMapSchema
 >;
 
-export function validateDiscourseApiBasicTopicMap(
-  topicMapData: DiscourseApiBasicTopicMap
-): DiscourseApiBasicTopicMap {
-  return DiscourseApiBasicTopicMapSchema.parse(topicMapData);
+export function validateDiscourseApiBasicCommentsMap(
+  commentsMapData: DiscourseApiBasicCommentsMap
+): DiscourseApiBasicCommentsMap {
+  return DiscourseApiBasicCommentsMapSchema.parse(commentsMapData);
 }
 
 /**
