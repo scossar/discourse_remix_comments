@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useFetcher, useLoaderData } from "@remix-run/react";
 import { json } from "@remix-run/node";
 import { addTopicCommentsRequest } from "~/services/jobs/rateLimitedApiWorker.server";
@@ -38,14 +38,23 @@ export default function HelloBull() {
   const [liveComments, setLiveComments] = useState<
     ParsedDiscoursePost[] | null
   >(comments?.pagedPosts?.[page]);
+  const retriesRef = useRef(0);
+  const [retryMessage, setRetryMessage] = useState("");
 
   useEffect(() => {
     let intervalId: ReturnType<typeof setInterval>;
-    if (!liveComments) {
+    if (!liveComments && retriesRef.current < 5) {
       intervalId = setInterval(async () => {
+        retriesRef.current += 1;
         fetcher.load(
           `/api/cachedTopicCommentsForPage?topicId=${topicId}&page=${page}`
         );
+        if (retriesRef.current >= 5) {
+          clearInterval(intervalId);
+          setRetryMessage(
+            "Comments are not available at this time. Please try again later."
+          );
+        }
       }, 1000);
       return () => clearInterval(intervalId);
     }
@@ -55,7 +64,6 @@ export default function HelloBull() {
     };
   }, [liveComments, fetcher, page, topicId]);
 
-  // TODO: see if this can be moved into the setInterval callback, that way the interval can be cleared on errors?
   useEffect(() => {
     if (fetcher && fetcher.data) {
       setLiveComments(fetcher.data?.pagedPosts?.[page]);
@@ -64,10 +72,21 @@ export default function HelloBull() {
 
   return (
     <div className="mx-auto max-w-prose">
+      {retryMessage && <div>{retryMessage}</div>}
       {liveComments &&
         liveComments.map((comment) => (
           <div key={comment.id}>{comment.username}</div>
         ))}
+    </div>
+  );
+}
+
+export function ErrorBoundary() {
+  return (
+    <div>
+      <p>
+        Will the interval be cleared if the error boundary catches an error?
+      </p>
     </div>
   );
 }
