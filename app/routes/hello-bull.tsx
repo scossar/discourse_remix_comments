@@ -1,40 +1,70 @@
 import { useEffect, useRef, useState } from "react";
 import { useFetcher, useLoaderData } from "@remix-run/react";
 import { json } from "@remix-run/node";
-import { addTopicCommentsRequest } from "~/services/jobs/rateLimitedApiWorker.server";
+import {
+  // addTopicCommentsRequest,
+  addCommentsMapRequest,
+} from "~/services/jobs/rateLimitedApiWorker.server";
 import { getRedisClient } from "~/services/redisClient.server";
-import { getTopicCommentsKey } from "~/services/redisKeys.server";
+import {
+  getTopicCommentsKey,
+  getCommentsMapKey,
+} from "~/services/redisKeys.server";
 import type {
   ParsedDiscourseTopicComments,
+  ParsedDiscourseCommentsMap,
   ParsedDiscoursePost,
 } from "~/types/parsedDiscourse";
 
 export async function loader() {
   const page = 0;
   const topicId = 505;
+
+  let client;
+  try {
+    client = await getRedisClient();
+  } catch (error) {
+    throw new Error("Error obtaining Redis Client");
+  }
+
+  let commentsMap;
+  try {
+    const cacheKey = getCommentsMapKey(topicId);
+    commentsMap = await client.get(cacheKey);
+  } catch (error) {
+    throw new Error("Redis Error fetching commentsMap");
+  }
+
+  if (!commentsMap) {
+    await addCommentsMapRequest({ topicId });
+  }
+
   let comments;
   try {
-    const client = await getRedisClient();
-    const cacheKey = getTopicCommentsKey(topicId, page);
-    comments = await client.get(cacheKey);
+    comments = await client.get(getTopicCommentsKey(topicId, page));
   } catch (error) {
-    throw new Error("this will eventually be handled");
+    throw new Error("Redis Error fetching comments");
   }
 
-  if (!comments) {
-    await addTopicCommentsRequest({
-      topicId: topicId,
-      page: page,
-    });
-    return json({ comments: null, topicId, page });
-  }
-
-  return json({ comments: JSON.parse(comments), topicId, page });
+  return json({
+    comments: comments ? JSON.parse(comments) : null,
+    commentsMap: commentsMap ? JSON.parse(commentsMap) : null,
+    topicId,
+    page,
+  });
 }
 
 export default function HelloBull() {
-  const { comments, topicId, page } = useLoaderData<typeof loader>();
-  const fetcher = useFetcher<ParsedDiscourseTopicComments>();
+  const { comments, commentsMap, topicId, page } =
+    useLoaderData<typeof loader>();
+  const commentsFetcher = useFetcher<ParsedDiscourseTopicComments>({
+    key: "comments-fetcher",
+  });
+  const commentsMapFetcher = useFetcher<ParsedDiscourseCommentsMap>({
+    key: "comments-map-fetcher",
+  });
+  const [liveCommentsMap, setLiveCommentsMap] =
+    useState<ParsedDiscourseCommentsMap | null>(commentsMap);
   const [liveComments, setLiveComments] = useState<
     ParsedDiscoursePost[] | null
   >(comments?.pagedPosts?.[page]);
@@ -43,10 +73,37 @@ export default function HelloBull() {
 
   useEffect(() => {
     let intervalId: ReturnType<typeof setInterval>;
+    if (!liveCommentsMap && retriesRef.current < 5) {
+      intervalId = setInterval(async () => {
+        retriesRef.current += 1;
+        commentsMapFetcher.load(`/api/cachedCommentsMap?topicId=${topicId}`);
+        if (retriesRef.current >= 5) {
+          clearInterval(intervalId);
+          setRetryMessage(
+            "Comments are not available at this time. Please try again later."
+          );
+        }
+      }, 1000);
+      return () => clearInterval(intervalId);
+    }
+
+    return () => {
+      if (intervalId) clearInterval(intervalId);
+    };
+  }, [liveCommentsMap, commentsMapFetcher, topicId]);
+
+  useEffect(() => {
+    if (commentsMapFetcher && commentsMapFetcher.data) {
+      setLiveCommentsMap(commentsMapFetcher.data);
+    }
+  }, [commentsMapFetcher]);
+
+  useEffect(() => {
+    let intervalId: ReturnType<typeof setInterval>;
     if (!liveComments && retriesRef.current < 5) {
       intervalId = setInterval(async () => {
         retriesRef.current += 1;
-        fetcher.load(
+        commentsFetcher.load(
           `/api/cachedTopicCommentsForPage?topicId=${topicId}&page=${page}`
         );
         if (retriesRef.current >= 5) {
@@ -62,17 +119,18 @@ export default function HelloBull() {
     return () => {
       if (intervalId) clearInterval(intervalId);
     };
-  }, [liveComments, fetcher, page, topicId]);
+  }, [liveComments, commentsFetcher, page, topicId]);
 
   useEffect(() => {
-    if (fetcher && fetcher.data) {
-      setLiveComments(fetcher.data?.pagedPosts?.[page]);
+    if (commentsFetcher && commentsFetcher.data) {
+      setLiveComments(commentsFetcher.data?.pagedPosts?.[page]);
     }
-  }, [fetcher, page]);
+  }, [commentsFetcher, page]);
 
   return (
     <div className="mx-auto max-w-prose">
       {retryMessage && <div>{retryMessage}</div>}
+      {liveCommentsMap && liveCommentsMap.title}
       {liveComments &&
         liveComments.map((comment) => (
           <div key={comment.id}>{comment.username}</div>
