@@ -16,7 +16,7 @@ export type TopicCommentsQueueArgs = {
   username?: string;
 };
 
-export const topicStreamWorker = new Worker(
+export const rateLimitedApiWorker = new Worker(
   apiRequestQueue.name,
   async (job: Job) => {
     if (job.name === "cacheTopicPostStream") {
@@ -62,7 +62,7 @@ export async function addTopicCommentsRequest({
   });
 }
 
-topicStreamWorker.on("completed", async (job: Job) => {
+rateLimitedApiWorker.on("completed", async (job: Job) => {
   const topicId = job.returnvalue;
   try {
     const client = await getRedisClient();
