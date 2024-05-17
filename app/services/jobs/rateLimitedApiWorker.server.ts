@@ -3,6 +3,7 @@ import { apiRequestQueue } from "~/services/jobs/bullmq.server";
 import { connection, getRedisClient } from "~/services/redisClient.server";
 import { postStreamProcessor } from "~/services/jobs/postStreamProcessor.server";
 import { topicCommentsProcessor } from "~/services/jobs/topicCommentsProcessor.server";
+import { commentsMapProcessor } from "~/services/jobs/commentsMapProcessor.server";
 import QueueError from "~/services/errors/queueError.server";
 import { getPostStreamKey } from "~/services/redisKeys.server";
 
@@ -13,6 +14,11 @@ export type TopicStreamQueueArgs = {
 export type TopicCommentsQueueArgs = {
   topicId: number;
   page: number;
+  username?: string;
+};
+
+export type CommentsMapQueueArgs = {
+  topicId: number;
   username?: string;
 };
 
@@ -42,6 +48,17 @@ export const rateLimitedApiWorker = new Worker(
         throw new QueueError("Failed to process cacheTopicComments job");
       }
     }
+
+    if (job.name === "cacheCommentsMap") {
+      const { topicId, username } = job.data;
+      try {
+        await commentsMapProcessor(topicId, username);
+      } catch (error) {
+        console.error(`Failed to process cacheCommentsMap job: ${error}`);
+        await job.remove();
+        throw new QueueError("Failed to process cacheCommentsMap job");
+      }
+    }
   },
   { connection, limiter: { max: 1, duration: 1000 } }
 );
@@ -62,18 +79,30 @@ export async function addTopicCommentsRequest({
   });
 }
 
+export async function addCommentsMapRequest({
+  topicId,
+  username,
+}: CommentsMapQueueArgs) {
+  await apiRequestQueue.add("cacheCommentsMap", { topicId, username });
+}
+
 rateLimitedApiWorker.on("completed", async (job: Job) => {
-  const topicId = job.returnvalue;
-  try {
-    const client = await getRedisClient();
-    const streamLength = await client.llen(getPostStreamKey(topicId));
-    if (topicId && streamLength) {
-      const totalPages = Math.ceil(streamLength / 20);
-      for (let page = 0; page < totalPages; page++) {
-        await addTopicCommentsRequest({ topicId: topicId, page: page });
+  if (job.name === "cacheTopicPostStream") {
+    const topicId = job.returnvalue;
+    try {
+      const client = await getRedisClient();
+      const streamLength = await client.llen(getPostStreamKey(topicId));
+      if (topicId && streamLength) {
+        const totalPages = Math.ceil(streamLength / 20);
+        for (let page = 0; page < totalPages; page++) {
+          console.log(
+            `addTopicCommentsRequest for topicId: ${topicId}, page: ${page}`
+          );
+          await addTopicCommentsRequest({ topicId: topicId, page: page });
+        }
       }
+    } catch (error) {
+      throw new QueueError("Error initializing Redis client");
     }
-  } catch (error) {
-    throw new QueueError("Error initializing Redis client");
   }
 });

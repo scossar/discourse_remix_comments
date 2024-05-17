@@ -25,7 +25,7 @@ export async function loader() {
 
   const client = await getRedisClient();
   let parsed: ParsedDiscourseTopicComments;
-  const stringifiedJson = await client.get(getTopicCommentsKey(454, 0));
+  const stringifiedJson = await client.get(getTopicCommentsKey(505, 0));
   if (stringifiedJson) {
     parsed = JSON.parse(stringifiedJson);
   } else {
