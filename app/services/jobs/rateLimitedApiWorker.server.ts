@@ -99,21 +99,11 @@ rateLimitedApiWorker.on("completed", async (job: Job) => {
         const streamLength = stream.length;
         const totalPages = Math.ceil(streamLength / 20);
         for (let page = 0; page < totalPages; page++) {
-          console.log(
-            `addTopicCommentsRequest for topicId: ${topicId}, page: ${page}`
-          );
           await addTopicCommentsRequest({ topicId: topicId, page: page });
         }
       } catch (error) {
         throw new QueueError("Error initializing Redis client");
       }
     }
-  }
-
-  if (job.name === "cacheTopicComments") {
-    const { topicId, page, stringifiedComments } = job.returnvalue;
-    console.log(
-      `return values from cacheTopicComments. topicId: ${topicId}, page: ${page}`
-    );
   }
 });
