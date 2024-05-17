@@ -28,9 +28,9 @@ export const rateLimitedApiWorker = new Worker(
     if (job.name === "cacheTopicPostStream") {
       const { topicId } = job.data;
       try {
-        await postStreamProcessor(topicId);
+        const stream = await postStreamProcessor(topicId);
 
-        return topicId;
+        return { stream, topicId };
       } catch (error) {
         console.error(`Failed to process topicStream job: ${error}`);
         await job.remove();
@@ -88,21 +88,21 @@ export async function addCommentsMapRequest({
 
 rateLimitedApiWorker.on("completed", async (job: Job) => {
   if (job.name === "cacheTopicPostStream") {
-    const topicId = job.returnvalue;
-    try {
-      const client = await getRedisClient();
-      const streamLength = await client.llen(getPostStreamKey(topicId));
-      if (topicId && streamLength) {
+    const { stream, topicId } = job.returnvalue;
+    console.log(stream);
+    if (stream.length && Number(topicId)) {
+      try {
+        const streamLength = stream.length;
         const totalPages = Math.ceil(streamLength / 20);
         for (let page = 0; page < totalPages; page++) {
           console.log(
             `addTopicCommentsRequest for topicId: ${topicId}, page: ${page}`
           );
-          await addTopicCommentsRequest({ topicId: topicId, page: page });
+          //await addTopicCommentsRequest({ topicId: topicId, page: page });
         }
+      } catch (error) {
+        throw new QueueError("Error initializing Redis client");
       }
-    } catch (error) {
-      throw new QueueError("Error initializing Redis client");
     }
   }
 });
