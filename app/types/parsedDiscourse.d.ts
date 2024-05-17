@@ -75,7 +75,7 @@ export interface ParsedDiscourseTopicMapDetails extends ParsedDiscourseDetails {
   lastPoster: ParsedDiscourseBasicUser;
 }
 
-export interface ParsedDiscourseTopicMap {
+export interface ParsedDiscourseCommentsMap {
   id: number;
   title: string;
   slug: string;

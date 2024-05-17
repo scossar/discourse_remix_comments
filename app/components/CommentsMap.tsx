@@ -1,8 +1,8 @@
 import Comments from "~/components/Comments";
-import type { ParsedDiscourseTopicMap } from "~/types/parsedDiscourse";
+import type { ParsedDiscourseCommentsMap } from "~/types/parsedDiscourse";
 
 type CommentsMapProps = {
-  commentsMapData: ParsedDiscourseTopicMap;
+  commentsMapData: ParsedDiscourseCommentsMap;
   children: React.ReactElement<typeof Comments>;
 };
 

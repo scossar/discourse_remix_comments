@@ -1,7 +1,7 @@
 import {
   addTopicStreamRequest,
   addTopicCommentsRequest,
-} from "~/services/jobs/postStreamWorker.server";
+} from "~/services/jobs/rateLimitedApiWorker.server";
 
 import { useLoaderData } from "@remix-run/react";
 import { json } from "@remix-run/node";

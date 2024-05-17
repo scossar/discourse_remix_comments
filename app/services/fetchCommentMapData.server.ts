@@ -2,7 +2,7 @@ import { fromError } from "zod-validation-error";
 import AppError from "~/services/errors/AppError.server";
 import { discourseEnv } from "./config.server";
 
-import type { ParsedDiscourseTopicMap } from "~/types/parsedDiscourse";
+import type { ParsedDiscourseCommentsMap } from "~/types/parsedDiscourse";
 import { validateDiscourseApiBasicTopicMap } from "~/schemas/discourseApiResponse.server";
 import {
   transformParticipant,
@@ -11,7 +11,7 @@ import {
 export async function fetchCommentMapData(
   topicId: number,
   currentUsername?: string
-): Promise<ParsedDiscourseTopicMap> {
+): Promise<ParsedDiscourseCommentsMap> {
   const { apiKey, baseUrl } = discourseEnv();
 
   const headers = new Headers();

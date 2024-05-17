@@ -67,8 +67,6 @@ rateLimitedApiWorker.on("completed", async (job: Job) => {
   try {
     const client = await getRedisClient();
     const streamLength = await client.llen(getPostStreamKey(topicId));
-    console.log(`topicId: ${topicId}, streamLength: ${streamLength}`);
-    // TODO: validate before proceeding
     if (topicId && streamLength) {
       const totalPages = Math.ceil(streamLength / 20);
       for (let page = 0; page < totalPages; page++) {
