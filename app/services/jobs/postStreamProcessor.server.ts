@@ -14,6 +14,7 @@ export async function postStreamProcessor(topicId: number) {
 
   const postStreamUrl = `${baseUrl}/t/-/${topicId}.json`;
 
+  // TODO: the outer try...catch block seems excessive
   try {
     const response = await fetch(postStreamUrl, { headers });
     if (!response.ok) {

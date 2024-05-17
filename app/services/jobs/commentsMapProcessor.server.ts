@@ -1,5 +1,8 @@
 import QueueError from "~/services/errors/queueError.server";
-import { validateDiscourseApiBasicCommentsMap } from "~/schemas/discourseApiResponse.server";
+import {
+  validateDiscourseApiBasicCommentsMap,
+  validateDiscourseApiPostStream,
+} from "~/schemas/discourseApiResponse.server";
 import type { ParsedDiscourseCommentsMap } from "~/types/parsedDiscourse";
 import { fromError } from "zod-validation-error";
 import {
@@ -8,7 +11,10 @@ import {
 } from "~/services/transformDiscourseDataZod.server";
 import { discourseEnv } from "~/services/config.server";
 import { getRedisClient } from "~/services/redisClient.server";
-import { getCommentsMapKey } from "~/services/redisKeys.server";
+import {
+  getCommentsMapKey,
+  getPostStreamKey,
+} from "~/services/redisKeys.server";
 
 export async function commentsMapProcessor(topicId: number, username?: string) {
   const { apiKey, baseUrl } = discourseEnv();
@@ -56,8 +62,21 @@ export async function commentsMapProcessor(topicId: number, username?: string) {
     },
   };
 
+  let stream;
+  try {
+    stream = validateDiscourseApiPostStream(json?.post_stream?.stream);
+  } catch (error) {
+    const errorMessage = fromError(error).toString();
+    throw new QueueError(errorMessage);
+  }
+
   try {
     const client = await getRedisClient();
+
+    const streamKey = getPostStreamKey(topicId);
+    await client.del(streamKey);
+    await client.rpush(streamKey, ...stream);
+
     await client.set(
       getCommentsMapKey(topicId),
       JSON.stringify(parsedDiscourseCommentsMap)
@@ -67,4 +86,6 @@ export async function commentsMapProcessor(topicId: number, username?: string) {
       `Unable to set Redis commentsMap data for topicId: ${topicId}`
     );
   }
+
+  return stream;
 }
