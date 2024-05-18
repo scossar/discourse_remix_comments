@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type {
   ActionFunctionArgs,
   LoaderFunctionArgs,
@@ -7,6 +7,7 @@ import type {
 import { json } from "@remix-run/node";
 import {
   isRouteErrorResponse,
+  useFetcher,
   useLoaderData,
   useRouteError,
 } from "@remix-run/react";
@@ -18,11 +19,13 @@ import { discourseEnv } from "~/services/config.server";
 import { discourseSessionStorage } from "~/services/session.server";
 import { getSessionData, validateSession } from "~/schemas/currentUser.server";
 import { transformPost } from "~/services/transformDiscourseData.server";
-import { fetchCommentMapData } from "~/services/fetchCommentMapData.server";
 import type { RouteError } from "~/types/errorTypes";
+// TODO: use zod type:
 import type { ApiDiscoursePost } from "~/types/apiDiscourse";
+import type { ParsedDiscourseCommentsMap } from "~/types/parsedDiscourse";
 import PageContextProvider from "~/components/PageContextProvider";
 import Topic from "~/components/Topic";
+import { getOrQueueCommentsMapCache } from "~/services/getOrQueueCommentsMapCache.server";
 import CommentsMap from "~/components/CommentsMap";
 import Comments from "~/components/Comments";
 
@@ -145,12 +148,20 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
     });
   }
 
-  const topicMapData = await fetchCommentMapData(topicId);
+  let commentsMapData;
+  try {
+    commentsMapData = await getOrQueueCommentsMapCache(topicId);
+  } catch (error) {
+    throw new Response(null, {
+      status: 404,
+      statusText: "Comments are not available at this time.",
+    });
+  }
 
   return json(
     {
       topic,
-      topicMapData,
+      commentsMapData: commentsMapData || null,
       currentUser,
     },
     {
@@ -162,18 +173,56 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
 }
 
 export default function TopicForSlugAndId() {
-  const { topic, topicMapData } = useLoaderData<typeof loader>();
+  const { topic, commentsMapData } = useLoaderData<typeof loader>();
+  const topicId = topic.externalId;
+  const commentsMapFetcher = useFetcher<ParsedDiscourseCommentsMap>({
+    key: `comments-map-${topicId}`,
+  });
   const [page, setPage] = useState<number | null>(0);
-  const commentsCount = topicMapData.postsCount - 1;
+  const [liveCommentsMapData, setLiveCommentsMapData] =
+    useState<ParsedDiscourseCommentsMap | null>(commentsMapData);
+  const retriesRef = useRef(0);
+  const [retriesMessage, setRetryMessage] = useState("");
+  const [commentsCount, setCommentsCount] = useState<number | null>(
+    commentsMapData ? commentsMapData.postsCount - 1 : null
+  );
+
+  useEffect(() => {
+    let intervalId: ReturnType<typeof setInterval>;
+    if (!liveCommentsMapData && retriesRef.current < 5) {
+      intervalId = setInterval(async () => {
+        retriesRef.current += 1;
+        commentsMapFetcher.load(`/api/cachedCommentsMap?topicId=${topicId}`);
+        if (retriesRef.current >= 5) {
+          clearInterval(intervalId);
+          setRetryMessage("Comments are not available at this time.");
+        }
+      }, 1000);
+      return () => clearInterval(intervalId);
+    }
+    return () => {
+      if (intervalId) clearInterval(intervalId);
+    };
+  }, [liveCommentsMapData, commentsMapFetcher, topicId]);
+
+  useEffect(() => {
+    if (commentsMapFetcher && commentsMapFetcher.data) {
+      setLiveCommentsMapData(commentsMapFetcher.data);
+      setCommentsCount(commentsMapFetcher.data.postsCount - 1);
+    }
+  }, [commentsMapFetcher]);
 
   return (
     <div className="relative pt-6 pb-12 mx-auto max-w-screen-md">
       <Topic topic={topic} />
-      <PageContextProvider value={{ page, setPage }}>
-        <CommentsMap commentsMapData={topicMapData}>
-          <Comments topicId={topic.externalId} commentsCount={commentsCount} />
-        </CommentsMap>
-      </PageContextProvider>
+      {retriesMessage && <div>{retriesMessage}</div>}
+      {liveCommentsMapData && commentsCount !== null && (
+        <PageContextProvider value={{ page, setPage }}>
+          <CommentsMap commentsMapData={liveCommentsMapData}>
+            <Comments topicId={topicId} commentsCount={commentsCount} />
+          </CommentsMap>
+        </PageContextProvider>
+      )}
     </div>
   );
 }
