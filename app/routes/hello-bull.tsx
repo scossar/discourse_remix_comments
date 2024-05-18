@@ -6,6 +6,7 @@ import {
   addCommentsMapRequest,
 } from "~/services/jobs/rateLimitedApiWorker.server";
 import { getRedisClient } from "~/services/redisClient.server";
+import { getOrQueueCommentsMapCache } from "~/services/getOrQueueCommentsMapCache.server";
 import {
   getTopicCommentsKey,
   getCommentsMapKey,
@@ -29,8 +30,9 @@ export async function loader() {
 
   let commentsMap;
   try {
-    const cacheKey = getCommentsMapKey(topicId);
-    commentsMap = await client.get(cacheKey);
+    //const cacheKey = getCommentsMapKey(topicId);
+    //commentsMap = await client.get(cacheKey);
+    commentsMap = await getOrQueueCommentsMapCache(topicId);
   } catch (error) {
     throw new Error("Redis Error fetching commentsMap");
   }
