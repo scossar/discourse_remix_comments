@@ -68,7 +68,8 @@ export const rateLimitedApiWorker = new Worker(
 );
 
 export async function addTopicStreamRequest({ topicId }: TopicStreamQueueArgs) {
-  await apiRequestQueue.add("cacheTopicPostStream", { topicId });
+  const jobId = `stream-${topicId}`;
+  await apiRequestQueue.add("cacheTopicPostStream", { topicId }, { jobId });
 }
 
 export async function addTopicCommentsRequest({
@@ -76,18 +77,30 @@ export async function addTopicCommentsRequest({
   page,
   username,
 }: TopicCommentsQueueArgs) {
-  await apiRequestQueue.add("cacheTopicComments", {
-    topicId,
-    page,
-    username,
-  });
+  const jobId = username
+    ? `comments-${topicId}-${page}-${username}`
+    : `comments-${topicId}-${page}`;
+  await apiRequestQueue.add(
+    "cacheTopicComments",
+    {
+      topicId,
+      page,
+      username,
+    },
+    { jobId }
+  );
 }
 
 export async function addCommentsMapRequest({
   topicId,
   username,
 }: CommentsMapQueueArgs) {
-  await apiRequestQueue.add("cacheCommentsMap", { topicId, username });
+  const jobId = username ? `map-${topicId}-${username}` : `map-${topicId}`;
+  await apiRequestQueue.add(
+    "cacheCommentsMap",
+    { topicId, username },
+    { jobId }
+  );
 }
 
 rateLimitedApiWorker.on("completed", async (job: Job) => {

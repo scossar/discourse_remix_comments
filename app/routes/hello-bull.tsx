@@ -33,6 +33,8 @@ export async function loader() {
   try {
     commentsMap = await getOrQueueCommentsMapCache(topicId);
   } catch (error) {
+    // in the production app, this won't actually throw an error
+    // instead, it will return a response that can be handled by the UI
     throw new RedisError("Error getting or queuing commentsMap");
   }
 
