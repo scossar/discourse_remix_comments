@@ -20,6 +20,8 @@ export async function loader({ request }: LoaderFunctionArgs) {
       console.log(JSON.parse(stringifiedComments));
       return JSON.parse(stringifiedComments);
     }
+    // TODO: probably call `addTopicCommentsRequest({topicId, page})`
+    // then return `null`
     return null;
   } catch (error) {
     throw new RedisError(

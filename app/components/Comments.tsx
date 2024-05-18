@@ -71,6 +71,9 @@ export default function Comments({ topicId, commentsCount }: CommentsProps) {
     }
   }
 
+  // TODO: need to handle the case of `null` being returned from api.cachedTopicCommentsForPage
+  // probably that route should return an object: `{comments: comments || null}`
+  // if `comments === null`, retry a few times, then display error message.
   useEffect(() => {
     if (commentFetcher.data?.pagedPosts) {
       const { currentPage, previousPage, nextPage } = commentFetcher.data;
