@@ -1,16 +1,9 @@
 import { useEffect, useRef, useState } from "react";
 import { useFetcher, useLoaderData } from "@remix-run/react";
 import { json } from "@remix-run/node";
-import {
-  // addTopicCommentsRequest,
-  addCommentsMapRequest,
-} from "~/services/jobs/rateLimitedApiWorker.server";
 import { getRedisClient } from "~/services/redisClient.server";
 import { getOrQueueCommentsMapCache } from "~/services/getOrQueueCommentsMapCache.server";
-import {
-  getTopicCommentsKey,
-  getCommentsMapKey,
-} from "~/services/redisKeys.server";
+import { getTopicCommentsKey } from "~/services/redisKeys.server";
 import type {
   ParsedDiscourseTopicComments,
   ParsedDiscourseCommentsMap,
