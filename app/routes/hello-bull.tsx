@@ -36,10 +36,6 @@ export async function loader() {
     throw new RedisError("Error getting or queuing commentsMap");
   }
 
-  /*  if (!commentsMap) {
-    await addCommentsMapRequest({ topicId });
-  } */
-
   let comments;
   try {
     comments = await client.get(getTopicCommentsKey(topicId, page));

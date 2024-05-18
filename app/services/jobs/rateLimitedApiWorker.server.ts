@@ -32,7 +32,6 @@ export const rateLimitedApiWorker = new Worker(
         return { topicId, stream };
       } catch (error) {
         console.error(`Failed to process topicStream job: ${error}`);
-        await job.remove();
         throw new QueueError("Failed to process cacheTopicPostStream job");
       }
     }
@@ -49,7 +48,6 @@ export const rateLimitedApiWorker = new Worker(
         return { topicId, page, stringifiedComments };
       } catch (error) {
         console.error(`Failed to process cacheTopicComments job: ${error}`);
-        await job.remove();
         throw new QueueError("Failed to process cacheTopicComments job");
       }
     }
@@ -62,7 +60,6 @@ export const rateLimitedApiWorker = new Worker(
         return { topicId, stream };
       } catch (error) {
         console.error(`Failed to process cacheCommentsMap job: ${error}`);
-        await job.remove();
         throw new QueueError("Failed to process cacheCommentsMap job");
       }
     }

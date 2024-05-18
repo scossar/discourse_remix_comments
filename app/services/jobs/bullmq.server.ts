@@ -4,7 +4,12 @@ import { connection } from "~/services/redisClient.server";
 export const apiRequestQueue = new Queue("api-request", {
   defaultJobOptions: {
     removeOnComplete: true,
-    removeOnFail: 1000,
+    removeOnFail: false,
+    attempts: 3,
+    backoff: {
+      type: "exponential",
+      delay: 1000,
+    },
   },
   connection,
 });
