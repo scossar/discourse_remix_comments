@@ -16,6 +16,7 @@ import type {
   ParsedDiscourseCommentsMap,
   ParsedDiscoursePost,
 } from "~/types/parsedDiscourse";
+import RedisError from "~/services/errors/redisError.server";
 
 export async function loader() {
   const page = 0;
@@ -25,32 +26,30 @@ export async function loader() {
   try {
     client = await getRedisClient();
   } catch (error) {
-    throw new Error("Error obtaining Redis Client");
+    throw new RedisError("Unable to obtain Redis Client");
   }
 
   let commentsMap;
   try {
-    //const cacheKey = getCommentsMapKey(topicId);
-    //commentsMap = await client.get(cacheKey);
     commentsMap = await getOrQueueCommentsMapCache(topicId);
   } catch (error) {
-    throw new Error("Redis Error fetching commentsMap");
+    throw new RedisError("Error getting or queuing commentsMap");
   }
 
-  if (!commentsMap) {
+  /*  if (!commentsMap) {
     await addCommentsMapRequest({ topicId });
-  }
+  } */
 
   let comments;
   try {
     comments = await client.get(getTopicCommentsKey(topicId, page));
   } catch (error) {
-    throw new Error("Redis Error fetching comments");
+    throw new RedisError("Error fetching cached comments");
   }
 
   return json({
     comments: comments ? JSON.parse(comments) : null,
-    commentsMap: commentsMap ? JSON.parse(commentsMap) : null,
+    commentsMap: commentsMap ? commentsMap : null,
     topicId,
     page,
   });
