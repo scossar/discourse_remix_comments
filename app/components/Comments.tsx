@@ -45,7 +45,7 @@ export default function Comments({ topicId, commentsCount }: CommentsProps) {
   function getInitialComments() {
     const pageParam = page || 0;
     commentFetcher.load(
-      `/api/getTopicComments?topicId=${topicId}&page=${pageParam}`
+      `/api/cachedTopicCommentsForPage?topicId=${topicId}&page=${pageParam}`
     );
   }
 
@@ -64,7 +64,7 @@ export default function Comments({ topicId, commentsCount }: CommentsProps) {
         const nextPage = pageData.nextPage;
         if (commentFetcher.state === "idle") {
           commentFetcher.load(
-            `/api/getTopicComments?topicId=${topicId}&page=${nextPage}`
+            `/api/cachedTopicCommentsForPage?topicId=${topicId}&page=${nextPage}`
           );
         }
       }
@@ -114,7 +114,7 @@ export default function Comments({ topicId, commentsCount }: CommentsProps) {
     function handleJumpToPost(postNumber: number, postId: number) {
       const requiredPage = Math.floor(postNumber / 20);
       commentFetcher.load(
-        `/api/getTopicComments?topicId=${topicId}&page=${requiredPage}`
+        `/api/cachedTopicCommentsForPage?topicId=${topicId}&page=${requiredPage}`
       );
       setScrollToPost(postId);
     }
@@ -122,7 +122,7 @@ export default function Comments({ topicId, commentsCount }: CommentsProps) {
     function getCommentsForPage(commentPage: number) {
       if (commentFetcher.state === "idle") {
         commentFetcher.load(
-          `/api/getTopicComments?topicId=${topicId}&page=${commentPage}`
+          `/api/cachedTopicCommentsForPage?topicId=${topicId}&page=${commentPage}`
         );
       }
     }

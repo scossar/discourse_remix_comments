@@ -13,6 +13,11 @@ export async function loader({ request }: LoaderFunctionArgs) {
     const cacheKey = getTopicCommentsKey(topicId, page);
     const stringifiedComments = await client.get(cacheKey);
     if (stringifiedComments) {
+      console.log(
+        `getting cached comments for topicId: ${topicId}, page: ${page}`
+      );
+
+      console.log(JSON.parse(stringifiedComments));
       return JSON.parse(stringifiedComments);
     }
     return null;
