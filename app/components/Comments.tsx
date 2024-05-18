@@ -11,7 +11,7 @@ import type {
 import Comment from "~/components/Comment";
 import ZalgEditorClientOnly from "~/components/ZalgEditorClientOnly";
 import CommentsGap from "~/components/CommentsGap";
-export type CommentFetcherData = { comments: ParsedDiscourseTopicComments };
+export type CommentFetcherData = ParsedDiscourseTopicComments;
 
 type LoadedPages = {
   [currentPage: number]: {
@@ -72,14 +72,13 @@ export default function Comments({ topicId, commentsCount }: CommentsProps) {
   }
 
   useEffect(() => {
-    if (commentFetcher.data?.comments.pagedPosts) {
-      const { currentPage, previousPage, nextPage } =
-        commentFetcher.data.comments;
+    if (commentFetcher.data?.pagedPosts) {
+      const { currentPage, previousPage, nextPage } = commentFetcher.data;
       setLoadedPages((prevLoadedPages) => ({
         ...prevLoadedPages,
         [currentPage]: { nextPage: nextPage, previousPage: previousPage },
       }));
-      const pagedPosts = commentFetcher.data.comments.pagedPosts;
+      const pagedPosts = commentFetcher.data.pagedPosts;
       setPosts((prevPosts) => {
         const updatedPosts = { ...prevPosts };
         Object.entries(pagedPosts).forEach(([page, posts]) => {
@@ -90,7 +89,7 @@ export default function Comments({ topicId, commentsCount }: CommentsProps) {
         });
         return updatedPosts;
       });
-      setPage(commentFetcher.data.comments.nextPage);
+      setPage(commentFetcher.data.nextPage);
     }
   }, [commentFetcher.data, setLoadedPages, setPosts, setPage]);
 
