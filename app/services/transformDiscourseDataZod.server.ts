@@ -49,7 +49,13 @@ export async function transformPostAndQueueReplies(
 ): Promise<ParsedDiscoursePost> {
   if (apiPost.reply_count > 0) {
     const postId = apiPost.id;
-    await addCommentRepliesRequest({ postId });
+    try {
+      await addCommentRepliesRequest({ postId });
+    } catch (error) {
+      console.error(
+        `Unable to queue cacheCommentReplies job for postId: ${postId}`
+      );
+    }
   }
   return {
     id: apiPost.id,

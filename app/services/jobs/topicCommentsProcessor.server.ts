@@ -10,7 +10,7 @@ import {
   validateDiscourseApiCommentPosts,
 } from "~/schemas/discourseApiResponse.server";
 import type { ParsedDiscourseTopicComments } from "~/types/parsedDiscourse";
-import { transformPost } from "~/services/transformDiscourseDataZod.server";
+import { transformPostAndQueueReplies } from "~/services/transformDiscourseDataZod.server";
 
 // TODO: maybe handle first page differently?
 export async function topicCommentsProcessor(
@@ -65,13 +65,17 @@ export async function topicCommentsProcessor(
   const nextPage = page + 1 < totalPages ? page + 1 : null;
   const previousPage = page - 1 >= 0 ? page - 1 : null;
 
+  const transformedPosts = await Promise.all(
+    posts.map((post) => transformPostAndQueueReplies(post, baseUrl))
+  );
+
   const parsedTopicComments: ParsedDiscourseTopicComments = {
     topicId: topicId,
     currentPage: page,
     nextPage: nextPage,
     previousPage: previousPage,
     pagedPosts: {
-      [page]: posts.map((post) => transformPost(post, baseUrl)),
+      [page]: transformedPosts,
     },
   };
 
