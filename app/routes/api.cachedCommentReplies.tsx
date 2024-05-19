@@ -1,6 +1,7 @@
 import type { LoaderFunctionArgs } from "@remix-run/node";
 import { getRedisClient } from "~/services/redisClient.server";
 import { getPostRepliesKey } from "~/services/redisKeys.server";
+import { addCommentRepliesRequest } from "~/services/jobs/rateLimitedApiWorker.server";
 
 export async function loader({ request }: LoaderFunctionArgs) {
   const { searchParams } = new URL(request.url);
@@ -18,7 +19,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
       console.log(`returned cached reply posts for postId: ${postId}`);
       return JSON.parse(stringifiedPostReplies);
     }
-    // TODO: queue the postReplies processor
+    addCommentRepliesRequest({ postId });
     return null;
   } catch (error) {
     throw new Error(`Unable to set postRepliesKey for postId: ${postId}`);

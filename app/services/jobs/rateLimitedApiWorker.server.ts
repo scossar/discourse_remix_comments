@@ -22,6 +22,11 @@ export type CommentsMapQueueArgs = {
   username?: string;
 };
 
+export type commentRepliesQueueArgs = {
+  postId: number;
+  username?: string;
+};
+
 export const rateLimitedApiWorker = new Worker(
   apiRequestQueue.name,
   async (job: Job) => {
@@ -64,6 +69,17 @@ export const rateLimitedApiWorker = new Worker(
         throw new QueueError("Failed to process cacheCommentsMap job");
       }
     }
+    if (job.name === "cacheCommentReplies") {
+      const { postId, username } = job.data;
+      try {
+        const replies = await commentRepliesProcessor(postId, username);
+
+        return { postId, replies };
+      } catch (error) {
+        console.error(`Failed to process cacheCommentReplies job: ${error}`);
+        throw new QueueError("Failed to process cacheCommentReplies job");
+      }
+    }
   },
   { connection, limiter: { max: 1, duration: 1000 } }
 );
@@ -100,6 +116,20 @@ export async function addCommentsMapRequest({
   await apiRequestQueue.add(
     "cacheCommentsMap",
     { topicId, username },
+    { jobId }
+  );
+}
+
+export async function addCommentRepliesRequest({
+  postId,
+  username,
+}: commentRepliesQueueArgs) {
+  const jobId = username
+    ? `replies-${postId}-${username}`
+    : `replies-${postId}`;
+  await apiRequestQueue.add(
+    "cacheCommentReplies",
+    { postId, username },
     { jobId }
   );
 }
