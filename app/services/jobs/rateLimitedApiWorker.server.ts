@@ -4,6 +4,7 @@ import { connection } from "~/services/redisClient.server";
 import { postStreamProcessor } from "~/services/jobs/postStreamProcessor.server";
 import { topicCommentsProcessor } from "~/services/jobs/topicCommentsProcessor.server";
 import { commentsMapProcessor } from "~/services/jobs/commentsMapProcessor.server";
+import { commentRepliesProcessor } from "~/services/jobs/commentRepliesProcessor.server";
 import QueueError from "~/services/errors/queueError.server";
 
 export type TopicStreamQueueArgs = {
