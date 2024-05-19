@@ -32,7 +32,7 @@ const Comment = forwardRef<HTMLDivElement, CommentProps>(function Comment(
 
   function getRepliesForPost(postId: number) {
     if (!repliesLoadedRef.current) {
-      replyFetcher.load(`/api/discourseRepliesForPost?postId=${postId}`);
+      replyFetcher.load(`/api/cachedCommentReplies?postId=${postId}`);
     }
     repliesLoadedRef.current = true;
   }
