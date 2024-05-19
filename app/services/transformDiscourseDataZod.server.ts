@@ -1,3 +1,4 @@
+import { addCommentRepliesRequest } from "./jobs/rateLimitedApiWorker.server";
 import type {
   DiscourseApiBasicUser,
   DiscourseApiParticipant,
@@ -27,6 +28,29 @@ export function transformPost(
   apiPost: DiscourseApiBasicPost,
   baseUrl: string
 ): ParsedDiscoursePost {
+  return {
+    id: apiPost.id,
+    username: apiPost.username,
+    avatarUrl: generateAvatarUrl(apiPost.avatar_template, baseUrl),
+    createdAt: apiPost.created_at,
+    cooked: apiPost.cooked,
+    postNumber: apiPost.post_number,
+    replyCount: apiPost.reply_count,
+    replyToPostNumber: apiPost.reply_to_post_number,
+    topicId: apiPost.topic_id,
+    updatedAt: apiPost.updated_at,
+    userId: apiPost.user_id,
+  };
+}
+
+export async function transformPostAndQueueReplies(
+  apiPost: DiscourseApiBasicPost,
+  baseUrl: string
+): Promise<ParsedDiscoursePost> {
+  if (apiPost.reply_count > 0) {
+    const postId = apiPost.id;
+    await addCommentRepliesRequest({ postId });
+  }
   return {
     id: apiPost.id,
     username: apiPost.username,
