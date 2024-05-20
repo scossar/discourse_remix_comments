@@ -12,10 +12,7 @@ import {
   UnknownError,
   ValidationError,
 } from "~/services/errors/appErrors.server";
-import {
-  type PrismaErrorType,
-  throwPrismaError,
-} from "~/services/errors/handlePrismaError.server";
+import { throwPrismaError } from "~/services/errors/handlePrismaError.server";
 import type { DiscourseCategory, Prisma } from "@prisma/client";
 
 export default async function createCategory(
@@ -123,7 +120,6 @@ async function saveCategory(discourseCategory: DiscourseApiBasicCategory) {
   try {
     return await db.discourseCategory.create({ data: categoryFields });
   } catch (error) {
-    const err = error as PrismaErrorType;
-    throwPrismaError(err);
+    throwPrismaError(error);
   }
 }

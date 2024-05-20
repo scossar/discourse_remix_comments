@@ -1,9 +1,6 @@
 import { db } from "./db.server";
 import type { DiscourseAPiWebHookTopic } from "~/schemas/discourseApiResponse.server";
-import {
-  type PrismaErrorType,
-  throwPrismaError,
-} from "~/services/errors/handlePrismaError.server";
+import { throwPrismaError } from "~/services/errors/handlePrismaError.server";
 import { generateAvatarUrl } from "~/services/transformDiscourseDataZod.server";
 import { discourseEnv } from "~/services/config.server";
 import { DiscourseTopic, Prisma } from "@prisma/client";
@@ -60,7 +57,6 @@ export default async function createOrUpdateTopic(
     });
     return topic;
   } catch (error) {
-    const err = error as PrismaErrorType;
-    throwPrismaError(err);
+    throwPrismaError(error);
   }
 }

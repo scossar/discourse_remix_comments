@@ -103,23 +103,24 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     }
   }
 
-  let topic =
-    (await db.discourseTopic.findUnique({
+  let topic;
+  try {
+    topic = await db.discourseTopic.findUnique({
       where: { externalId: topicJson.id },
-    })) || null;
-  if (!topic || discourseHeaders["X-Discourse-Event"] === "topic_edited") {
-    try {
-      topic = (await createOrUpdateTopic(topicJson)) || null;
-    } catch (error) {
-      const errorMessage =
-        error instanceof PrismaError ? error.message : "Unknown error";
-      console.error(`Prisma error: ${errorMessage}`);
-      return json({ message: errorMessage }, 500);
+    });
+    if (!topic || discourseHeaders["X-Discourse-Event"] === "topic_edited") {
+      topic = await createOrUpdateTopic(topicJson);
     }
-  }
-
-  if (!topic) {
-    return json({ message: "Unable to create topic" }, 500);
+    if (!topic) {
+      return json({ message: "Unable to create or update topic" }, 500);
+    }
+  } catch (error) {
+    let errorMessage = "Unknown error";
+    if (error instanceof PrismaError) {
+      errorMessage = error.message;
+    }
+    console.error(`Prisma error: ${errorMessage}`);
+    return json({ message: "Unable to create or update topic" }, 500);
   }
 
   const tagsArray = topicJson?.tags;
