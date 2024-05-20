@@ -1,60 +1,64 @@
-import { fromError } from "zod-validation-error";
 import { db } from "~/services/db.server";
-import { discourseEnv } from "~/services/config.server";
-import PostCreationError from "~/services/errors/postCreationError.server";
-import type { DiscoursePost, Prisma } from "@prisma/client";
-
+import { type DiscourseRawEnv, discourseEnv } from "~/services/config.server";
+import { ApiError, PrismaError } from "~/services/errors/appErrors.server";
+import { ZodError } from "zod";
+import type { Prisma } from "@prisma/client";
+import { throwPrismaError } from "~/services/errors/handlePrismaError.server";
 import {
-  DiscourseApiFullTopicWithPostStream,
+  type DiscourseApiFullTopicWithPostStream,
+  type DiscourseApiBasicPost,
   validateDiscourseApiBasicPost,
-  validateDiscourseApiTopicStream,
 } from "~/schemas/discourseApiResponse.server";
-import { getRedisClient } from "~/services/redisClient.server";
 import { generateAvatarUrl } from "~/services/transformDiscourseDataZod.server";
 
 export default async function createOrUpdateOp(topicId: number) {
-  if (!topicId) {
-    throw new PostCreationError(
-      "The createOrUpdatePost function was called without a topicId argument",
-      500
+  try {
+    const topicJson = await fetchTopic(topicId, discourseEnv());
+    const post = validateDiscourseApiBasicPost(
+      topicJson?.post_stream?.posts[0]
     );
+    await savePost(post, discourseEnv());
+  } catch (error) {
+    if (error instanceof ApiError) {
+      console.error(`Api Error: ${error.message}`);
+      throw error;
+    } else if (error instanceof PrismaError) {
+      console.error(`Prisma error: ${error.message}`);
+      throw error;
+    } else if (error instanceof ZodError) {
+      console.error(`Zod validation error: ${error}`);
+      throw error;
+    } else {
+      console.error(
+        "Unknown error occurred when attempting to fetch or create the post"
+      );
+      throw error;
+    }
   }
+}
 
-  const { apiKey, baseUrl } = discourseEnv();
+async function fetchTopic(
+  topicId: number,
+  config: DiscourseRawEnv
+): Promise<DiscourseApiFullTopicWithPostStream> {
+  const { apiKey, baseUrl } = config;
   const headers = new Headers();
   headers.append("Api-Key", apiKey);
   headers.append("Api-Username", "system");
   const url = `${baseUrl}/t/-/${topicId}.json`;
-  const response = await fetch(url, {
-    headers: headers,
-  });
+  const response = await fetch(url, { headers });
   if (!response.ok) {
-    throw new PostCreationError(
+    throw new ApiError(
       "Bad response returned from Discourse when fetching Topic's OP",
       response.status
     );
   }
 
-  const topicResponse: DiscourseApiFullTopicWithPostStream =
-    await response.json();
+  return await response.json();
+}
 
-  let post;
-  try {
-    post = validateDiscourseApiBasicPost(
-      topicResponse?.post_stream?.posts?.[0]
-    );
-  } catch (error) {
-    throw new PostCreationError(fromError(error).toString(), 422);
-  }
-  let stream;
-  try {
-    stream = validateDiscourseApiTopicStream(
-      topicResponse?.post_stream?.stream
-    );
-  } catch (error) {
-    throw new PostCreationError(fromError(error).toString(), 422);
-  }
-
+async function savePost(post: DiscourseApiBasicPost, config: DiscourseRawEnv) {
+  const { baseUrl } = config;
   const postFields: Prisma.DiscoursePostCreateInput = {
     externalId: post.id,
     username: post.username,
@@ -82,9 +86,8 @@ export default async function createOrUpdateOp(topicId: number) {
     },
   };
 
-  let discoursePost: DiscoursePost;
   try {
-    discoursePost = await db.discoursePost.upsert({
+    await db.discoursePost.upsert({
       where: { externalId: post.id },
       update: {
         ...postFields,
@@ -94,24 +97,6 @@ export default async function createOrUpdateOp(topicId: number) {
       },
     });
   } catch (error) {
-    console.error("There was an error creating the post", error);
-    throw new PostCreationError(
-      "There was an error inserting the post into the database",
-      500
-    );
+    throwPrismaError(error);
   }
-
-  const streamKey = `postStream:${topicId}`;
-  const client = await getRedisClient();
-  try {
-    await client.del(streamKey);
-    await client.rpush(streamKey, ...stream);
-  } catch (error) {
-    throw new PostCreationError(
-      `there was an error writing the postStream ${streamKey} to Redis`,
-      500
-    );
-  }
-
-  return discoursePost;
 }

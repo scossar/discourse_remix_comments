@@ -1,13 +1,13 @@
 import { db } from "~/services/db.server";
-import TagCreationError from "./errors/tagCreationError.server";
+import { throwPrismaError } from "~/services/errors/handlePrismaError.server";
 
 export default async function createTagTopics(
   tagIds: number[],
   topicDatabaseId: number
 ) {
-  const topicTags = tagIds.map((tagId) =>
-    db.discourseTopicTag
-      .upsert({
+  const topicTags = tagIds.map((tagId) => {
+    try {
+      db.discourseTopicTag.upsert({
         where: {
           tagId_topicId: {
             tagId: tagId,
@@ -22,19 +22,15 @@ export default async function createTagTopics(
           tagId: tagId,
           topicId: topicDatabaseId,
         },
-      })
-      .catch((error: any) => {
-        throw new TagCreationError(
-          `Unable to find or create tag: ${tagId}`,
-          500
-        );
-      })
-  );
+      });
+    } catch (error) {
+      throwPrismaError(error);
+    }
+  });
 
   try {
     await Promise.all(topicTags);
-  } catch (error: any) {
-    console.error(error.message);
-    throw new TagCreationError(error.message, 500);
+  } catch (error) {
+    throwPrismaError(error);
   }
 }

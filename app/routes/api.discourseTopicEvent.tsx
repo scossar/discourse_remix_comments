@@ -1,6 +1,6 @@
 import { json, type ActionFunctionArgs } from "@remix-run/node";
+import { ZodError } from "zod";
 import { fromError } from "zod-validation-error";
-
 import { db } from "~/services/db.server";
 import {
   DiscourseApiWebHookTopicPayload,
@@ -15,8 +15,6 @@ import createOrUpdateTopic from "~/services/createOrUpdateTopic.server";
 import createOrUpdateOp from "~/services/createOrUpdateOp.server";
 import findOrCreateTags from "~/services/findOrCreateTags.server";
 import createTagTopics from "~/services/createTagTopics.server";
-import PostCreationError from "~/services/errors/postCreationError.server";
-import TagCreationError from "~/services/errors/tagCreationError.server";
 import {
   ApiError,
   ValidationError,
@@ -131,10 +129,11 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     try {
       topicTagIds = await findOrCreateTags(tagsArray, tagDescriptionsObj);
     } catch (error) {
-      if (error instanceof TagCreationError) {
-        return json({ message: error.message }, error.statusCode);
+      let errorMessage = "Unknown error";
+      if (error instanceof PrismaError) {
+        errorMessage = error.message;
       }
-      return json({ message: "An unexpected error occurred" }, 500);
+      return json({ message: errorMessage }, 500);
     }
   }
 
@@ -142,26 +141,31 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     try {
       await createTagTopics(topicTagIds, topic.id);
     } catch (error) {
-      if (error instanceof TagCreationError) {
-        return json({ message: error.message }, error.statusCode);
+      let errorMessage = "Unknown error";
+      if (error instanceof PrismaError) {
+        errorMessage = error.message;
       }
-      return json({ message: "An unexpected error occurred" }, 500);
+      return json({ message: errorMessage }, 500);
     }
   }
 
-  let post = await db.discoursePost.findUnique({
-    where: { topicId: topic.externalId },
-  });
-
-  if (!post) {
-    try {
-      post = await createOrUpdateOp(topic.externalId);
-    } catch (error) {
-      if (error instanceof PostCreationError) {
-        return json({ message: error.message }, error.statusCode);
-      }
-      return json({ message: "An unexpected error occurred" }, 500);
+  let post;
+  try {
+    post = await db.discoursePost.findUnique({
+      where: { topicId: topic.externalId },
+    });
+    if (!post) {
+      await createOrUpdateOp(topic.externalId);
     }
+  } catch (error) {
+    let errorMessage = "Unknown error";
+    if (error instanceof ApiError || error instanceof PrismaError) {
+      errorMessage = error.message;
+    } else if (error instanceof ZodError) {
+      errorMessage = fromError(error).toString();
+    }
+    console.error(errorMessage);
+    return json({ message: errorMessage }, 500);
   }
 
   return json({ message: "success" }, 200);
