@@ -110,11 +110,10 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     try {
       topic = await createOrUpdateTopic(topicJson);
     } catch (error) {
-      const message = error?.message
-        ? error.message
-        : "An unknown error occurred";
-      console.error(`Prisma error: ${message}`);
-      return json({ message: message }, 500);
+      const errorMessage =
+        error instanceof PrismaError ? error.message : "Unknown error";
+      console.error(`Prisma error: ${errorMessage}`);
+      return json({ message: errorMessage }, 500);
     }
   }
 
