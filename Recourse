@@ -13,14 +13,30 @@ if &shortmess =~ 'A'
 else
   set shortmess=aoO
 endif
-badd +43 ~/.config/nvim/init.lua
-badd +0 term://~/remix/discourse/discourse_remix_comments//15577:/bin/bash
-badd +1 app/components/Comments.tsx
-badd +0 term://~/remix/discourse/discourse_remix_comments//16229:/bin/bash
-badd +0 term://~/remix/discourse/discourse_remix_comments//16649:/bin/bash
+badd +1 ~/.config/nvim/init.lua
+badd +1 term://~/remix/discourse/discourse_remix_comments//15577:/bin/bash
+badd +209 app/components/Comments.tsx
+badd +1 term://~/remix/discourse/discourse_remix_comments//16229:/bin/bash
+badd +1 term://~/remix/discourse/discourse_remix_comments//16649:/bin/bash
+badd +1 app/components/Header.tsx
+badd +21 app/components/PageContextProvider.tsx
+badd +97 app/routes/api.discourseTopicEvent.tsx
+badd +155 app/services/jobs/rateLimitedApiWorker.server.ts
+badd +28 app/services/jobs/postStreamProcessor.server.ts
+badd +164 app/schemas/discourseApiResponse.server.ts
+badd +39 app/services/errors/appErrors.server.ts
+badd +23 app/services/errors/categoryCreationError.server.ts
+badd +20 app/services/config.server.ts
+badd +27 app/services/createOrUpdateTopic.server.ts
+badd +1 app/services/errors/PrismaError.server.ts
+badd +37 app/services/createCategory.server.ts
+badd +28 app/services/errors/handlePrismaError.server.ts
+badd +21 app/services/errors/throwPrismaError.server.ts
+badd +23 prisma/schema.prisma
+badd +0 app/services/findOrCreateTags.server.ts
 argglobal
 %argdel
-edit app/components/Comments.tsx
+edit app/routes/api.discourseTopicEvent.tsx
 let s:save_splitbelow = &splitbelow
 let s:save_splitright = &splitright
 set splitbelow splitright
@@ -29,7 +45,10 @@ split
 1wincmd k
 wincmd _ | wincmd |
 vsplit
-1wincmd h
+wincmd _ | wincmd |
+vsplit
+2wincmd h
+wincmd w
 wincmd w
 wincmd w
 wincmd _ | wincmd |
@@ -48,17 +67,20 @@ set winminheight=0
 set winheight=1
 set winminwidth=0
 set winwidth=1
-exe '1resize ' . ((&lines * 44 + 35) / 71)
-exe 'vert 1resize ' . ((&columns * 191 + 191) / 382)
-exe '2resize ' . ((&lines * 44 + 35) / 71)
-exe 'vert 2resize ' . ((&columns * 190 + 191) / 382)
-exe '3resize ' . ((&lines * 24 + 35) / 71)
-exe 'vert 3resize ' . ((&columns * 127 + 191) / 382)
-exe '4resize ' . ((&lines * 24 + 35) / 71)
+exe '1resize ' . ((&lines * 48 + 35) / 71)
+exe 'vert 1resize ' . ((&columns * 129 + 191) / 382)
+exe '2resize ' . ((&lines * 48 + 35) / 71)
+exe 'vert 2resize ' . ((&columns * 126 + 191) / 382)
+exe '3resize ' . ((&lines * 48 + 35) / 71)
+exe 'vert 3resize ' . ((&columns * 125 + 191) / 382)
+exe '4resize ' . ((&lines * 20 + 35) / 71)
 exe 'vert 4resize ' . ((&columns * 127 + 191) / 382)
-exe '5resize ' . ((&lines * 24 + 35) / 71)
-exe 'vert 5resize ' . ((&columns * 126 + 191) / 382)
+exe '5resize ' . ((&lines * 20 + 35) / 71)
+exe 'vert 5resize ' . ((&columns * 127 + 191) / 382)
+exe '6resize ' . ((&lines * 20 + 35) / 71)
+exe 'vert 6resize ' . ((&columns * 126 + 191) / 382)
 argglobal
+balt app/services/errors/appErrors.server.ts
 setlocal fdm=manual
 setlocal fde=0
 setlocal fmr={{{,}}}
@@ -69,20 +91,20 @@ setlocal fdn=20
 setlocal fen
 silent! normal! zE
 let &fdl = &fdl
-let s:l = 101 - ((43 * winheight(0) + 22) / 44)
+let s:l = 134 - ((34 * winheight(0) + 24) / 48)
 if s:l < 1 | let s:l = 1 | endif
 keepjumps exe s:l
 normal! zt
-keepjumps 101
-normal! 021|
+keepjumps 134
+normal! 041|
 lcd ~/remix/discourse/discourse_remix_comments
 wincmd w
 argglobal
-if bufexists(fnamemodify("~/.config/nvim/init.lua", ":p")) | buffer ~/.config/nvim/init.lua | else | edit ~/.config/nvim/init.lua | endif
+if bufexists(fnamemodify("~/remix/discourse/discourse_remix_comments/app/services/findOrCreateTags.server.ts", ":p")) | buffer ~/remix/discourse/discourse_remix_comments/app/services/findOrCreateTags.server.ts | else | edit ~/remix/discourse/discourse_remix_comments/app/services/findOrCreateTags.server.ts | endif
 if &buftype ==# 'terminal'
-  silent file ~/.config/nvim/init.lua
+  silent file ~/remix/discourse/discourse_remix_comments/app/services/findOrCreateTags.server.ts
 endif
-balt ~/.config/nvim/init.lua
+balt ~/remix/discourse/discourse_remix_comments/app/services/createOrUpdateTopic.server.ts
 setlocal fdm=manual
 setlocal fde=0
 setlocal fmr={{{,}}}
@@ -93,12 +115,37 @@ setlocal fdn=20
 setlocal fen
 silent! normal! zE
 let &fdl = &fdl
-let s:l = 1 - ((0 * winheight(0) + 22) / 44)
+let s:l = 1 - ((0 * winheight(0) + 24) / 48)
 if s:l < 1 | let s:l = 1 | endif
 keepjumps exe s:l
 normal! zt
 keepjumps 1
-normal! 018|
+normal! 0
+lcd ~/remix/discourse/discourse_remix_comments
+wincmd w
+argglobal
+if bufexists(fnamemodify("~/remix/discourse/discourse_remix_comments/app/services/createOrUpdateTopic.server.ts", ":p")) | buffer ~/remix/discourse/discourse_remix_comments/app/services/createOrUpdateTopic.server.ts | else | edit ~/remix/discourse/discourse_remix_comments/app/services/createOrUpdateTopic.server.ts | endif
+if &buftype ==# 'terminal'
+  silent file ~/remix/discourse/discourse_remix_comments/app/services/createOrUpdateTopic.server.ts
+endif
+balt ~/remix/discourse/discourse_remix_comments/app/services/createCategory.server.ts
+setlocal fdm=manual
+setlocal fde=0
+setlocal fmr={{{,}}}
+setlocal fdi=#
+setlocal fdl=0
+setlocal fml=1
+setlocal fdn=20
+setlocal fen
+silent! normal! zE
+let &fdl = &fdl
+let s:l = 45 - ((41 * winheight(0) + 24) / 48)
+if s:l < 1 | let s:l = 1 | endif
+keepjumps exe s:l
+normal! zt
+keepjumps 45
+normal! 06|
+lcd ~/remix/discourse/discourse_remix_comments
 wincmd w
 argglobal
 if bufexists(fnamemodify("term://~/remix/discourse/discourse_remix_comments//16229:/bin/bash", ":p")) | buffer term://~/remix/discourse/discourse_remix_comments//16229:/bin/bash | else | edit term://~/remix/discourse/discourse_remix_comments//16229:/bin/bash | endif
@@ -114,12 +161,12 @@ setlocal fdl=0
 setlocal fml=1
 setlocal fdn=20
 setlocal fen
-let s:l = 1 - ((0 * winheight(0) + 12) / 24)
+let s:l = 2 - ((1 * winheight(0) + 10) / 20)
 if s:l < 1 | let s:l = 1 | endif
 keepjumps exe s:l
 normal! zt
-keepjumps 1
-normal! 0
+keepjumps 2
+normal! 019|
 wincmd w
 argglobal
 if bufexists(fnamemodify("term://~/remix/discourse/discourse_remix_comments//16649:/bin/bash", ":p")) | buffer term://~/remix/discourse/discourse_remix_comments//16649:/bin/bash | else | edit term://~/remix/discourse/discourse_remix_comments//16649:/bin/bash | endif
@@ -135,12 +182,12 @@ setlocal fdl=0
 setlocal fml=1
 setlocal fdn=20
 setlocal fen
-let s:l = 1 - ((0 * winheight(0) + 12) / 24)
+let s:l = 90 - ((19 * winheight(0) + 10) / 20)
 if s:l < 1 | let s:l = 1 | endif
 keepjumps exe s:l
 normal! zt
-keepjumps 1
-normal! 0
+keepjumps 90
+normal! 064|
 wincmd w
 argglobal
 if bufexists(fnamemodify("term://~/remix/discourse/discourse_remix_comments//15577:/bin/bash", ":p")) | buffer term://~/remix/discourse/discourse_remix_comments//15577:/bin/bash | else | edit term://~/remix/discourse/discourse_remix_comments//15577:/bin/bash | endif
@@ -156,24 +203,25 @@ setlocal fdl=0
 setlocal fml=1
 setlocal fdn=20
 setlocal fen
-let s:l = 9 - ((8 * winheight(0) + 12) / 24)
+let s:l = 94 - ((0 * winheight(0) + 10) / 20)
 if s:l < 1 | let s:l = 1 | endif
 keepjumps exe s:l
 normal! zt
-keepjumps 9
-normal! 0
+keepjumps 94
+normal! 026|
 wincmd w
-2wincmd w
-exe '1resize ' . ((&lines * 44 + 35) / 71)
-exe 'vert 1resize ' . ((&columns * 191 + 191) / 382)
-exe '2resize ' . ((&lines * 44 + 35) / 71)
-exe 'vert 2resize ' . ((&columns * 190 + 191) / 382)
-exe '3resize ' . ((&lines * 24 + 35) / 71)
-exe 'vert 3resize ' . ((&columns * 127 + 191) / 382)
-exe '4resize ' . ((&lines * 24 + 35) / 71)
+exe '1resize ' . ((&lines * 48 + 35) / 71)
+exe 'vert 1resize ' . ((&columns * 129 + 191) / 382)
+exe '2resize ' . ((&lines * 48 + 35) / 71)
+exe 'vert 2resize ' . ((&columns * 126 + 191) / 382)
+exe '3resize ' . ((&lines * 48 + 35) / 71)
+exe 'vert 3resize ' . ((&columns * 125 + 191) / 382)
+exe '4resize ' . ((&lines * 20 + 35) / 71)
 exe 'vert 4resize ' . ((&columns * 127 + 191) / 382)
-exe '5resize ' . ((&lines * 24 + 35) / 71)
-exe 'vert 5resize ' . ((&columns * 126 + 191) / 382)
+exe '5resize ' . ((&lines * 20 + 35) / 71)
+exe 'vert 5resize ' . ((&columns * 127 + 191) / 382)
+exe '6resize ' . ((&lines * 20 + 35) / 71)
+exe 'vert 6resize ' . ((&columns * 126 + 191) / 382)
 tabnext 1
 if exists('s:wipebuf') && len(win_findbuf(s:wipebuf)) == 0 && getbufvar(s:wipebuf, '&buftype') isnot# 'terminal'
   silent exe 'bwipe ' . s:wipebuf
