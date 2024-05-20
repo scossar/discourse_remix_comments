@@ -31,3 +31,13 @@ export class RedisError extends Error {
     Object.setPrototypeOf(this, new.target.prototype);
   }
 }
+
+export class PrismaError extends Error {
+  errorCode: string;
+  constructor(message: string, errorCode = "") {
+    super(message);
+    this.name = "PrismaError";
+    this.errorCode = errorCode;
+    Object.setPrototypeOf(this, new.target.prototype);
+  }
+}
