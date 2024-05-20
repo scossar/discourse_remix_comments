@@ -1,6 +1,9 @@
 import { db } from "./db.server";
 import type { DiscourseAPiWebHookTopic } from "~/schemas/discourseApiResponse.server";
-import { PrismaError } from "~/services/errors/appErrors.server";
+import {
+  type PrismaErrorType,
+  throwPrismaError,
+} from "~/services/errors/handlePrismaError.server";
 import { generateAvatarUrl } from "~/services/transformDiscourseDataZod.server";
 import { discourseEnv } from "~/services/config.server";
 import { DiscourseTopic, Prisma } from "@prisma/client";
@@ -56,22 +59,8 @@ export default async function createOrUpdateTopic(
       },
     });
   } catch (error) {
-    if (error instanceof Prisma.PrismaClientKnownRequestError) {
-      console.error(`Prisma error: ${error.message}`);
-      throw new PrismaError(`Prisma error: ${error.message}`, error.code);
-    } else if (error instanceof Prisma.PrismaClientValidationError) {
-      console.error(`Prisma error: ${error.message}`);
-      throw new PrismaError(`Prisma validation error: ${error.message}`);
-    } else if (
-      error instanceof Prisma.PrismaClientUnknownRequestError ||
-      error instanceof Prisma.PrismaClientRustPanicError
-    ) {
-      console.error(`Prisma error: ${error.message}`);
-      throw new PrismaError(`Prisma error: ${error.message}`);
-    } else {
-      console.error(`Prisma error while attempting to save or update Topic`);
-      throw new PrismaError(`Prisma error of unknown type: ${error}`);
-    }
+    const err = error as PrismaErrorType;
+    throwPrismaError(err);
   }
 
   return topic;

@@ -9,15 +9,18 @@ import {
 import {
   ApiError,
   PrismaError,
+  UnknownError,
   ValidationError,
 } from "~/services/errors/appErrors.server";
 import {
   type PrismaErrorType,
   throwPrismaError,
 } from "~/services/errors/handlePrismaError.server";
-import type { Prisma } from "@prisma/client";
+import type { DiscourseCategory, Prisma } from "@prisma/client";
 
-export default async function createCategory(categoryId: number) {
+export default async function createCategory(
+  categoryId: number
+): Promise<DiscourseCategory | undefined> {
   try {
     const categories = await fetchCategories(discourseEnv());
     const foundCategory = findCategory(categoryId, categories);
@@ -36,7 +39,7 @@ export default async function createCategory(categoryId: number) {
       throw error;
     } else {
       console.error(`unknown error: ${error}`);
-      throw error;
+      throw new UnknownError("An unknown error occurred");
     }
   }
 }

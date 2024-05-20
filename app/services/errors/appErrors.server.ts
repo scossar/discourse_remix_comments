@@ -40,6 +40,14 @@ export class ValidationError extends Error {
   }
 }
 
+export class UnknownError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "UnknownError";
+    Object.setPrototypeOf(this, new.target.prototype);
+  }
+}
+
 export class PrismaError extends Error {
   errorCode: string;
   constructor(message: string, errorCode = "") {

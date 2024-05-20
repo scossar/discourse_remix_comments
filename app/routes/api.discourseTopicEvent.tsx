@@ -15,10 +15,8 @@ import createOrUpdateTopic from "~/services/createOrUpdateTopic.server";
 import createOrUpdateOp from "~/services/createOrUpdateOp.server";
 import findOrCreateTags from "~/services/findOrCreateTags.server";
 import createTagTopics from "~/services/createTagTopics.server";
-//import CategoryCreationError from "~/services/errors/categoryCreationError.server";
 import PostCreationError from "~/services/errors/postCreationError.server";
 import TagCreationError from "~/services/errors/tagCreationError.server";
-import TopicCreationError from "~/services/errors/topicCreationError.server";
 
 export const action = async ({ request }: ActionFunctionArgs) => {
   if (request.method !== "POST") {
@@ -72,19 +70,21 @@ export const action = async ({ request }: ActionFunctionArgs) => {
   }
 
   const topicJson = topicWebHookJson.topic;
+
   const categoryId = topicJson?.category_id;
   if (categoryId) {
-    let category = await db.discourseCategory.findUnique({
+    const category = await db.discourseCategory.findUnique({
       where: { externalId: categoryId },
     });
     if (!category) {
       try {
-        category = await createCategory(categoryId);
+        await createCategory(categoryId);
       } catch (error) {
-        if (error instanceof CategoryCreationError) {
-          return json({ message: error.message }, error.statusCode);
-        }
-        return json({ message: "An unexpected error occurred" }, 500);
+        const message = error?.message
+          ? error.message
+          : "An unknown error occurred";
+        console.error(`Prisma error: ${message}`);
+        return json({ message: message }, 500);
       }
     }
   }
@@ -92,15 +92,15 @@ export const action = async ({ request }: ActionFunctionArgs) => {
   let topic = await db.discourseTopic.findUnique({
     where: { externalId: topicJson.id },
   });
-
   if (!topic || discourseHeaders["X-Discourse-Event"] === "topic_edited") {
     try {
       topic = await createOrUpdateTopic(topicJson);
     } catch (error) {
-      if (error instanceof TopicCreationError) {
-        return json({ message: error.message }, error.statusCode);
-      }
-      return json({ message: "An unexpected error occurred" }, 500);
+      const message = error?.message
+        ? error.message
+        : "An unknown error occurred";
+      console.error(`Prisma error: ${message}`);
+      return json({ message: message }, 500);
     }
   }
 
