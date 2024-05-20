@@ -15,7 +15,7 @@ import createOrUpdateTopic from "~/services/createOrUpdateTopic.server";
 import createOrUpdateOp from "~/services/createOrUpdateOp.server";
 import findOrCreateTags from "~/services/findOrCreateTags.server";
 import createTagTopics from "~/services/createTagTopics.server";
-import CategoryCreationError from "~/services/errors/categoryCreationError.server";
+//import CategoryCreationError from "~/services/errors/categoryCreationError.server";
 import PostCreationError from "~/services/errors/postCreationError.server";
 import TagCreationError from "~/services/errors/tagCreationError.server";
 import TopicCreationError from "~/services/errors/topicCreationError.server";
