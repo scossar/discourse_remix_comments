@@ -1,11 +1,35 @@
-import { fromError } from "zod-validation-error";
-import { discourseEnv } from "~/services/config.server";
+import { ZodError } from "zod";
+import { type DiscourseRawEnv, discourseEnv } from "~/services/config.server";
 import { getPostStreamKey } from "~/services/redisKeys.server";
 import { validateDiscourseApiPostStream } from "~/schemas/discourseApiResponse.server";
 import { getRedisClient } from "~/services/redisClient.server";
+import { RedisError, ApiError } from "~/services/errors/appErrors.server";
 
 export async function postStreamProcessor(topicId: number) {
-  const { apiKey, baseUrl } = discourseEnv();
+  try {
+    const json = await fetchPostStream(topicId, discourseEnv());
+    const stream = validateDiscourseApiPostStream(json?.post_stream?.stream);
+    await savePostStreamToRedis(getPostStreamKey(topicId), stream);
+    return stream;
+  } catch (error) {
+    if (error instanceof ApiError) {
+      console.error(`API error: ${error.message}`);
+      throw error;
+    } else if (error instanceof ZodError) {
+      console.error("Error validating postStream");
+      throw error;
+    } else if (error instanceof RedisError) {
+      console.error(`Redis error: ${error.message}`);
+      throw error;
+    } else {
+      console.error("Unknown error");
+      throw error;
+    }
+  }
+}
+
+async function fetchPostStream(topicId: number, config: DiscourseRawEnv) {
+  const { apiKey, baseUrl } = config;
 
   const headers = new Headers();
   headers.append("Content-Type", "application/json");
@@ -14,34 +38,24 @@ export async function postStreamProcessor(topicId: number) {
 
   const postStreamUrl = `${baseUrl}/t/-/${topicId}.json`;
 
-  // TODO: the outer try...catch block seems excessive
+  const response = await fetch(postStreamUrl, { headers });
+  if (!response.ok) {
+    throw new ApiError(
+      "Error fetching postStream from Discourse",
+      response.status
+    );
+  }
+
+  const json = await response.json();
+  return json;
+}
+
+async function savePostStreamToRedis(redisKey: string, stream: number[]) {
   try {
-    const response = await fetch(postStreamUrl, { headers });
-    if (!response.ok) {
-      throw new Error(`HTTP error ${response.status}`);
-    }
-    const json = await response.json();
-
-    let stream;
-    try {
-      stream = validateDiscourseApiPostStream(json?.post_stream?.stream);
-    } catch (error) {
-      const errorMessage = fromError(error).toString();
-      throw new Error(errorMessage);
-    }
-
-    try {
-      const client = await getRedisClient();
-      const streamKey = getPostStreamKey(topicId);
-      await client.del(streamKey);
-      await client.rpush(streamKey, ...stream);
-
-      return stream;
-    } catch (error) {
-      throw new Error("Redis error");
-    }
+    const client = await getRedisClient();
+    await client.del(redisKey);
+    await client.rpush(redisKey, ...stream);
   } catch (error) {
-    console.error(`Failed to process postStream job: ${error}`);
-    throw new Error("Failed to process job");
+    throw new RedisError("Error obtaining Redis client");
   }
 }

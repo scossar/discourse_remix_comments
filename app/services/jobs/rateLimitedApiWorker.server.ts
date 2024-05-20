@@ -155,3 +155,9 @@ rateLimitedApiWorker.on("completed", async (job: Job) => {
     }
   }
 });
+
+// Attach an error listener to the worker to prevent NodeJS from raising
+// an unhandled exception when an error occurs.
+rateLimitedApiWorker.on("error", (error) => {
+  console.error(error);
+});
