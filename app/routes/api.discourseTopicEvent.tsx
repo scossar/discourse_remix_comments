@@ -10,6 +10,7 @@ import {
   discourseWehbookHeaders,
   verifyWebhookRequest,
 } from "~/services/discourseWebhooks.server";
+import type { ApiDiscourseWebhookHeaders } from "~/types/apiDiscourse";
 import createCategory from "~/services/createCategory.server";
 import createOrUpdateTopic from "~/services/createOrUpdateTopic.server";
 import createOrUpdateOp from "~/services/createOrUpdateOp.server";
@@ -24,57 +25,20 @@ import {
 } from "~/services/errors/appErrors.server";
 
 export const action = async ({ request }: ActionFunctionArgs) => {
-  if (request.method !== "POST") {
-    return json({ message: "Invalid request method" }, 403);
-  }
-
   const receivedHeaders: Headers = request.headers;
   const discourseHeaders = discourseWehbookHeaders(receivedHeaders);
-
-  if (
-    discourseHeaders["X-Discourse-Event-Type"] !== "topic" ||
-    (discourseHeaders["X-Discourse-Event"] !== "topic_created" &&
-      discourseHeaders["X-Discourse-Event"] !== "topic_edited")
-  ) {
-    console.warn(
-      `Webhook Error: route not configured to handle ${discourseHeaders["X-Discourse-Event-Type"]} ${discourseHeaders["X-Discourse-Event"]}`
-    );
-    return json(
-      {
-        message: `Payload URL not configured to handle ${discourseHeaders["X-Discourse-Event-Id"]} event`,
-      },
-      403
-    );
-  }
-
-  const webhookData: DiscourseApiWebHookTopicPayload = await request.json();
-
-  let topicWebHookJson;
+  let topicJson;
   try {
-    topicWebHookJson = validateDiscourseApiWebHookTopicPayload(webhookData);
+    topicJson = await validateTopicEventWebHook(request, discourseHeaders);
   } catch (error) {
-    return json({ message: fromError(error).toString() }, 422);
+    let errorMessage = "Invalid webhook request";
+    let statusCode = 403;
+    if (error instanceof WebHookError) {
+      errorMessage = error.message;
+      statusCode = error.statusCode;
+    }
+    return json({ errorMessage }, statusCode);
   }
-
-  const eventSignature = discourseHeaders["X-Discourse-Event-Signature"];
-
-  const validSig = eventSignature
-    ? verifyWebhookRequest(JSON.stringify(webhookData), eventSignature)
-    : false;
-
-  if (!validSig) {
-    console.warn(
-      `Webhook Error: invalid or missing event signature for event-id ${discourseHeaders["X-Discourse-Event-Id"]} `
-    );
-    return json(
-      {
-        message: `Payload Signature mismatch`,
-      },
-      403
-    );
-  }
-
-  const topicJson = topicWebHookJson.topic;
 
   // maybe makes an API request
   const categoryId = topicJson?.category_id;
@@ -175,13 +139,13 @@ export const action = async ({ request }: ActionFunctionArgs) => {
   return json({ message: "success" }, 200);
 };
 
-async function validateTopicEventWebhook({ request }: ActionFunctionArgs) {
+async function validateTopicEventWebHook(
+  request: Request,
+  discourseHeaders: ApiDiscourseWebhookHeaders
+) {
   if (request.method !== "POST") {
     throw new WebHookError("Invalid request method", 403);
   }
-
-  const receivedHeaders: Headers = request.headers;
-  const discourseHeaders = discourseWehbookHeaders(receivedHeaders);
 
   if (
     discourseHeaders["X-Discourse-Event-Type"] !== "topic" ||
