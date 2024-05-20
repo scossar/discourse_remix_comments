@@ -20,6 +20,7 @@ import {
   ValidationError,
   PrismaError,
   UnknownError,
+  WebHookError,
 } from "~/services/errors/appErrors.server";
 
 export const action = async ({ request }: ActionFunctionArgs) => {
@@ -75,6 +76,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
 
   const topicJson = topicWebHookJson.topic;
 
+  // maybe makes an API request
   const categoryId = topicJson?.category_id;
   if (categoryId) {
     const category = await db.discourseCategory.findUnique({
@@ -101,6 +103,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     }
   }
 
+  // maybe makes an API request
   let topic;
   try {
     topic = await db.discourseTopic.findUnique({
@@ -121,9 +124,9 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     return json({ message: "Unable to create or update topic" }, 500);
   }
 
+  // maybe makes an API request
   const tagsArray = topicJson?.tags;
   const tagDescriptionsObj = topicJson?.tags_descriptions;
-
   let topicTagIds;
   if (tagsArray) {
     try {
@@ -149,6 +152,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     }
   }
 
+  // maybe makes an API request
   let post;
   try {
     post = await db.discoursePost.findUnique({
@@ -170,3 +174,53 @@ export const action = async ({ request }: ActionFunctionArgs) => {
 
   return json({ message: "success" }, 200);
 };
+
+async function validateTopicEventWebhook({ request }: ActionFunctionArgs) {
+  if (request.method !== "POST") {
+    throw new WebHookError("Invalid request method", 403);
+  }
+
+  const receivedHeaders: Headers = request.headers;
+  const discourseHeaders = discourseWehbookHeaders(receivedHeaders);
+
+  if (
+    discourseHeaders["X-Discourse-Event-Type"] !== "topic" ||
+    (discourseHeaders["X-Discourse-Event"] !== "topic_created" &&
+      discourseHeaders["X-Discourse-Event"] !== "topic_edited")
+  ) {
+    const errorMessage = `Webhook error: route not configured to handle ${discourseHeaders["X-Discourse-Event-Type"]} 
+      ${discourseHeaders["X-Discourse-Event"]}`;
+    throw new WebHookError(errorMessage, 422);
+  }
+
+  const webhookData: DiscourseApiWebHookTopicPayload = await request.json();
+
+  let topicWebHookJson;
+  try {
+    topicWebHookJson = validateDiscourseApiWebHookTopicPayload(webhookData);
+    if (!topicWebHookJson) {
+      throw new WebHookError("Invalid webhook data", 422);
+    }
+  } catch (error) {
+    let errorMessage = "Invalid webhook data";
+    if (error instanceof ZodError) {
+      errorMessage = fromError(error).toString();
+    }
+    throw new WebHookError(errorMessage, 422);
+  }
+
+  const eventSignature = discourseHeaders["X-Discourse-Event-Signature"];
+
+  const validSig = eventSignature
+    ? verifyWebhookRequest(JSON.stringify(webhookData), eventSignature)
+    : false;
+
+  if (!validSig) {
+    const errorMessage = `Webhook Error: invalid or missing event signature for event-id
+    ${discourseHeaders["X-Discourse-Event-Id"]} `;
+
+    throw new WebHookError(errorMessage, 403);
+  }
+
+  return topicWebHookJson.topic;
+}
