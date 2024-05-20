@@ -17,6 +17,12 @@ import findOrCreateTags from "~/services/findOrCreateTags.server";
 import createTagTopics from "~/services/createTagTopics.server";
 import PostCreationError from "~/services/errors/postCreationError.server";
 import TagCreationError from "~/services/errors/tagCreationError.server";
+import {
+  ApiError,
+  ValidationError,
+  PrismaError,
+  UnknownError,
+} from "~/services/errors/appErrors.server";
 
 export const action = async ({ request }: ActionFunctionArgs) => {
   if (request.method !== "POST") {
@@ -80,11 +86,19 @@ export const action = async ({ request }: ActionFunctionArgs) => {
       try {
         await createCategory(categoryId);
       } catch (error) {
-        const message = error?.message
-          ? error.message
-          : "An unknown error occurred";
-        console.error(`Prisma error: ${message}`);
-        return json({ message: message }, 500);
+        let errorMessage;
+        if (
+          error instanceof ApiError ||
+          error instanceof ValidationError ||
+          error instanceof PrismaError ||
+          error instanceof UnknownError
+        ) {
+          errorMessage = error.message;
+        } else {
+          errorMessage = "Unknown error";
+        }
+        console.error(`Error creating category: ${errorMessage}`);
+        return json({ message: errorMessage }, 500);
       }
     }
   }

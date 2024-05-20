@@ -58,10 +58,9 @@ export default async function createOrUpdateTopic(
         ...topicFields,
       },
     });
+    return topic;
   } catch (error) {
     const err = error as PrismaErrorType;
     throwPrismaError(err);
   }
-
-  return topic;
 }
