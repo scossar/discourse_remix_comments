@@ -1,17 +1,17 @@
 import { db } from "~/services/db.server";
-import TagCreationError from "~/services/errors/tagCreationError.server";
+import { throwPrismaError } from "~/services/errors/handlePrismaError.server";
 
 export default async function findOrCreateTags(
   tags: string[],
   descriptions?: Record<string, string>
 ) {
-  const foundOrCreatedTags = [];
-  for (const tag of tags) {
-    let t = await db.discourseTag.findUnique({
-      where: { externalId: tag },
-    });
-    if (!t) {
-      try {
+  try {
+    const foundOrCreatedTags = [];
+    for (const tag of tags) {
+      let t = await db.discourseTag.findUnique({
+        where: { externalId: tag },
+      });
+      if (!t) {
         t = await db.discourseTag.create({
           data: {
             externalId: tag,
@@ -19,12 +19,11 @@ export default async function findOrCreateTags(
             description: descriptions?.[tag],
           },
         });
-      } catch (error) {
-        console.error(error);
-        throw new TagCreationError(`Unable to find or create tag: ${tag}`);
       }
+      foundOrCreatedTags.push(t.id);
     }
-    foundOrCreatedTags.push(t.id);
+    return foundOrCreatedTags;
+  } catch (error) {
+    throwPrismaError(error);
   }
-  return foundOrCreatedTags;
 }
