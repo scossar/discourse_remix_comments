@@ -22,6 +22,26 @@ export class ApiError extends Error {
   }
 }
 
+export class WebHookError extends Error {
+  statusCode: number;
+  constructor(message: string, statusCode = 500) {
+    super(message);
+    this.name = "WebHookError";
+    this.statusCode = statusCode;
+    Object.setPrototypeOf(this, new.target.prototype); // restore the prototype chain
+  }
+}
+
+export class JobError extends Error {
+  statusCode: number;
+  constructor(message: string, statusCode = 500) {
+    super(message);
+    this.name = "JobError";
+    this.statusCode = statusCode;
+    Object.setPrototypeOf(this, new.target.prototype); // restore the prototype chain
+  }
+}
+
 export class RedisError extends Error {
   statusCode: number;
   constructor(message: string, statusCode = 500) {

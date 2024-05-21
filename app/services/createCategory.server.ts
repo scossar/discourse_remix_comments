@@ -13,7 +13,7 @@ import {
   ValidationError,
 } from "~/services/errors/appErrors.server";
 import { throwPrismaError } from "~/services/errors/handlePrismaError.server";
-import type { DiscourseCategory, Prisma } from "@prisma/client";
+import { type DiscourseCategory, Prisma } from "@prisma/client";
 
 export default async function createCategory(
   categoryId: number

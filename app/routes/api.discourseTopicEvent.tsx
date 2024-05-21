@@ -16,6 +16,9 @@ import createOrUpdateTopic from "~/services/createOrUpdateTopic.server";
 import createOrUpdateOp from "~/services/createOrUpdateOp.server";
 import findOrCreateTags from "~/services/findOrCreateTags.server";
 import createTagTopics from "~/services/createTagTopics.server";
+
+import { addCategoryRequest } from "~/services/jobs/rateLimitedApiWorker.server";
+
 import {
   ApiError,
   ValidationError,
@@ -30,6 +33,9 @@ export const action = async ({ request }: ActionFunctionArgs) => {
   let topicJson;
   try {
     topicJson = await validateTopicEventWebHook(request, discourseHeaders);
+    if (!topicJson) {
+      return json({ message: "Unknown validation error" }, 422);
+    }
   } catch (error) {
     let errorMessage = "Invalid webhook request";
     let statusCode = 403;
@@ -37,11 +43,15 @@ export const action = async ({ request }: ActionFunctionArgs) => {
       errorMessage = error.message;
       statusCode = error.statusCode;
     }
-    return json({ errorMessage }, statusCode);
+    console.error(`WebHook error: ${errorMessage}`);
+    return json({ message: errorMessage }, statusCode);
   }
 
   // maybe makes an API request
-  const categoryId = topicJson?.category_id;
+  const topicId = topicJson.id;
+  const categoryId = topicJson?.category_id || null;
+
+  await addCategoryRequest({ topicId, categoryId });
   if (categoryId) {
     const category = await db.discourseCategory.findUnique({
       where: { externalId: categoryId },

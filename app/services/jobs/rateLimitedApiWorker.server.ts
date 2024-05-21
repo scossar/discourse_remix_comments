@@ -5,26 +5,32 @@ import { postStreamProcessor } from "~/services/jobs/postStreamProcessor.server"
 import { topicCommentsProcessor } from "~/services/jobs/topicCommentsProcessor.server";
 import { commentsMapProcessor } from "~/services/jobs/commentsMapProcessor.server";
 import { commentRepliesProcessor } from "~/services/jobs/commentRepliesProcessor.server";
-import QueueError from "~/services/errors/queueError.server";
+import { webHookCategoryProcessor } from "~/services/jobs/webHookCategoryProcessor.server";
+import { JobError } from "~/services/errors/appErrors.server";
 
-export type TopicStreamQueueArgs = {
+type TopicStreamQueueArgs = {
   topicId: number;
 };
 
-export type TopicCommentsQueueArgs = {
+type TopicCommentsQueueArgs = {
   topicId: number;
   page: number;
   username?: string;
 };
 
-export type CommentsMapQueueArgs = {
+type CommentsMapQueueArgs = {
   topicId: number;
   username?: string;
 };
 
-export type commentRepliesQueueArgs = {
+type commentRepliesQueueArgs = {
   postId: number;
   username?: string;
+};
+
+type categoryQueueArgs = {
+  topicId: number;
+  categoryId: number | null;
 };
 
 export const rateLimitedApiWorker = new Worker(
@@ -38,7 +44,7 @@ export const rateLimitedApiWorker = new Worker(
         return { topicId, stream };
       } catch (error) {
         console.error(`Failed to process topicStream job: ${error}`);
-        throw new QueueError("Failed to process cacheTopicPostStream job");
+        throw new JobError("Failed to process cacheTopicPostStream job");
       }
     }
 
@@ -54,7 +60,7 @@ export const rateLimitedApiWorker = new Worker(
         return { topicId, page, stringifiedComments };
       } catch (error) {
         console.error(`Failed to process cacheTopicComments job: ${error}`);
-        throw new QueueError("Failed to process cacheTopicComments job");
+        throw new JobError("Failed to process cacheTopicComments job");
       }
     }
 
@@ -66,7 +72,7 @@ export const rateLimitedApiWorker = new Worker(
         return { topicId, stream };
       } catch (error) {
         console.error(`Failed to process cacheCommentsMap job: ${error}`);
-        throw new QueueError("Failed to process cacheCommentsMap job");
+        throw new JobError("Failed to process cacheCommentsMap job");
       }
     }
     if (job.name === "cacheCommentReplies") {
@@ -77,7 +83,24 @@ export const rateLimitedApiWorker = new Worker(
         return { postId, replies };
       } catch (error) {
         console.error(`Failed to process cacheCommentReplies job: ${error}`);
-        throw new QueueError("Failed to process cacheCommentReplies job");
+        throw new JobError("Failed to process cacheCommentReplies job");
+      }
+    }
+    if (job.name === "findOrCreateCategory") {
+      const { topicId, categoryId } = job.data;
+      try {
+        const categoryData = await webHookCategoryProcessor(
+          topicId,
+          categoryId
+        );
+
+        return {
+          topicId: categoryData.topicId,
+          categoryId: categoryData.categoryId,
+        };
+      } catch (error) {
+        console.error(`Failed to process findOrCreateCategory job: ${error}`);
+        throw new JobError("Failed to process findOrCreateCategory job");
       }
     }
   },
@@ -134,6 +157,18 @@ export async function addCommentRepliesRequest({
   );
 }
 
+export async function addCategoryRequest({
+  topicId,
+  categoryId,
+}: categoryQueueArgs) {
+  const jobId = `category-${topicId}-${categoryId}`;
+  await apiRequestQueue.add(
+    "findOrCreateCategory",
+    { topicId, categoryId },
+    { jobId }
+  );
+}
+
 rateLimitedApiWorker.on("completed", async (job: Job) => {
   if (job.name === "cacheCommentsMap") {
     const { topicId, stream } = job.returnvalue;
@@ -148,11 +183,18 @@ rateLimitedApiWorker.on("completed", async (job: Job) => {
           await addTopicCommentsRequest({ topicId: topicId, page: page });
         }
       } catch (error) {
-        throw new QueueError(
+        throw new JobError(
           `Error handling "completed" event for topicId: ${topicId}`
         );
       }
     }
+  }
+
+  if (job.name === "findOrCreateCategory") {
+    const { topicId, categoryId } = job.returnvalue;
+    console.log(
+      `findOrCreateCategory, topicId: ${topicId}, categoryId: ${categoryId}`
+    );
   }
 });
 
