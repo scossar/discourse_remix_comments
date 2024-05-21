@@ -94,7 +94,7 @@ export const rateLimitedApiWorker = new Worker(
         throw new JobError("Failed to process cacheCommentReplies job");
       }
     }
-    if (job.name === "findOrCreateCategory") {
+    if (job.name === "findOrCreateWebHookTopicCategory") {
       const { categoryId, topicPayload, topicEdited } = job.data;
       try {
         const { payload, edited } = await webHookCategoryProcessor(
@@ -173,14 +173,14 @@ export async function addCommentRepliesRequest({
   );
 }
 
-export async function addCategoryRequest({
+export async function addWebHookTopicCategoryRequest({
   categoryId,
   topicPayload,
   topicEdited,
 }: categoryQueueArgs) {
   const jobId = `category-${categoryId}`;
   await apiRequestQueue.add(
-    "findOrCreateCategory",
+    "findOrCreateWebHookTopicCategory",
     { categoryId, topicPayload, topicEdited },
     { jobId }
   );
@@ -219,7 +219,7 @@ rateLimitedApiWorker.on("completed", async (job: Job) => {
     }
   }
 
-  if (job.name === "findOrCreateCategory") {
+  if (job.name === "findOrCreateWebHookTopicCategory") {
     const { payload, edited } = job.returnvalue;
     if (payload) {
       await addWebHookTopicRequest({

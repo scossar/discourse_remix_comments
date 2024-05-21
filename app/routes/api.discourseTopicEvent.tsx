@@ -17,7 +17,7 @@ import createOrUpdateOp from "~/services/createOrUpdateOp.server";
 import findOrCreateTags from "~/services/findOrCreateTags.server";
 import createTagTopics from "~/services/createTagTopics.server";
 
-import { addCategoryRequest } from "~/services/jobs/rateLimitedApiWorker.server";
+import { addWebHookTopicCategoryRequest } from "~/services/jobs/rateLimitedApiWorker.server";
 
 import {
   ApiError,
@@ -53,7 +53,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
   // maybe makes an API request
   const categoryId = topicWebHookJson.topic.category_id;
 
-  await addCategoryRequest({
+  await addWebHookTopicCategoryRequest({
     categoryId,
     topicPayload: topicWebHookJson,
     topicEdited: discourseHeaders["X-Discourse-Event"] === "topic-edited",
