@@ -30,7 +30,7 @@ type commentRepliesQueueArgs = {
 
 type categoryQueueArgs = {
   topicId: number;
-  categoryId: number | null;
+  categoryId: number;
 };
 
 export const rateLimitedApiWorker = new Worker(

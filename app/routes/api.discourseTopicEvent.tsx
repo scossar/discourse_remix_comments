@@ -49,9 +49,11 @@ export const action = async ({ request }: ActionFunctionArgs) => {
 
   // maybe makes an API request
   const topicId = topicJson.id;
-  const categoryId = topicJson?.category_id || null;
+  const categoryId = topicJson.category_id;
 
   await addCategoryRequest({ topicId, categoryId });
+
+  /*
   if (categoryId) {
     const category = await db.discourseCategory.findUnique({
       where: { externalId: categoryId },
@@ -144,7 +146,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     }
     console.error(errorMessage);
     return json({ message: errorMessage }, 500);
-  }
+  } */
 
   return json({ message: "success" }, 200);
 };

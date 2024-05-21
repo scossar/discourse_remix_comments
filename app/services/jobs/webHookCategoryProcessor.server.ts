@@ -10,12 +10,8 @@ import {
 
 export async function webHookCategoryProcessor(
   topicId: number,
-  categoryId: number | null
+  categoryId: number
 ) {
-  if (!categoryId) {
-    return { topicId, categoryId };
-  }
-
   let category;
   try {
     category = await db.discourseCategory.findUnique({
