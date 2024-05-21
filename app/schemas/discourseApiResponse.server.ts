@@ -197,7 +197,7 @@ export const DiscourseApiBasicTopicSchema = z.object({
   archived: z.boolean(),
   archetype: DiscourseApiTopicArchetypeSchema,
   slug: z.string(),
-  category_id: z.number().optional(),
+  category_id: z.number(),
   word_count: z.number(),
   deleted_at: z.string().nullable(),
   user_id: z.number(),
