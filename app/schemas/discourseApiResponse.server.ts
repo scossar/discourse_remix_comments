@@ -283,16 +283,22 @@ export function validateDiscourseApiBasicCommentsMap(
 /**
  * Webhooks
  */
-export const DiscourseApiWebHookPostSchema = z.object({
-  post: DiscourseApiBasicPostSchema.extend({
-    topic_title: z.string(),
-    category_id: z.number().optional(),
-    category_slug: z.string().optional(),
-    topic_posts_count: z.number(),
-    topic_filtered_posts_count: z.number(),
-    topic_archetype: DiscourseApiTopicArchetypeSchema,
-  }),
-});
+// Note the use of `refine`. Possibly `refine` should be called on a separate schema.
+export const DiscourseApiWebHookPostSchema = z
+  .object({
+    post: DiscourseApiBasicPostSchema.extend({
+      topic_title: z.string(),
+      category_id: z.number(),
+      category_slug: z.string(),
+      topic_posts_count: z.number(),
+      topic_filtered_posts_count: z.number(),
+      topic_archetype: DiscourseApiTopicArchetypeSchema,
+    }),
+  })
+  .refine((data) => data.post.post_type === DiscourseApiPostType.Regular, {
+    message: "Only posts with post_type: 1 are allowed",
+    path: ["post", "post_type"],
+  });
 export type DiscourseApiWebHookPost = z.infer<
   typeof DiscourseApiWebHookPostSchema
 >;
