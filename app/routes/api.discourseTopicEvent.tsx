@@ -15,7 +15,7 @@ import createCategory from "~/services/createCategory.server";
 import createOrUpdateTopic from "~/services/createOrUpdateTopic.server";
 import createOrUpdateOp from "~/services/createOrUpdateOp.server";
 import findOrCreateTags from "~/services/findOrCreateTags.server";
-import createTagTopics from "~/services/createTagTopics.server";
+import createTopicTags from "~/services/createTopicTags.server";
 
 import { addWebHookTopicCategoryRequest } from "~/services/jobs/rateLimitedApiWorker.server";
 

@@ -1,7 +1,7 @@
 import { db } from "~/services/db.server";
 import { throwPrismaError } from "~/services/errors/handlePrismaError.server";
 
-export default async function createTagTopics(
+export default async function createTopicTags(
   tagIds: number[],
   topicDatabaseId: number
 ) {
