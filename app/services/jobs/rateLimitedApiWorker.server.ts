@@ -230,14 +230,8 @@ rateLimitedApiWorker.on("completed", async (job: Job) => {
   }
 
   if (job.name === "findOrCreateWebHookTopic") {
-    const { topic, payload } = job.returnvalue;
-    console.log(
-      `topic: ${JSON.stringify(topic, null, 2)}, payload: ${JSON.stringify(
-        payload,
-        null,
-        2
-      )}`
-    );
+    const topic = job.returnvalue;
+    console.log(`topic: ${JSON.stringify(topic, null, 2)}`);
   }
 });
 
