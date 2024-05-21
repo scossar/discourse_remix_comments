@@ -6,6 +6,7 @@ import { topicCommentsProcessor } from "~/services/jobs/topicCommentsProcessor.s
 import { commentsMapProcessor } from "~/services/jobs/commentsMapProcessor.server";
 import { commentRepliesProcessor } from "~/services/jobs/commentRepliesProcessor.server";
 import { webHookCategoryProcessor } from "~/services/jobs/webHookCategoryProcessor.server";
+import { webHookTopicProcessor } from "~/services/jobs/webHookTopicProcessor.server";
 import { JobError } from "~/services/errors/appErrors.server";
 import type { DiscourseApiWebHookTopicPayload } from "~/schemas/discourseApiResponse.server";
 
@@ -32,6 +33,12 @@ type commentRepliesQueueArgs = {
 type categoryQueueArgs = {
   categoryId: number;
   topicPayload: DiscourseApiWebHookTopicPayload;
+  topicEdited: boolean;
+};
+
+type webhookTopicQueueArgs = {
+  topicPayload: DiscourseApiWebHookTopicPayload;
+  topicEdited: boolean;
 };
 
 export const rateLimitedApiWorker = new Worker(
@@ -88,12 +95,28 @@ export const rateLimitedApiWorker = new Worker(
       }
     }
     if (job.name === "findOrCreateCategory") {
-      const { categoryId, topicPayload } = job.data;
+      const { categoryId, topicPayload, topicEdited } = job.data;
       try {
-        return await webHookCategoryProcessor(categoryId, topicPayload);
+        const { payload, edited } = await webHookCategoryProcessor(
+          categoryId,
+          topicPayload,
+          topicEdited
+        );
+        return { payload, edited };
       } catch (error) {
         console.error(`Failed to process findOrCreateCategory job: ${error}`);
         throw new JobError("Failed to process findOrCreateCategory job");
+      }
+    }
+    if (job.name === "findOrCreateWebHookTopic") {
+      const { topicPayload, topicEdited } = job.data;
+      try {
+        return await webHookTopicProcessor(topicPayload, topicEdited);
+      } catch (error) {
+        console.error(
+          `Failed to process findOrCreateWebHookTopic job: ${error}`
+        );
+        throw new JobError("Failed to process findOrCreateWebHookTopic job");
       }
     }
   },
@@ -153,11 +176,24 @@ export async function addCommentRepliesRequest({
 export async function addCategoryRequest({
   categoryId,
   topicPayload,
+  topicEdited,
 }: categoryQueueArgs) {
   const jobId = `category-${categoryId}`;
   await apiRequestQueue.add(
     "findOrCreateCategory",
-    { categoryId, topicPayload },
+    { categoryId, topicPayload, topicEdited },
+    { jobId }
+  );
+}
+
+export async function addWebHookTopicRequest({
+  topicPayload,
+  topicEdited,
+}: webhookTopicQueueArgs) {
+  const jobId = `webhookTopic-${topicPayload.topic.id}`;
+  await apiRequestQueue.add(
+    "findOrCreateWebHookTopic",
+    { topicPayload, topicEdited },
     { jobId }
   );
 }
@@ -184,9 +220,19 @@ rateLimitedApiWorker.on("completed", async (job: Job) => {
   }
 
   if (job.name === "findOrCreateCategory") {
-    const payload = job.returnvalue;
+    const { payload, edited } = job.returnvalue;
+    if (payload) {
+      await addWebHookTopicRequest({
+        topicPayload: payload,
+        topicEdited: edited,
+      });
+    }
+  }
+
+  if (job.name === "findOrCreateWebHookTopic") {
+    const { topic, payload } = job.returnvalue;
     console.log(
-      `findOrCreateCategory, topicWebHookJson: ${JSON.stringify(
+      `topic: ${JSON.stringify(topic, null, 2)}, payload: ${JSON.stringify(
         payload,
         null,
         2

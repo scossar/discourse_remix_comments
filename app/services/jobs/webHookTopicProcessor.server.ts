@@ -5,7 +5,7 @@ import { JobError, PrismaError } from "~/services/errors/appErrors.server";
 
 export async function webHookTopicProcessor(
   topicWebHookJson: DiscourseApiWebHookTopicPayload,
-  topicEdited: false
+  topicEdited: boolean
 ) {
   let topic;
   try {
@@ -21,7 +21,7 @@ export async function webHookTopicProcessor(
       );
     }
 
-    return topic;
+    return { topic, payload: topicWebHookJson };
   } catch (error) {
     let errorMessage = "Unknown error";
     if (error instanceof PrismaError) {

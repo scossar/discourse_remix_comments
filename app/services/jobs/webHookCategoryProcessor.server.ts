@@ -11,7 +11,8 @@ import {
 
 export async function webHookCategoryProcessor(
   categoryId: number,
-  topicPayload: DiscourseApiWebHookTopicPayload
+  topicPayload: DiscourseApiWebHookTopicPayload,
+  topicEdited: boolean
 ) {
   let category;
   try {
@@ -21,7 +22,7 @@ export async function webHookCategoryProcessor(
     if (!category) {
       category = await createCategory(categoryId);
     }
-    return topicPayload;
+    return { payload: topicPayload, edited: topicEdited };
   } catch (error) {
     let errorMessage = "Unknown error";
     if (

@@ -53,7 +53,11 @@ export const action = async ({ request }: ActionFunctionArgs) => {
   // maybe makes an API request
   const categoryId = topicWebHookJson.topic.category_id;
 
-  await addCategoryRequest({ categoryId, topicPayload: topicWebHookJson });
+  await addCategoryRequest({
+    categoryId,
+    topicPayload: topicWebHookJson,
+    topicEdited: discourseHeaders["X-Discourse-Event"] === "topic-edited",
+  });
 
   /*
 
