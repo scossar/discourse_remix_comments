@@ -9,7 +9,7 @@ import {
   JobError,
 } from "~/services/errors/appErrors.server";
 
-export async function webHookCategoryProcessor(
+export async function webHookTopicCategoryProcessor(
   categoryId: number,
   topicPayload: DiscourseApiWebHookTopicPayload,
   topicEdited: boolean

@@ -1,7 +1,6 @@
 import { json, type ActionFunctionArgs } from "@remix-run/node";
 import { ZodError } from "zod";
 import { fromError } from "zod-validation-error";
-import { db } from "~/services/db.server";
 import {
   DiscourseApiWebHookTopicPayload,
   validateDiscourseApiWebHookTopicPayload,
@@ -11,21 +10,9 @@ import {
   verifyWebhookRequest,
 } from "~/services/discourseWebhooks.server";
 import type { ApiDiscourseWebhookHeaders } from "~/types/apiDiscourse";
-import createCategory from "~/services/createCategory.server";
-import createOrUpdateTopic from "~/services/createOrUpdateTopic.server";
-import createOrUpdateOp from "~/services/createOrUpdateOp.server";
-import findOrCreateTags from "~/services/findOrCreateTags.server";
-import createTopicTags from "~/services/createTopicTags.server";
-
 import { addWebHookTopicCategoryRequest } from "~/services/jobs/rateLimitedApiWorker.server";
 
-import {
-  ApiError,
-  ValidationError,
-  PrismaError,
-  UnknownError,
-  WebHookError,
-} from "~/services/errors/appErrors.server";
+import { WebHookError } from "~/services/errors/appErrors.server";
 
 export const action = async ({ request }: ActionFunctionArgs) => {
   const receivedHeaders: Headers = request.headers;
@@ -50,85 +37,14 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     return json({ message: errorMessage }, statusCode);
   }
 
-  // maybe makes an API request
   const categoryId = topicWebHookJson.topic.category_id;
 
+  // this fires off the process
   await addWebHookTopicCategoryRequest({
     categoryId,
     topicPayload: topicWebHookJson,
     topicEdited: discourseHeaders["X-Discourse-Event"] === "topic-edited",
   });
-
-  /*
-
-  // maybe makes an API request
-  let topic;
-  try {
-    topic = await db.discourseTopic.findUnique({
-      where: { externalId: topicJson.id },
-    });
-    if (!topic || discourseHeaders["X-Discourse-Event"] === "topic_edited") {
-      topic = await createOrUpdateTopic(topicJson);
-    }
-    if (!topic) {
-      return json({ message: "Unable to create or update topic" }, 500);
-    }
-  } catch (error) {
-    let errorMessage = "Unknown error";
-    if (error instanceof PrismaError) {
-      errorMessage = error.message;
-    }
-    console.error(`Prisma error: ${errorMessage}`);
-    return json({ message: "Unable to create or update topic" }, 500);
-  }
-
-  // maybe makes an API request
-  const tagsArray = topicJson?.tags;
-  const tagDescriptionsObj = topicJson?.tags_descriptions;
-  let topicTagIds;
-  if (tagsArray) {
-    try {
-      topicTagIds = await findOrCreateTags(tagsArray, tagDescriptionsObj);
-    } catch (error) {
-      let errorMessage = "Unknown error";
-      if (error instanceof PrismaError) {
-        errorMessage = error.message;
-      }
-      return json({ message: errorMessage }, 500);
-    }
-  }
-
-  if (topicTagIds) {
-    try {
-      await createTagTopics(topicTagIds, topic.id);
-    } catch (error) {
-      let errorMessage = "Unknown error";
-      if (error instanceof PrismaError) {
-        errorMessage = error.message;
-      }
-      return json({ message: errorMessage }, 500);
-    }
-  }
-
-  // maybe makes an API request
-  let post;
-  try {
-    post = await db.discoursePost.findUnique({
-      where: { topicId: topic.externalId },
-    });
-    if (!post) {
-      await createOrUpdateOp(topic.externalId);
-    }
-  } catch (error) {
-    let errorMessage = "Unknown error";
-    if (error instanceof ApiError || error instanceof PrismaError) {
-      errorMessage = error.message;
-    } else if (error instanceof ZodError) {
-      errorMessage = fromError(error).toString();
-    }
-    console.error(errorMessage);
-    return json({ message: errorMessage }, 500);
-  } */
 
   return json({ message: "success" }, 200);
 };

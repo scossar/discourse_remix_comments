@@ -5,10 +5,12 @@ import { postStreamProcessor } from "~/services/jobs/postStreamProcessor.server"
 import { topicCommentsProcessor } from "~/services/jobs/topicCommentsProcessor.server";
 import { commentsMapProcessor } from "~/services/jobs/commentsMapProcessor.server";
 import { commentRepliesProcessor } from "~/services/jobs/commentRepliesProcessor.server";
-import { webHookCategoryProcessor } from "~/services/jobs/webHookCategoryProcessor.server";
+import { webHookTopicCategoryProcessor } from "~/services/jobs/webHookTopicCategoryProcessor.server";
 import { webHookTopicProcessor } from "~/services/jobs/webHookTopicProcessor.server";
+import { webHookTopicPostProcessor } from "~/services/jobs/webHookTopicPostProcessor.server";
 import { JobError } from "~/services/errors/appErrors.server";
 import type { DiscourseApiWebHookTopicPayload } from "~/schemas/discourseApiResponse.server";
+import { DiscourseTopic } from "@prisma/client";
 
 type TopicStreamQueueArgs = {
   topicId: number;
@@ -36,9 +38,13 @@ type categoryQueueArgs = {
   topicEdited: boolean;
 };
 
-type webhookTopicQueueArgs = {
+type webHookTopicQueueArgs = {
   topicPayload: DiscourseApiWebHookTopicPayload;
   topicEdited: boolean;
+};
+
+type webHookTopicPostQueuArgs = {
+  topic: DiscourseTopic;
 };
 
 export const rateLimitedApiWorker = new Worker(
@@ -97,7 +103,7 @@ export const rateLimitedApiWorker = new Worker(
     if (job.name === "findOrCreateWebHookTopicCategory") {
       const { categoryId, topicPayload, topicEdited } = job.data;
       try {
-        const { payload, edited } = await webHookCategoryProcessor(
+        const { payload, edited } = await webHookTopicCategoryProcessor(
           categoryId,
           topicPayload,
           topicEdited
@@ -117,6 +123,19 @@ export const rateLimitedApiWorker = new Worker(
           `Failed to process findOrCreateWebHookTopic job: ${error}`
         );
         throw new JobError("Failed to process findOrCreateWebHookTopic job");
+      }
+    }
+    if (job.name === "findOrCreateWebHookTopicPost") {
+      const { topic } = job.data;
+      try {
+        await webHookTopicPostProcessor(topic);
+      } catch (error) {
+        console.error(
+          `Failed to process findOrCreateWebHookTopicPost job: ${error}`
+        );
+        throw new JobError(
+          "Failed to process findOrCreateWebHookTopicPost job"
+        );
       }
     }
   },
@@ -189,11 +208,22 @@ export async function addWebHookTopicCategoryRequest({
 export async function addWebHookTopicRequest({
   topicPayload,
   topicEdited,
-}: webhookTopicQueueArgs) {
-  const jobId = `webhookTopic-${topicPayload.topic.id}`;
+}: webHookTopicQueueArgs) {
+  const jobId = `webHookTopic-${topicPayload.topic.id}`;
   await apiRequestQueue.add(
     "findOrCreateWebHookTopic",
     { topicPayload, topicEdited },
+    { jobId }
+  );
+}
+
+export async function addWebHookTopicPostRequest({
+  topic,
+}: webHookTopicPostQueuArgs) {
+  const jobId = `webHookTopicPost-${topic.id}`;
+  await apiRequestQueue.add(
+    "findOrCreateWebHookTopicPost",
+    { topic },
     { jobId }
   );
 }
@@ -231,7 +261,9 @@ rateLimitedApiWorker.on("completed", async (job: Job) => {
 
   if (job.name === "findOrCreateWebHookTopic") {
     const topic = job.returnvalue;
-    console.log(`topic: ${JSON.stringify(topic, null, 2)}`);
+    if (topic) {
+      await addWebHookTopicPostRequest({ topic });
+    }
   }
 });
 
