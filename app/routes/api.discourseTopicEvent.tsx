@@ -9,7 +9,7 @@ import {
   discourseWehbookHeaders,
   verifyWebhookRequest,
 } from "~/services/discourseWebhooks.server";
-import type { ApiDiscourseWebhookHeaders } from "~/types/apiDiscourse";
+import type { ApiDiscourseWebHookHeaders } from "~/types/apiDiscourse";
 import { addWebHookTopicCategoryRequest } from "~/services/jobs/rateLimitedApiWorker.server";
 
 import { WebHookError } from "~/services/errors/appErrors.server";
@@ -51,7 +51,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
 
 async function validateTopicEventWebHook(
   request: Request,
-  discourseHeaders: ApiDiscourseWebhookHeaders
+  discourseHeaders: ApiDiscourseWebHookHeaders
 ) {
   if (request.method !== "POST") {
     throw new WebHookError("Invalid request method", 403);

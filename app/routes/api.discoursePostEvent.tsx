@@ -1,5 +1,7 @@
 import { json, type ActionFunctionArgs } from "@remix-run/node";
 import { fromError } from "zod-validation-error";
+import { WebHookError } from "~/services/errors/appErrors.server";
+import type { ApiDiscourseWebHookHeaders } from "~/types/apiDiscourse";
 
 import {
   validateDiscourseApiWebHookPost,
@@ -68,3 +70,8 @@ export const action = async ({ request }: ActionFunctionArgs) => {
 
   return json({ message: "success" }, 200);
 };
+
+async function validatePostEventWebHook(
+  request: Request,
+  discourseHeaders: ApiDiscourseWebHookHeaders
+) {}

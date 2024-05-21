@@ -1,4 +1,4 @@
-export interface ApiDiscourseWebhookHeaders {
+export interface ApiDiscourseWebHookHeaders {
   Accept?: string | null;
   Connection?: string | null;
   "Content-Length"?: string | null;

@@ -1,10 +1,10 @@
 import { discourseEnv } from "./config.server";
-import type { ApiDiscourseWebhookHeaders } from "~/types/apiDiscourse";
+import type { ApiDiscourseWebHookHeaders } from "~/types/apiDiscourse";
 import { createHmac, timingSafeEqual } from "node:crypto";
 
 export const discourseWehbookHeaders = (
   headers: Headers
-): ApiDiscourseWebhookHeaders => {
+): ApiDiscourseWebHookHeaders => {
   return {
     Accept: headers.get("Accept"),
     Connection: headers.get("Connection"),
