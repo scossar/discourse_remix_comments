@@ -64,7 +64,7 @@ async function validateTopicEventWebHook(
   ) {
     const errorMessage = `Webhook error: route not configured to handle ${discourseHeaders["X-Discourse-Event-Type"]} 
       ${discourseHeaders["X-Discourse-Event"]}`;
-    throw new WebHookError(errorMessage, 422);
+    throw new WebHookError(errorMessage, 403);
   }
 
   const webhookData: DiscourseApiWebHookTopicPayload = await request.json();
