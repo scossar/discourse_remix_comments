@@ -6,8 +6,8 @@ export default async function createTopicTags(
   topicDatabaseId: number
 ) {
   const topicTags = tagIds.map((tagId) => {
-    try {
-      db.discourseTopicTag.upsert({
+    db.discourseTopicTag
+      .upsert({
         where: {
           tagId_topicId: {
             tagId: tagId,
@@ -22,10 +22,10 @@ export default async function createTopicTags(
           tagId: tagId,
           topicId: topicDatabaseId,
         },
+      })
+      .catch((error) => {
+        throwPrismaError(error);
       });
-    } catch (error) {
-      throwPrismaError(error);
-    }
   });
 
   try {
