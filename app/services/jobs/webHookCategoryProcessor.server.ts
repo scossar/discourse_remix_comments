@@ -1,5 +1,6 @@
 import { db } from "~/services/db.server";
 import createCategory from "~/services/createCategory.server";
+import type { DiscourseApiWebHookTopicPayload } from "~/schemas/discourseApiResponse.server";
 import {
   ApiError,
   ValidationError,
@@ -9,8 +10,8 @@ import {
 } from "~/services/errors/appErrors.server";
 
 export async function webHookCategoryProcessor(
-  topicId: number,
-  categoryId: number
+  categoryId: number,
+  topicPayload: DiscourseApiWebHookTopicPayload
 ) {
   let category;
   try {
@@ -20,7 +21,7 @@ export async function webHookCategoryProcessor(
     if (!category) {
       category = await createCategory(categoryId);
     }
-    return { topicId, categoryId };
+    return topicPayload;
   } catch (error) {
     let errorMessage = "Unknown error";
     if (

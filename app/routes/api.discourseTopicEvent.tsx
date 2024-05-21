@@ -30,10 +30,13 @@ import {
 export const action = async ({ request }: ActionFunctionArgs) => {
   const receivedHeaders: Headers = request.headers;
   const discourseHeaders = discourseWehbookHeaders(receivedHeaders);
-  let topicJson;
+  let topicWebHookJson;
   try {
-    topicJson = await validateTopicEventWebHook(request, discourseHeaders);
-    if (!topicJson) {
+    topicWebHookJson = await validateTopicEventWebHook(
+      request,
+      discourseHeaders
+    );
+    if (!topicWebHookJson) {
       return json({ message: "Unknown validation error" }, 422);
     }
   } catch (error) {
@@ -48,36 +51,11 @@ export const action = async ({ request }: ActionFunctionArgs) => {
   }
 
   // maybe makes an API request
-  const topicId = topicJson.id;
-  const categoryId = topicJson.category_id;
+  const categoryId = topicWebHookJson.topic.category_id;
 
-  await addCategoryRequest({ topicId, categoryId });
+  await addCategoryRequest({ categoryId, topicPayload: topicWebHookJson });
 
   /*
-  if (categoryId) {
-    const category = await db.discourseCategory.findUnique({
-      where: { externalId: categoryId },
-    });
-    if (!category) {
-      try {
-        await createCategory(categoryId);
-      } catch (error) {
-        let errorMessage;
-        if (
-          error instanceof ApiError ||
-          error instanceof ValidationError ||
-          error instanceof PrismaError ||
-          error instanceof UnknownError
-        ) {
-          errorMessage = error.message;
-        } else {
-          errorMessage = "Unknown error";
-        }
-        console.error(`Error creating category: ${errorMessage}`);
-        return json({ message: errorMessage }, 500);
-      }
-    }
-  }
 
   // maybe makes an API request
   let topic;
@@ -198,5 +176,5 @@ async function validateTopicEventWebHook(
     throw new WebHookError(errorMessage, 403);
   }
 
-  return topicWebHookJson.topic;
+  return topicWebHookJson;
 }

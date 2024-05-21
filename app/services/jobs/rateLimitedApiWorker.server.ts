@@ -7,6 +7,7 @@ import { commentsMapProcessor } from "~/services/jobs/commentsMapProcessor.serve
 import { commentRepliesProcessor } from "~/services/jobs/commentRepliesProcessor.server";
 import { webHookCategoryProcessor } from "~/services/jobs/webHookCategoryProcessor.server";
 import { JobError } from "~/services/errors/appErrors.server";
+import type { DiscourseApiWebHookTopicPayload } from "~/schemas/discourseApiResponse.server";
 
 type TopicStreamQueueArgs = {
   topicId: number;
@@ -29,8 +30,8 @@ type commentRepliesQueueArgs = {
 };
 
 type categoryQueueArgs = {
-  topicId: number;
   categoryId: number;
+  topicPayload: DiscourseApiWebHookTopicPayload;
 };
 
 export const rateLimitedApiWorker = new Worker(
@@ -87,17 +88,14 @@ export const rateLimitedApiWorker = new Worker(
       }
     }
     if (job.name === "findOrCreateCategory") {
-      const { topicId, categoryId } = job.data;
+      const { categoryId, topicPayload } = job.data;
       try {
-        const categoryData = await webHookCategoryProcessor(
-          topicId,
-          categoryId
+        const topicWebHookJson = await webHookCategoryProcessor(
+          categoryId,
+          topicPayload
         );
 
-        return {
-          topicId: categoryData.topicId,
-          categoryId: categoryData.categoryId,
-        };
+        return topicWebHookJson;
       } catch (error) {
         console.error(`Failed to process findOrCreateCategory job: ${error}`);
         throw new JobError("Failed to process findOrCreateCategory job");
@@ -158,13 +156,13 @@ export async function addCommentRepliesRequest({
 }
 
 export async function addCategoryRequest({
-  topicId,
   categoryId,
+  topicPayload,
 }: categoryQueueArgs) {
-  const jobId = `category-${topicId}-${categoryId}`;
+  const jobId = `category-${categoryId}`;
   await apiRequestQueue.add(
     "findOrCreateCategory",
-    { topicId, categoryId },
+    { categoryId, topicPayload },
     { jobId }
   );
 }
@@ -191,9 +189,13 @@ rateLimitedApiWorker.on("completed", async (job: Job) => {
   }
 
   if (job.name === "findOrCreateCategory") {
-    const { topicId, categoryId } = job.returnvalue;
+    const topicWebHookJson = job.returnvalue;
     console.log(
-      `findOrCreateCategory, topicId: ${topicId}, categoryId: ${categoryId}`
+      `findOrCreateCategory, topicWebHookJson: ${JSON.stringify(
+        topicWebHookJson,
+        null,
+        2
+      )}`
     );
   }
 });
