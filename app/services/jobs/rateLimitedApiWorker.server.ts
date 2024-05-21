@@ -90,12 +90,7 @@ export const rateLimitedApiWorker = new Worker(
     if (job.name === "findOrCreateCategory") {
       const { categoryId, topicPayload } = job.data;
       try {
-        const payload = await webHookCategoryProcessor(
-          categoryId,
-          topicPayload
-        );
-
-        return { payload };
+        return await webHookCategoryProcessor(categoryId, topicPayload);
       } catch (error) {
         console.error(`Failed to process findOrCreateCategory job: ${error}`);
         throw new JobError("Failed to process findOrCreateCategory job");
@@ -189,7 +184,7 @@ rateLimitedApiWorker.on("completed", async (job: Job) => {
   }
 
   if (job.name === "findOrCreateCategory") {
-    const { payload } = job.returnvalue;
+    const payload = job.returnvalue;
     console.log(
       `findOrCreateCategory, topicWebHookJson: ${JSON.stringify(
         payload,
