@@ -4,7 +4,6 @@ import { fromError } from "zod-validation-error";
 import { WebHookError } from "~/services/errors/appErrors.server";
 import type { ApiDiscourseWebHookHeaders } from "~/types/apiDiscourse";
 import { addCommentsMapRequest } from "~/services/jobs/rateLimitedApiWorker.server";
-
 import {
   validateDiscourseApiWebHookPost,
   type DiscourseApiWebHookPost,
@@ -12,7 +11,7 @@ import {
 import {
   discourseWebHookHeaders,
   verifyWebHookRequest,
-} from "~/services/discourseWebhooks.server";
+} from "~/services/discourseWebHooks.server";
 
 export const action = async ({ request }: ActionFunctionArgs) => {
   const receivedHeaders: Headers = request.headers;

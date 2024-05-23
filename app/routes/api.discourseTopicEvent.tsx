@@ -8,7 +8,7 @@ import {
 import {
   discourseWebHookHeaders,
   verifyWebHookRequest,
-} from "~/services/discourseWebhooks.server";
+} from "~/services/discourseWebHooks.server";
 import type { ApiDiscourseWebHookHeaders } from "~/types/apiDiscourse";
 import { addWebHookTopicCategoryRequest } from "~/services/jobs/rateLimitedApiWorker.server";
 
