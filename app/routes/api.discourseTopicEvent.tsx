@@ -6,8 +6,8 @@ import {
   validateDiscourseApiWebHookTopicPayload,
 } from "~/schemas/discourseApiResponse.server";
 import {
-  discourseWehbookHeaders,
-  verifyWebhookRequest,
+  discourseWebHookHeaders,
+  verifyWebHookRequest,
 } from "~/services/discourseWebhooks.server";
 import type { ApiDiscourseWebHookHeaders } from "~/types/apiDiscourse";
 import { addWebHookTopicCategoryRequest } from "~/services/jobs/rateLimitedApiWorker.server";
@@ -16,7 +16,7 @@ import { WebHookError } from "~/services/errors/appErrors.server";
 
 export const action = async ({ request }: ActionFunctionArgs) => {
   const receivedHeaders: Headers = request.headers;
-  const discourseHeaders = discourseWehbookHeaders(receivedHeaders);
+  const discourseHeaders = discourseWebHookHeaders(receivedHeaders);
   let topicWebHookJson;
   try {
     topicWebHookJson = await validateTopicEventWebHook(
@@ -86,7 +86,7 @@ async function validateTopicEventWebHook(
   const eventSignature = discourseHeaders["X-Discourse-Event-Signature"];
 
   const validSig = eventSignature
-    ? verifyWebhookRequest(JSON.stringify(webhookData), eventSignature)
+    ? verifyWebHookRequest(JSON.stringify(webhookData), eventSignature)
     : false;
 
   if (!validSig) {

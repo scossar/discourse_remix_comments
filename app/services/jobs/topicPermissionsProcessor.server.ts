@@ -14,7 +14,6 @@ export async function topicPermissionsProcessor(
   topicId: number,
   username: string,
 ) {
-  console.log(`topicid: ${topicId}, username: ${username}`);
   const details = await fetchTopicDetails(topicId, username, discourseEnv());
   const canComment = details?.can_create_post ? "true" : "false";
   const permissions: TopicPermissions = {

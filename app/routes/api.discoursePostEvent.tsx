@@ -10,13 +10,13 @@ import {
   type DiscourseApiWebHookPost,
 } from "~/schemas/discourseApiResponse.server";
 import {
-  discourseWehbookHeaders,
-  verifyWebhookRequest,
+  discourseWebHookHeaders,
+  verifyWebHookRequest,
 } from "~/services/discourseWebhooks.server";
 
 export const action = async ({ request }: ActionFunctionArgs) => {
   const receivedHeaders: Headers = request.headers;
-  const discourseHeaders = discourseWehbookHeaders(receivedHeaders);
+  const discourseHeaders = discourseWebHookHeaders(receivedHeaders);
 
   let postWebHookJson;
   try {
@@ -73,7 +73,7 @@ async function validatePostEventWebHook(
 
   const eventSignature = discourseHeaders["X-Discourse-Event-Signature"];
   const validSig = eventSignature
-    ? verifyWebhookRequest(JSON.stringify(webHookData), eventSignature)
+    ? verifyWebHookRequest(JSON.stringify(webHookData), eventSignature)
     : false;
 
   if (!validSig) {

@@ -243,7 +243,7 @@ export async function addWebHookTopicPostRequest({
   );
 }
 
-export async function addCommentPermissionsRequest({ topicId, username }: TopicPermissionsQueueArgs) {
+export async function addTopicPermissionsRequest({ topicId, username }: TopicPermissionsQueueArgs) {
   const jobId = `topicPermissions-${topicId}-${username}`;
   await apiRequestQueue.add("setTopicPermissionsForUser", { topicId, username }, { jobId })
 }

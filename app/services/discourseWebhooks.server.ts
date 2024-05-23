@@ -2,7 +2,7 @@ import { discourseEnv } from "./config.server";
 import type { ApiDiscourseWebHookHeaders } from "~/types/apiDiscourse";
 import { createHmac, timingSafeEqual } from "node:crypto";
 
-export const discourseWehbookHeaders = (
+export const discourseWebHookHeaders = (
   headers: Headers
 ): ApiDiscourseWebHookHeaders => {
   return {
@@ -20,7 +20,7 @@ export const discourseWehbookHeaders = (
   };
 };
 
-export const verifyWebhookRequest = (
+export const verifyWebHookRequest = (
   payload: string,
   xDiscourseEventSignature: string
 ) => {
