@@ -1,9 +1,14 @@
 import { type DiscourseRawEnv, discourseEnv } from "~/services/config.server";
-import { ApiError, ValidationError } from "~/services/errors/appErrors.server";
-import { type DiscourseApiTopicDetails, validateDiscourseApiFullTopicWithPostStream } from "~/schemas/discourseApiResponse.server";
+import { ApiError, RedisError, ValidationError } from "~/services/errors/appErrors.server";
+import { validateDiscourseApiFullTopicWithPostStream } from "~/schemas/discourseApiResponse.server";
 import { ZodError } from "zod";
 import { fromError } from "zod-validation-error";
-//import { getRedisClient } from "~/services/redisClient.server";
+import { getTopicPermissionsKey } from "../redisKeys.server";
+import { getRedisClient } from "~/services/redisClient.server";
+
+type TopicPermissions = {
+  canComment: "true" | "false";
+}
 
 export async function topicPermissionsProcessor(
   topicId: number,
@@ -11,11 +16,15 @@ export async function topicPermissionsProcessor(
 ) {
   console.log(`topicid: ${topicId}, username: ${username}`);
   const details = await fetchTopicDetails(topicId, username, discourseEnv());
-  const canComment = details?.can_create_post ? details.can_create_post : false;
+  const canComment = details?.can_create_post ? "true" : "false";
+  const permissions: TopicPermissions = {
+    canComment: canComment,
+  }
+  await setTopicPermissions(topicId, username, permissions);
 
 }
 
-export async function fetchTopicDetails(
+async function fetchTopicDetails(
   topicId: number,
   username: string,
   config: DiscourseRawEnv,
@@ -44,5 +53,14 @@ export async function fetchTopicDetails(
       errorMessage = fromError(error).toString();
       throw new ValidationError(errorMessage);
     }
+  }
+}
+
+async function setTopicPermissions(topicId: number, username: string, permissions: TopicPermissions) {
+  try {
+    const client = await getRedisClient();
+    await client.set(getTopicPermissionsKey(topicId, username), permissions.canComment);
+  } catch (error) {
+    throw new RedisError("Unable to set topicPermissions key", 500);
   }
 }

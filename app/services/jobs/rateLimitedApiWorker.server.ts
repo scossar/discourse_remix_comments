@@ -8,6 +8,7 @@ import { commentRepliesProcessor } from "~/services/jobs/commentRepliesProcessor
 import { webHookTopicCategoryProcessor } from "~/services/jobs/webHookTopicCategoryProcessor.server";
 import { webHookTopicProcessor } from "~/services/jobs/webHookTopicProcessor.server";
 import { webHookTopicPostProcessor } from "~/services/jobs/webHookTopicPostProcessor.server";
+import { topicPermissionsProcessor } from "~/services/jobs/topicPermissionsProcessor.server";
 import { JobError } from "~/services/errors/appErrors.server";
 import type { DiscourseApiWebHookTopicPayload } from "~/schemas/discourseApiResponse.server";
 import { DiscourseTopic } from "@prisma/client";
@@ -27,25 +28,30 @@ type CommentsMapQueueArgs = {
   username?: string;
 };
 
-type commentRepliesQueueArgs = {
+type CommentRepliesQueueArgs = {
   postId: number;
   username?: string;
 };
 
-type categoryQueueArgs = {
+type CategoryQueueArgs = {
   categoryId: number;
   topicPayload: DiscourseApiWebHookTopicPayload;
   topicEdited: boolean;
 };
 
-type webHookTopicQueueArgs = {
+type WebHookTopicQueueArgs = {
   topicPayload: DiscourseApiWebHookTopicPayload;
   topicEdited: boolean;
 };
 
-type webHookTopicPostQueuArgs = {
+type WebHookTopicPostQueuArgs = {
   topic: DiscourseTopic;
 };
+
+type TopicPermissionsQueueArgs = {
+  topicId: number;
+  username: string;
+}
 
 export const rateLimitedApiWorker = new Worker(
   apiRequestQueue.name,
@@ -138,6 +144,15 @@ export const rateLimitedApiWorker = new Worker(
         );
       }
     }
+    if (job.name === "setTopicPermissionsForUser") {
+      const {topicId, username} = job.data;
+      try {
+        await topicPermissionsProcessor(topicId, username);
+      } catch (error) {
+        console.error(`Failed to process setTopicPermissionsForUser job: ${error}`);
+        throw new JobError("Failed to process setTopicPermissionsForUser job")
+      }
+    }
   },
   { connection, limiter: { max: 1, duration: 1000 } }
 );
@@ -181,7 +196,7 @@ export async function addCommentsMapRequest({
 export async function addCommentRepliesRequest({
   postId,
   username,
-}: commentRepliesQueueArgs) {
+}: CommentRepliesQueueArgs) {
   const jobId = username
     ? `replies-${postId}-${username}`
     : `replies-${postId}`;
@@ -196,7 +211,7 @@ export async function addWebHookTopicCategoryRequest({
   categoryId,
   topicPayload,
   topicEdited,
-}: categoryQueueArgs) {
+}: CategoryQueueArgs) {
   const jobId = `category-${categoryId}`;
   await apiRequestQueue.add(
     "findOrCreateWebHookTopicCategory",
@@ -208,7 +223,7 @@ export async function addWebHookTopicCategoryRequest({
 export async function addWebHookTopicRequest({
   topicPayload,
   topicEdited,
-}: webHookTopicQueueArgs) {
+}: WebHookTopicQueueArgs) {
   const jobId = `webHookTopic-${topicPayload.topic.id}`;
   await apiRequestQueue.add(
     "findOrCreateWebHookTopic",
@@ -219,13 +234,18 @@ export async function addWebHookTopicRequest({
 
 export async function addWebHookTopicPostRequest({
   topic,
-}: webHookTopicPostQueuArgs) {
+}: WebHookTopicPostQueuArgs) {
   const jobId = `webHookTopicPost-${topic.id}`;
   await apiRequestQueue.add(
     "findOrCreateWebHookTopicPost",
     { topic },
     { jobId }
   );
+}
+
+export async function addCommentPermissionsRequest({ topicId, username }: TopicPermissionsQueueArgs) {
+  const jobId = `topicPermissions-${topicId}-${username}`;
+  await apiRequestQueue.add("setTopicPermissionsForUser", { topicId, username }, { jobId })
 }
 
 rateLimitedApiWorker.on("completed", async (job: Job) => {

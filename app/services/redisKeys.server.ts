@@ -15,5 +15,5 @@ export function getCommentsMapKey(topicId: number): string {
 }
 
 export function getTopicPermissionsKey(topicId: number, username: string) {
-  return `topicPermissions:${username}:${topicId}`;
+  return `topicPermissions:${topicId}:${username}`;
 }
