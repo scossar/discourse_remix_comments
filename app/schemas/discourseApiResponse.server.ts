@@ -213,6 +213,7 @@ export const DiscourseApiTopicDetailsSchema = z.object({
   created_by: DiscourseApiBasicUserSchema,
   last_poster: DiscourseApiBasicUserSchema,
 });
+export type DiscourseApiTopicDetails = z.infer<typeof DiscourseApiTopicDetailsSchema>;
 
 export const DiscourseApiFullTopicSchema = DiscourseApiBasicTopicSchema.extend({
   details: DiscourseApiTopicDetailsSchema,
