@@ -1,4 +1,5 @@
 import { type DiscourseRawEnv, discourseEnv } from "~/services/config.server";
+import { getRedisClient } from "~/services/redisClient.server";
 
 export async function topicActionsForUserProcessor(
   topicId: number,
@@ -18,4 +19,8 @@ export async function fetchTopic(
   headers.append("Content-Type", "application/json");
   headers.append("Api-Key", apiKey);
   headers.append("Api-Username", username);
+  const url = `${baseUrl}/t/-/${topicId}.json`
+  fetch(url, { headers })
+
+
 }
