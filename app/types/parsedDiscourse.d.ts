@@ -1,3 +1,10 @@
+export interface ParsedDiscourseBasicReaction {
+  id: string;
+  count: number;
+}
+
+export type ParsedDiscourseBasicReactions = ParsedDiscourseBasicReaction[];
+
 export interface ParsedDiscoursePost {
   id: number;
   username: string;
@@ -10,6 +17,7 @@ export interface ParsedDiscoursePost {
   topicId: number;
   updatedAt: string;
   userId: number;
+  reactions: ParsedDiscourseBasicReactions;
 }
 
 export interface ParsedDiscourseReplyPost extends ParsedDiscoursePost {
