@@ -345,7 +345,14 @@ export function validateDiscourseApiWebHookTopicPayload(
 
 export const DiscourseApiWebHookLikeSchema = z.object({
   like: z.object({
-    post: DiscourseApiWebHookPostSchema,
+    post: DiscourseApiBasicPostSchema.extend({
+      topic_title: z.string(),
+      category_id: z.number(),
+      category_slug: z.string(),
+      topic_posts_count: z.number(),
+      topic_filtered_posts_count: z.number(),
+      topic_archetype: DiscourseApiTopicArchetypeSchema,
+    }),
     user: DiscourseApiBasicUserSchema,
   }),
 });

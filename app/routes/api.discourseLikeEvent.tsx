@@ -14,8 +14,10 @@ export const action = async ({ request }: ActionFunctionArgs) => {
   const discourseHeaders = discourseWebHookHeaders(receivedHeaders);
   let likeWebHookJson;
   try {
-    likeWebHookJson = validateLikeEventWebHook(request, discourseHeaders);
+    likeWebHookJson = await validateLikeEventWebHook(request, discourseHeaders);
     console.log(JSON.stringify(likeWebHookJson, null, 2));
+
+    return json({ message: "success" }, 200);
   } catch (error) {
     let errorMessage = "Unknown validation error";
     let statusCode = 500;
@@ -31,7 +33,7 @@ async function validateLikeEventWebHook(
   request: Request,
   discourseHeaders: ApiDiscourseWebHookHeaders
 ) {
-  if (request.method == "POST") {
+  if (request.method !== "POST") {
     throw new WebHookError("Invalid request method", 403);
   }
   if (
