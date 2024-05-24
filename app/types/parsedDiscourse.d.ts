@@ -1,5 +1,6 @@
 export interface ParsedDiscourseBasicReaction {
   id: string;
+  type: string;
   count: number;
 }
 

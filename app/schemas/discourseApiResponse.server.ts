@@ -55,8 +55,10 @@ export const DiscourseApiReactionSchema = z.object({
   type: z.string(),
   count: z.number(),
 });
+export type DiscourseApiReaction = z.infer<typeof DiscourseApiReactionSchema>;
 
 export const DiscourseApiReactionsSchema = z.array(DiscourseApiReactionSchema);
+export type DiscourseApiReactions = z.infer<typeof DiscourseApiReactionsSchema>;
 
 /**
  * Post

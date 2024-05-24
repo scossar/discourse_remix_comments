@@ -5,6 +5,7 @@ import type {
   DiscourseApiReplyToUser,
   DiscourseApiBasicPost,
   DiscourseApiReplyPost,
+  DiscourseApiReaction,
 } from "~/schemas/discourseApiResponse.server";
 
 import type {
@@ -13,6 +14,7 @@ import type {
   ParsedDiscoursePost,
   ParsedDiscourseReplyPost,
   ParsedDiscourseReplyToUser,
+  ParsedDiscourseBasicReaction,
 } from "~/types/parsedDiscourse";
 
 export function generateAvatarUrl(
@@ -22,6 +24,16 @@ export function generateAvatarUrl(
 ) {
   const sized = avatarTemplate.replace("{size}", size);
   return `${discourseBaseUrl}${sized}`;
+}
+
+export function transformReaction(
+  reaction: DiscourseApiReaction
+): ParsedDiscourseBasicReaction {
+  return {
+    id: reaction.id,
+    type: reaction.type,
+    count: reaction.count,
+  };
 }
 
 export function transformPost(
@@ -40,6 +52,7 @@ export function transformPost(
     topicId: apiPost.topic_id,
     updatedAt: apiPost.updated_at,
     userId: apiPost.user_id,
+    reactions: apiPost.reactions.map((reaction) => transformReaction(reaction)),
   };
 }
 
@@ -70,6 +83,7 @@ export async function transformPostAndQueueReplies(
     topicId: apiPost.topic_id,
     updatedAt: apiPost.updated_at,
     userId: apiPost.user_id,
+    reactions: apiPost.reactions.map((reaction) => transformReaction(reaction)),
   };
 }
 
@@ -90,6 +104,9 @@ export function transformReplyPost(
     updatedAt: apiReplyPost.updated_at,
     userId: apiReplyPost.user_id,
     replyToUser: transformReplyToUser(apiReplyPost.reply_to_user, baseUrl),
+    reactions: apiReplyPost.reactions.map((reaction) =>
+      transformReaction(reaction)
+    ),
   };
 }
 
