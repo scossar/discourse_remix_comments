@@ -50,6 +50,14 @@ export type DiscourseApiReplyToUser = z.infer<
   typeof DiscourseApiReplyToUserSchema
 >;
 
+export const DiscourseApiReactionSchema = z.object({
+  id: z.string(),
+  type: z.string(),
+  count: z.number(),
+});
+
+export const DiscourseApiReactionsSchema = z.array(DiscourseApiReactionSchema);
+
 /**
  * Post
  */
@@ -69,6 +77,7 @@ export const DiscourseApiBasicPostSchema = z.object({
   user_id: z.number(),
   hidden: z.boolean(),
   deleted_at: z.string().nullable(),
+  reactions: DiscourseApiReactionsSchema,
 });
 export type DiscourseApiBasicPost = z.infer<typeof DiscourseApiBasicPostSchema>;
 
@@ -213,7 +222,9 @@ export const DiscourseApiTopicDetailsSchema = z.object({
   created_by: DiscourseApiBasicUserSchema,
   last_poster: DiscourseApiBasicUserSchema,
 });
-export type DiscourseApiTopicDetails = z.infer<typeof DiscourseApiTopicDetailsSchema>;
+export type DiscourseApiTopicDetails = z.infer<
+  typeof DiscourseApiTopicDetailsSchema
+>;
 
 export const DiscourseApiFullTopicSchema = DiscourseApiBasicTopicSchema.extend({
   details: DiscourseApiTopicDetailsSchema,
@@ -330,4 +341,18 @@ export function validateDiscourseApiWebHookTopicPayload(
   webHookTopic: DiscourseApiWebHookTopicPayload
 ) {
   return DiscourseApiWebHookTopicPayloadSchema.parse(webHookTopic);
+}
+
+export const DiscourseApiWebHookLikeSchema = z.object({
+  like: z.object({
+    post: DiscourseApiWebHookPostSchema,
+    user: DiscourseApiBasicUserSchema,
+  }),
+});
+export type DiscourseApiWebHookLike = z.infer<
+  typeof DiscourseApiWebHookLikeSchema
+>;
+
+export function validateDiscourseApiWebHookLikePayload(webHookLike: unknown) {
+  return DiscourseApiWebHookLikeSchema.parse(webHookLike);
 }
