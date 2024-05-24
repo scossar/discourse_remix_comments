@@ -1,7 +1,13 @@
-import { type ActionFunctionArgs } from "@remix-run/node";
+import { json, type ActionFunctionArgs } from "@remix-run/node";
 import type { ApiDiscourseWebHookHeaders } from "~/types/apiDiscourse";
 import { WebHookError } from "~/services/errors/appErrors.server";
-import { discourseWebHookHeaders } from "~/services/discourseWebHooks.server";
+import {
+  discourseWebHookHeaders,
+  verifyWebHookRequest,
+} from "~/services/discourseWebHooks.server";
+import { validateDiscourseApiWebHookLikePayload } from "~/schemas/discourseApiResponse.server";
+import { ZodError } from "zod";
+import { fromError } from "zod-validation-error";
 
 export const action = async ({ request }: ActionFunctionArgs) => {
   const receivedHeaders: Headers = request.headers;
@@ -9,8 +15,15 @@ export const action = async ({ request }: ActionFunctionArgs) => {
   let likeWebHookJson;
   try {
     likeWebHookJson = validateLikeEventWebHook(request, discourseHeaders);
+    console.log(JSON.stringify(likeWebHookJson, null, 2));
   } catch (error) {
-    const errorMessage = "Unknown validation error";
+    let errorMessage = "Unknown validation error";
+    let statusCode = 500;
+    if (error instanceof WebHookError) {
+      errorMessage = error.message;
+      statusCode = error.statusCode;
+    }
+    return json({ message: errorMessage }, statusCode);
   }
 };
 
@@ -30,4 +43,26 @@ async function validateLikeEventWebHook(
   }
 
   const webHookJson = await request.json();
+  let likeEventJson;
+  try {
+    likeEventJson = validateDiscourseApiWebHookLikePayload(webHookJson);
+  } catch (error) {
+    let errorMessage = "Invalid webhook data";
+    if (error instanceof ZodError) {
+      errorMessage = fromError(error).toString();
+    }
+    throw new WebHookError(errorMessage, 422);
+  }
+
+  const eventSignature = discourseHeaders["X-Discourse-Event-Signature"];
+  const validSig = eventSignature
+    ? verifyWebHookRequest(JSON.stringify(webHookJson), eventSignature)
+    : false;
+
+  if (!validSig) {
+    const errorMessage = `Webhook Error: invalid or missing event signature for event-id ${discourseHeaders["X-Discourse-Event-Id"]} `;
+    throw new WebHookError(errorMessage, 403);
+  }
+
+  return likeEventJson;
 }

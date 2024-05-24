@@ -62,7 +62,6 @@ async function validatePostEventWebHook(
   try {
     postWebHookJson = validateDiscourseApiWebHookPost(webHookData);
   } catch (error) {
-    console.log("a validation error has occurred");
     let errorMessage = "Invalid webhook data";
     if (error instanceof ZodError) {
       errorMessage = fromError(error).toString();
