@@ -9,8 +9,12 @@ import { webHookTopicCategoryProcessor } from "~/services/jobs/webHookTopicCateg
 import { webHookTopicProcessor } from "~/services/jobs/webHookTopicProcessor.server";
 import { webHookTopicPostProcessor } from "~/services/jobs/webHookTopicPostProcessor.server";
 import { topicPermissionsProcessor } from "~/services/jobs/topicPermissionsProcessor.server";
+import { commentProcessor } from "~/services/jobs/commentProcessor.server";
 import { JobError } from "~/services/errors/appErrors.server";
-import type { DiscourseApiWebHookTopicPayload } from "~/schemas/discourseApiResponse.server";
+import type {
+  DiscourseApiWebHookPost,
+  DiscourseApiWebHookTopicPayload,
+} from "~/schemas/discourseApiResponse.server";
 import { DiscourseTopic } from "@prisma/client";
 
 type TopicStreamQueueArgs = {
@@ -51,7 +55,11 @@ type WebHookTopicPostQueuArgs = {
 type TopicPermissionsQueueArgs = {
   topicId: number;
   username: string;
-}
+};
+
+export type CommentProcessorArgs = {
+  postWebHookJson: DiscourseApiWebHookPost;
+};
 
 export const rateLimitedApiWorker = new Worker(
   apiRequestQueue.name,
@@ -145,12 +153,25 @@ export const rateLimitedApiWorker = new Worker(
       }
     }
     if (job.name === "setTopicPermissionsForUser") {
-      const {topicId, username} = job.data;
+      const { topicId, username } = job.data;
       try {
         await topicPermissionsProcessor(topicId, username);
       } catch (error) {
-        console.error(`Failed to process setTopicPermissionsForUser job: ${error}`);
-        throw new JobError("Failed to process setTopicPermissionsForUser job")
+        console.error(
+          `Failed to process setTopicPermissionsForUser job: ${error}`
+        );
+        throw new JobError("Failed to process setTopicPermissionsForUser job");
+      }
+    }
+    if (job.name === "createOrUpdateTopicComment") {
+      const postWebHookJson = job.data;
+      try {
+        await commentProcessor(postWebHookJson);
+      } catch (error) {
+        console.error(
+          `Failed to process createOrUpdateTopicComment job: ${error}`
+        );
+        throw new JobError("Failed to process createOrUpdateTopicComment job");
       }
     }
   },
@@ -243,9 +264,29 @@ export async function addWebHookTopicPostRequest({
   );
 }
 
-export async function addTopicPermissionsRequest({ topicId, username }: TopicPermissionsQueueArgs) {
+export async function addCommentRequest({
+  postWebHookJson,
+}: CommentProcessorArgs) {
+  const topicId = postWebHookJson.post.topic_id;
+  const postId = postWebHookJson.post.id;
+  const jobId = `comment-${topicId}-${postId}`;
+  await apiRequestQueue.add(
+    "createOrUpdateTopicComment",
+    { postWebHookJson },
+    { jobId }
+  );
+}
+
+export async function addTopicPermissionsRequest({
+  topicId,
+  username,
+}: TopicPermissionsQueueArgs) {
   const jobId = `topicPermissions-${topicId}-${username}`;
-  await apiRequestQueue.add("setTopicPermissionsForUser", { topicId, username }, { jobId })
+  await apiRequestQueue.add(
+    "setTopicPermissionsForUser",
+    { topicId, username },
+    { jobId }
+  );
 }
 
 rateLimitedApiWorker.on("completed", async (job: Job) => {
