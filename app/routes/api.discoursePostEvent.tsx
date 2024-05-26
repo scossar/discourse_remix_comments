@@ -3,10 +3,7 @@ import { ZodError } from "zod";
 import { fromError } from "zod-validation-error";
 import { WebHookError } from "~/services/errors/appErrors.server";
 import type { ApiDiscourseWebHookHeaders } from "~/types/apiDiscourse";
-import {
-  addCommentRequest,
-  addCommentsMapRequest,
-} from "~/services/jobs/rateLimitedApiWorker.server";
+import { addCommentRequest } from "~/services/jobs/rateLimitedApiWorker.server";
 import {
   validateDiscourseApiWebHookPost,
   type DiscourseApiWebHookPost,
@@ -26,9 +23,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     if (!postWebHookJson) {
       return json({ message: "Unknown validation error" }, 422);
     }
-    // TODO: this is the laziest possible approach, but it works for now
-    //await addCommentsMapRequest({ topicId: postWebHookJson.post.topic_id });
-    await addCommentRequest({ postWebHookJson });
+    await addCommentRequest({ commentJson: postWebHookJson.post });
   } catch (error) {
     let errorMessage = "Invalid webhook request";
     let statusCode = 403;

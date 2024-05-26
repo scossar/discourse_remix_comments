@@ -1,18 +1,18 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
-// TODO: re-enable no-unused-vars
-
-import { type DiscourseApiWebHookPost } from "~/schemas/discourseApiResponse.server";
 import { transformPost } from "~/services/transformDiscourseDataZod.server";
-import { type DiscourseRawEnv, discourseEnv } from "~/services/config.server";
+import { discourseEnv } from "~/services/config.server";
 import { type CommentProcessorArgs } from "~/services/jobs/rateLimitedApiWorker.server";
+import { getCommentKey } from "~/services/redisKeys.server";
+import { getRedisClient } from "~/services/redisClient.server";
 
-export async function commentProcessor({
-  postWebHookJson,
-}: CommentProcessorArgs) {
+export async function commentProcessor({ commentJson }: CommentProcessorArgs) {
   const { baseUrl } = discourseEnv();
   try {
-    const tranformedPost = transformPost(postWebHookJson.post, baseUrl);
-    console.log(`transformedPost, ${JSON.stringify(tranformedPost, null, 2)}`);
+    const tranformedPost = transformPost(commentJson, baseUrl);
+    const key = getCommentKey(tranformedPost.topicId, tranformedPost.id);
+    console.log(`key: ${key}`);
+    const client = await getRedisClient();
+    console.log(JSON.stringify(tranformedPost, null, 2));
+    await client.set(key, JSON.stringify(tranformedPost));
   } catch (error) {
     // TODO: handle error
     throw new Error();

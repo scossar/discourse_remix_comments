@@ -12,8 +12,8 @@ import { topicPermissionsProcessor } from "~/services/jobs/topicPermissionsProce
 import { commentProcessor } from "~/services/jobs/commentProcessor.server";
 import { JobError } from "~/services/errors/appErrors.server";
 import type {
-  DiscourseApiWebHookPost,
   DiscourseApiWebHookTopicPayload,
+  ValidDiscourseApiCommentPost,
 } from "~/schemas/discourseApiResponse.server";
 import { DiscourseTopic } from "@prisma/client";
 
@@ -58,7 +58,7 @@ type TopicPermissionsQueueArgs = {
 };
 
 export type CommentProcessorArgs = {
-  postWebHookJson: DiscourseApiWebHookPost;
+  commentJson: ValidDiscourseApiCommentPost;
 };
 
 export const rateLimitedApiWorker = new Worker(
@@ -164,9 +164,9 @@ export const rateLimitedApiWorker = new Worker(
       }
     }
     if (job.name === "createOrUpdateTopicComment") {
-      const postWebHookJson = job.data;
+      const commentJson = job.data;
       try {
-        await commentProcessor(postWebHookJson);
+        await commentProcessor(commentJson);
       } catch (error) {
         console.error(
           `Failed to process createOrUpdateTopicComment job: ${error}`
@@ -264,15 +264,13 @@ export async function addWebHookTopicPostRequest({
   );
 }
 
-export async function addCommentRequest({
-  postWebHookJson,
-}: CommentProcessorArgs) {
-  const topicId = postWebHookJson.post.topic_id;
-  const postId = postWebHookJson.post.id;
+export async function addCommentRequest({ commentJson }: CommentProcessorArgs) {
+  const topicId = commentJson.topic_id;
+  const postId = commentJson.id;
   const jobId = `comment-${topicId}-${postId}`;
   await apiRequestQueue.add(
     "createOrUpdateTopicComment",
-    { postWebHookJson },
+    { commentJson },
     { jobId }
   );
 }
