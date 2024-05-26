@@ -11,7 +11,6 @@ import {
 } from "~/schemas/discourseApiResponse.server";
 import type { ParsedDiscourseTopicComments } from "~/types/parsedDiscourse";
 import { transformPostAndQueueReplies } from "~/services/transformDiscourseDataZod.server";
-import { addCommentRequest } from "~/services/jobs/rateLimitedApiWorker.server";
 
 // TODO: maybe handle first page differently?
 export async function topicCommentsProcessor(
@@ -62,12 +61,6 @@ export async function topicCommentsProcessor(
   const json: DiscourseApiTopicPostsOnly = await response.json();
   // note: if there are no valid posts, an empty array will be returned
   const posts = validateDiscourseApiCommentPosts(json.post_stream.posts);
-
-  await Promise.all(
-    posts.map((post) => addCommentRequest({ commentJson: post }))
-  );
-
-  /*
   const totalPages = Math.ceil(streamLength / chunkSize);
   const nextPage = page + 1 < totalPages ? page + 1 : null;
   const previousPage = page - 1 >= 0 ? page - 1 : null;
@@ -97,5 +90,4 @@ export async function topicCommentsProcessor(
   }
 
   return stringifiedComments;
-    */
 }

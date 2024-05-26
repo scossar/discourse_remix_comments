@@ -13,11 +13,12 @@ export async function getOrQueueCommentsMapCache(topicId: number) {
   }
 
   try {
+    // TODO: I changed the order here for testing
+    await addCommentsMapRequest({ topicId });
     const stringifiedCommentsMap = await client.get(cacheKey);
     if (stringifiedCommentsMap) {
       return JSON.parse(stringifiedCommentsMap);
     }
-    await addCommentsMapRequest({ topicId });
   } catch (error) {
     throw new RedisError(
       `Error getting commentsMap cache for topicId: ${topicId}`
