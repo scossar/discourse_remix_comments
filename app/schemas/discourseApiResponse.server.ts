@@ -105,6 +105,10 @@ export type ValidDiscourseApiCommentPosts = z.infer<
   typeof ValidDiscourseApiCommentPostsSchema
 >;
 
+export function validateDiscourseApiCommentPost(commentPost: unknown) {
+  return ValidDiscourseApiCommentPostSchema.parse(commentPost);
+}
+
 export function validateDiscourseApiCommentPosts(
   commentPosts: DiscourseApiBasicPosts
 ): ValidDiscourseApiCommentPosts {

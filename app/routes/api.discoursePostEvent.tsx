@@ -5,7 +5,7 @@ import { WebHookError } from "~/services/errors/appErrors.server";
 import type { ApiDiscourseWebHookHeaders } from "~/types/apiDiscourse";
 import { addCommentRequest } from "~/services/jobs/rateLimitedApiWorker.server";
 import {
-  validateDiscourseApiWebHookPost,
+  validateDiscourseApiCommentPost,
   type DiscourseApiWebHookPost,
 } from "~/schemas/discourseApiResponse.server";
 import {
@@ -23,7 +23,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     if (!postWebHookJson) {
       return json({ message: "Unknown validation error" }, 422);
     }
-    await addCommentRequest({ commentJson: postWebHookJson.post });
+    await addCommentRequest({ commentJson: postWebHookJson });
   } catch (error) {
     let errorMessage = "Invalid webhook request";
     let statusCode = 403;
@@ -59,7 +59,7 @@ async function validatePostEventWebHook(
 
   let postWebHookJson;
   try {
-    postWebHookJson = validateDiscourseApiWebHookPost(webHookData);
+    postWebHookJson = validateDiscourseApiCommentPost(webHookData.post);
   } catch (error) {
     let errorMessage = "Invalid webhook data";
     if (error instanceof ZodError) {
