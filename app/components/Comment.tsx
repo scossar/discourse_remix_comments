@@ -57,8 +57,8 @@ const Comment = forwardRef<HTMLDivElement, CommentProps>(function Comment(
             <span className="inline-block p-1 text-sm text-slate-50">
               {post.postNumber}
             </span>
-            <div dangerouslySetInnerHTML={{ __html: post.cooked }} />
-          </div>
+            <div dangerouslySetInnerHTML={{ __html: post.cooked }} />{" "}
+          </div>{" "}
           {replyCount > 0 && (
             <div className="mr-6">
               <button onClick={() => handleCommentRepliesClick(post.id)}>
