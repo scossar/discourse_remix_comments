@@ -1,7 +1,7 @@
 import { discourseEnv } from "~/services/config.server";
 import { transformPost } from "~/services/transformDiscourseDataZod.server";
 import type { ParsedDiscoursePost } from "~/types/parsedDiscourse";
-import { getPostStreamKey } from "~/services/redisKeys.server";
+import { getCommentKey, getPostStreamKey } from "~/services/redisKeys.server";
 import { getRedisClient } from "~/services/redisClient.server";
 import QueueError from "~/services/errors/queueError.server";
 import {
@@ -15,12 +15,15 @@ export async function topicCommentsProcessor(
   page: number,
   username?: string
 ) {
+  // TODO: this limit is set by Discourse.
+  // it should be set in this app's .env file.
   const chunkSize = 20;
   const { apiKey, baseUrl } = discourseEnv();
-  const headers = new Headers();
-  headers.append("Content-Type", "application/json");
-  headers.append("Api-Key", apiKey);
-  headers.append("Api-Username", username || "system");
+  const headers = new Headers({
+    "Content-Type": "application/json",
+    "Api-Key": apiKey,
+    "Api-Username": username || "system",
+  });
 
   let client: Redis;
   try {
@@ -31,6 +34,7 @@ export async function topicCommentsProcessor(
 
   const start = page * chunkSize;
   const end = start + chunkSize - 1;
+
   let nextPostIds;
   try {
     const streamKey = getPostStreamKey(topicId);
@@ -45,8 +49,10 @@ export async function topicCommentsProcessor(
 
   const queryString = "?post_ids[]=" + nextPostIds.join("&post_ids[]=");
   const response = await fetch(
-    `${baseUrl}/t/${topicId}/posts.json${queryString}`
+    `${baseUrl}/t/${topicId}/posts.json${queryString}`,
+    { headers }
   );
+
   if (!response.ok) {
     throw new QueueError(
       "Failed to fetch subsequent comments",
@@ -60,17 +66,17 @@ export async function topicCommentsProcessor(
     transformPost(post, baseUrl)
   );
 
-  await cachePosts(transformedPosts, client);
+  try {
+    await cachePosts(transformedPosts, client);
+  } catch (error) {
+    throw new QueueError("Failed to cache posts");
+  }
+}
 
-  /*
-  await Promise.all(
-    posts.map((post) => addCommentRequest({ commentJson: post }))
-  );
-  */
+async function cachePost(post: ParsedDiscoursePost, client: Redis) {
+  await client.set(getCommentKey(post.topicId, post.id), JSON.stringify(post));
 }
 
 async function cachePosts(posts: ParsedDiscoursePost[], client: Redis) {
-  console.log(
-    `posts: ${JSON.stringify(posts, null, 2)}, Redis type: ${typeof client}`
-  );
+  await Promise.all(posts.map((post) => cachePost(post, client)));
 }
