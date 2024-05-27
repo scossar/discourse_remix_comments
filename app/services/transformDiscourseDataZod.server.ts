@@ -64,11 +64,9 @@ export async function transformPostAndQueueReplies(
     const postId = apiPost.id;
     try {
       await addCommentRepliesRequest({ postId });
-      console.log(`cacheCommentReplies job queued for postId: ${postId}`);
     } catch (error) {
-      console.error(
-        `Unable to queue cacheCommentReplies job for postId: ${postId}`
-      );
+      // TODO: handle this better
+      throw new Error("don't use this function");
     }
   }
   return {

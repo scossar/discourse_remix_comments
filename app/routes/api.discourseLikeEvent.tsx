@@ -16,7 +16,6 @@ export const action = async ({ request }: ActionFunctionArgs) => {
   try {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     likeWebHookJson = await validateLikeEventWebHook(request, discourseHeaders);
-    //  console.log(JSON.stringify(likeWebHookJson, null, 2));
 
     return json({ message: "success" }, 200);
   } catch (error) {

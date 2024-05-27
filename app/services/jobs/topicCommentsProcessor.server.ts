@@ -1,19 +1,15 @@
 import { discourseEnv } from "~/services/config.server";
-import {
-  getPostStreamKey,
-  getTopicCommentsKey,
-} from "~/services/redisKeys.server";
+import { transformPost } from "~/services/transformDiscourseDataZod.server";
+import type { ParsedDiscoursePost } from "~/types/parsedDiscourse";
+import { getPostStreamKey } from "~/services/redisKeys.server";
 import { getRedisClient } from "~/services/redisClient.server";
 import QueueError from "~/services/errors/queueError.server";
 import {
   type DiscourseApiTopicPostsOnly,
   validateDiscourseApiCommentPosts,
 } from "~/schemas/discourseApiResponse.server";
-import type { ParsedDiscourseTopicComments } from "~/types/parsedDiscourse";
-import { transformPostAndQueueReplies } from "~/services/transformDiscourseDataZod.server";
-import { addCommentRequest } from "~/services/jobs/rateLimitedApiWorker.server";
+import type { Redis } from "ioredis";
 
-// TODO: maybe handle first page differently?
 export async function topicCommentsProcessor(
   topicId: number,
   page: number,
@@ -26,7 +22,7 @@ export async function topicCommentsProcessor(
   headers.append("Api-Key", apiKey);
   headers.append("Api-Username", username || "system");
 
-  let client;
+  let client: Redis;
   try {
     client = await getRedisClient();
   } catch (error) {
@@ -35,11 +31,10 @@ export async function topicCommentsProcessor(
 
   const start = page * chunkSize;
   const end = start + chunkSize - 1;
-  let nextPostIds, streamLength;
+  let nextPostIds;
   try {
     const streamKey = getPostStreamKey(topicId);
     nextPostIds = await client.lrange(streamKey, start, end);
-    streamLength = await client.llen(streamKey);
   } catch (error) {
     throw new QueueError("Error obtaining post stream for page");
   }
@@ -60,42 +55,22 @@ export async function topicCommentsProcessor(
   }
 
   const json: DiscourseApiTopicPostsOnly = await response.json();
-  // note: if there are no valid posts, an empty array will be returned
   const posts = validateDiscourseApiCommentPosts(json.post_stream.posts);
+  const transformedPosts: ParsedDiscoursePost[] = posts.map((post) =>
+    transformPost(post, baseUrl)
+  );
 
+  await cachePosts(transformedPosts, client);
+
+  /*
   await Promise.all(
     posts.map((post) => addCommentRequest({ commentJson: post }))
   );
+  */
+}
 
-  /*
-  const totalPages = Math.ceil(streamLength / chunkSize);
-  const nextPage = page + 1 < totalPages ? page + 1 : null;
-  const previousPage = page - 1 >= 0 ? page - 1 : null;
-
-  const transformedPosts = await Promise.all(
-    posts.map((post) => transformPostAndQueueReplies(post, baseUrl))
+async function cachePosts(posts: ParsedDiscoursePost[], client: Redis) {
+  console.log(
+    `posts: ${JSON.stringify(posts, null, 2)}, Redis type: ${typeof client}`
   );
-
-  const parsedTopicComments: ParsedDiscourseTopicComments = {
-    topicId: topicId,
-    currentPage: page,
-    nextPage: nextPage,
-    previousPage: previousPage,
-    pagedPosts: {
-      [page]: transformedPosts,
-    },
-  };
-
-  const stringifiedComments = JSON.stringify(parsedTopicComments);
-
-  try {
-    await client.set(getTopicCommentsKey(topicId, page), stringifiedComments);
-  } catch (error) {
-    throw new QueueError(
-      `Unable to set Redis key for topicId: ${topicId}, page: ${page}`
-    );
-  }
-
-  return stringifiedComments;
-    */
 }

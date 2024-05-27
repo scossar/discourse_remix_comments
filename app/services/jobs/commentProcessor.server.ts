@@ -9,7 +9,6 @@ export async function commentProcessor({ commentJson }: CommentProcessorArgs) {
   try {
     const tranformedPost = transformPost(commentJson, baseUrl);
     const key = getCommentKey(tranformedPost.topicId, tranformedPost.id);
-    console.log(`key: ${key}`);
     const client = await getRedisClient();
     await client.set(key, JSON.stringify(tranformedPost));
   } catch (error) {

@@ -16,7 +16,6 @@ export async function loader({ request }: LoaderFunctionArgs) {
     client = await getRedisClient();
     const stringifiedPostReplies = await client.get(getPostRepliesKey(postId));
     if (stringifiedPostReplies) {
-      console.log(`returned cached reply posts for postId: ${postId}`);
       return JSON.parse(stringifiedPostReplies);
     }
     addCommentRepliesRequest({ postId });

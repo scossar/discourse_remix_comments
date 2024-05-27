@@ -295,9 +295,6 @@ rateLimitedApiWorker.on("completed", async (job: Job) => {
         const streamLength = stream.length;
         const totalPages = Math.ceil(streamLength / 20);
         for (let page = 0; page < totalPages; page++) {
-          console.log(
-            `adding topicCommentRequest for topicId: ${topicId}, page: ${page}`
-          );
           await addTopicCommentsRequest({ topicId: topicId, page: page });
         }
       } catch (error) {
