@@ -9,12 +9,8 @@ import { webHookTopicCategoryProcessor } from "~/services/jobs/webHookTopicCateg
 import { webHookTopicProcessor } from "~/services/jobs/webHookTopicProcessor.server";
 import { webHookTopicPostProcessor } from "~/services/jobs/webHookTopicPostProcessor.server";
 import { topicPermissionsProcessor } from "~/services/jobs/topicPermissionsProcessor.server";
-import { commentProcessor } from "~/services/jobs/commentProcessor.server";
 import { JobError } from "~/services/errors/appErrors.server";
-import type {
-  DiscourseApiWebHookTopicPayload,
-  ValidDiscourseApiCommentPost,
-} from "~/schemas/discourseApiResponse.server";
+import type { DiscourseApiWebHookTopicPayload } from "~/schemas/discourseApiResponse.server";
 import { DiscourseTopic } from "@prisma/client";
 
 type TopicStreamQueueArgs = {
@@ -55,10 +51,6 @@ type WebHookTopicPostQueuArgs = {
 type TopicPermissionsQueueArgs = {
   topicId: number;
   username: string;
-};
-
-export type CommentProcessorArgs = {
-  commentJson: ValidDiscourseApiCommentPost;
 };
 
 export const rateLimitedApiWorker = new Worker(
@@ -163,17 +155,6 @@ export const rateLimitedApiWorker = new Worker(
         throw new JobError("Failed to process setTopicPermissionsForUser job");
       }
     }
-    if (job.name === "createOrUpdateTopicComment") {
-      const commentJson = job.data;
-      try {
-        await commentProcessor(commentJson);
-      } catch (error) {
-        console.error(
-          `Failed to process createOrUpdateTopicComment job: ${error}`
-        );
-        throw new JobError("Failed to process createOrUpdateTopicComment job");
-      }
-    }
   },
   { connection, limiter: { max: 1, duration: 1000 } }
 );
@@ -260,17 +241,6 @@ export async function addWebHookTopicPostRequest({
   await apiRequestQueue.add(
     "findOrCreateWebHookTopicPost",
     { topic },
-    { jobId }
-  );
-}
-
-export async function addCommentRequest({ commentJson }: CommentProcessorArgs) {
-  const topicId = commentJson.topic_id;
-  const postId = commentJson.id;
-  const jobId = `comment-${topicId}-${postId}`;
-  await apiRequestQueue.add(
-    "createOrUpdateTopicComment",
-    { commentJson },
     { jobId }
   );
 }
