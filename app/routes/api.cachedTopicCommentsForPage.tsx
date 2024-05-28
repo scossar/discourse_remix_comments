@@ -1,16 +1,11 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import type { LoaderFunctionArgs } from "@remix-run/node";
 import { getRedisClient } from "~/services/redisClient.server";
 import type {
   ParsedDiscoursePost,
   ParsedDiscourseTopicComments,
 } from "~/types/parsedDiscourse";
-import {
-  getPostStreamKey,
-  getTopicCommentsKey,
-  getCommentKey,
-} from "~/services/redisKeys.server";
-import RedisError from "~/services/errors/redisError.server";
+import { getPostStreamKey, getCommentKey } from "~/services/redisKeys.server";
+import { addTopicStreamRequest } from "~/services/jobs/rateLimitedApiWorker.server";
 import type { Redis } from "ioredis";
 
 export async function loader({ request }: LoaderFunctionArgs) {
@@ -29,6 +24,10 @@ export async function loader({ request }: LoaderFunctionArgs) {
       end
     );
 
+    if (nextPostIds.length === 0) {
+      await addTopicStreamRequest({ topicId });
+    }
+
     const promises = nextPostIds.map((postId) =>
       getCachedComment(topicId, Number(postId), client)
     );
@@ -42,6 +41,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
     const totalPages = Math.ceil(streamLength / chunkSize);
     const nextPage = page + 1 < totalPages ? page + 1 : null;
     const previousPage = page - 1 >= 0 ? page - 1 : null;
+
     const parsedTopicComments: ParsedDiscourseTopicComments = {
       topicId: topicId,
       currentPage: page,
@@ -52,10 +52,9 @@ export async function loader({ request }: LoaderFunctionArgs) {
       },
     };
 
-    console.log("returning parsed comments");
     return parsedTopicComments;
   } catch (error) {
-    throw new RedisError(
+    return new Response(
       `Error returning topicComments for topicId: ${topicId}, page: ${page}`
     );
   }
