@@ -15,8 +15,6 @@ export async function topicCommentsProcessor(
   page: number,
   username?: string
 ) {
-  // TODO: this limit is set by Discourse.
-  // it should be set in this app's .env file.
   const chunkSize = 20;
   const { apiKey, baseUrl } = discourseEnv();
   const headers = new Headers({
