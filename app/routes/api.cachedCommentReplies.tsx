@@ -39,7 +39,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
       posts: filteredComments,
     };
 
-    return null;
+    return commentReplies;
   } catch (error) {
     throw new Error(
       `Unable to get reply posts for topicId: ${topicId}, postNumber: ${postNumber}`
