@@ -1,7 +1,11 @@
 import { discourseEnv } from "~/services/config.server";
 import { transformPost } from "~/services/transformDiscourseDataZod.server";
 import type { ParsedDiscoursePost } from "~/types/parsedDiscourse";
-import { getCommentKey, getPostStreamKey } from "~/services/redisKeys.server";
+import {
+  getCommentKey,
+  getCommentReplyKey,
+  getPostStreamKey,
+} from "~/services/redisKeys.server";
 import { getRedisClient } from "~/services/redisClient.server";
 import QueueError from "~/services/errors/queueError.server";
 import {
@@ -73,6 +77,12 @@ export async function topicCommentsProcessor(
 }
 
 async function cachePost(post: ParsedDiscoursePost, client: Redis) {
+  if (post.replyToPostNumber) {
+    await client.sadd(
+      getCommentReplyKey(post.topicId, post.replyToPostNumber),
+      post.id
+    );
+  }
   await client.set(getCommentKey(post.topicId, post.id), JSON.stringify(post));
 }
 
