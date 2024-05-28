@@ -71,7 +71,6 @@ export async function topicCommentsProcessor(
   try {
     await cachePosts(transformedPosts, client);
   } catch (error) {
-    // TODO: I'm going to use a different error class here
     throw new QueueError("Failed to cache posts");
   }
 }

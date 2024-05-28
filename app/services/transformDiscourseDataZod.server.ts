@@ -53,6 +53,9 @@ export function transformPost(
     updatedAt: apiPost.updated_at,
     userId: apiPost.user_id,
     reactions: apiPost.reactions.map((reaction) => transformReaction(reaction)),
+    replyToUser: apiPost?.reply_to_user
+      ? transformReplyToUser(apiPost.reply_to_user, baseUrl)
+      : null,
   };
 }
 
@@ -82,6 +85,9 @@ export async function transformPostAndQueueReplies(
     updatedAt: apiPost.updated_at,
     userId: apiPost.user_id,
     reactions: apiPost.reactions.map((reaction) => transformReaction(reaction)),
+    replyToUser: apiPost.reply_to_user
+      ? transformReplyToUser(apiPost.reply_to_user, baseUrl)
+      : null,
   };
 }
 

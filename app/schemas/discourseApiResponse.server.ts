@@ -80,6 +80,7 @@ export const DiscourseApiBasicPostSchema = z.object({
   hidden: z.boolean(),
   deleted_at: z.string().nullable(),
   reactions: DiscourseApiReactionsSchema,
+  reply_to_user: DiscourseApiReplyToUserSchema.optional(),
 });
 export type DiscourseApiBasicPost = z.infer<typeof DiscourseApiBasicPostSchema>;
 
@@ -124,6 +125,7 @@ export function validateDiscourseApiCommentPosts(
   );
 }
 
+// TODO: the replyPost schemas are going to be deleted
 export const DiscourseApiReplyPostSchema = DiscourseApiBasicPostSchema.extend({
   reply_to_user: DiscourseApiReplyToUserSchema,
 });

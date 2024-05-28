@@ -30,16 +30,26 @@ const Comment = forwardRef<HTMLDivElement, CommentProps>(function Comment(
   const [postRepliesOpen, setPostRepliesOpen] = useState(false);
   const repliesLoadedRef = useRef(false);
 
-  function getRepliesForPost(postId: number) {
+  function getRepliesForPost(
+    topicId: number,
+    postId: number,
+    postNumber: number
+  ) {
     if (!repliesLoadedRef.current) {
-      replyFetcher.load(`/api/cachedCommentReplies?postId=${postId}`);
+      replyFetcher.load(
+        `/api/cachedCommentReplies?topicId=${topicId}&postId=${postId}&postNumber=${postNumber}`
+      );
     }
     repliesLoadedRef.current = true;
   }
 
-  function handleCommentRepliesClick(postId: number) {
+  function handleCommentRepliesClick(
+    topicId: number,
+    postId: number,
+    postNumber: number
+  ) {
     setPostRepliesOpen(!postRepliesOpen);
-    getRepliesForPost(postId);
+    getRepliesForPost(topicId, postId, postNumber);
   }
 
   return (
@@ -61,7 +71,15 @@ const Comment = forwardRef<HTMLDivElement, CommentProps>(function Comment(
           </div>{" "}
           {replyCount > 0 && (
             <div className="mr-6">
-              <button onClick={() => handleCommentRepliesClick(post.id)}>
+              <button
+                onClick={() =>
+                  handleCommentRepliesClick(
+                    post.topicId,
+                    post.id,
+                    post.postNumber
+                  )
+                }
+              >
                 {`${replyCount} ${replyText}`}
                 <EditorIcon
                   id={postRepliesOpen ? "caret-up" : "caret-down"}

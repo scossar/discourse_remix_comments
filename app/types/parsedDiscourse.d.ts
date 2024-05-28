@@ -19,11 +19,11 @@ export interface ParsedDiscoursePost {
   updatedAt: string;
   userId: number;
   reactions: ParsedDiscourseBasicReactions;
+  replyToUser: ParsedDiscourseReplyToUser | null;
 }
 
-export interface ParsedDiscourseReplyPost extends ParsedDiscoursePost {
-  replyToUser: ParsedDiscourseReplyToUser;
-}
+// TODO: the replyPost types are going to be removed
+export interface ParsedDiscourseReplyPost extends ParsedDiscoursePost {}
 
 export interface ParsedDiscourseBasicUser {
   id: number;
@@ -76,7 +76,7 @@ export interface ParsedDiscourseTopicComments {
 
 export interface ParsedDiscourseCommentReplies {
   repliesForPostId: number;
-  posts: ParsedDiscourseReplyPost[];
+  posts: ParsedDiscoursePost[];
 }
 
 export interface ParsedDiscourseTopicMapDetails extends ParsedDiscourseDetails {
