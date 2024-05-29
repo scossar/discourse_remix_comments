@@ -17,13 +17,10 @@ export async function loader({ request }: LoaderFunctionArgs) {
   try {
     const client = await getRedisClient();
     const start = page * chunkSize;
-    const end = start + chunkSize - 1;
-    const nextPostIds = await client.lrange(
-      getPostStreamKey(topicId),
-      start,
-      end
-    );
-
+    const end = start + chunkSize;
+    const postStream = await client.smembers(getPostStreamKey(topicId));
+    const sortedPostStream = postStream.map(Number).sort((a, b) => a - b);
+    const nextPostIds = sortedPostStream.slice(start, end);
     if (nextPostIds.length === 0) {
       await addTopicStreamRequest({ topicId });
     }
@@ -36,8 +33,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
       (comment): comment is ParsedDiscoursePost => comment !== null
     );
 
-    const postStreamKey = getPostStreamKey(topicId);
-    const streamLength = await client.llen(postStreamKey);
+    const streamLength = sortedPostStream.length;
     const totalPages = Math.ceil(streamLength / chunkSize);
     const nextPage = page + 1 < totalPages ? page + 1 : null;
     const previousPage = page - 1 >= 0 ? page - 1 : null;
