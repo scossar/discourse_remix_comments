@@ -24,8 +24,6 @@ export async function loader({ request }: LoaderFunctionArgs) {
     );
     const sortedReplyPostIds = replyPostIds.map(Number).sort((a, b) => a - b);
 
-    console.log(`replyPostIds: ${replyPostIds}`);
-
     const promises = sortedReplyPostIds.map((postId) =>
       getCachedComment(topicId, postId, client)
     );

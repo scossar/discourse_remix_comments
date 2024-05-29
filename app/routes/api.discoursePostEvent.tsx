@@ -12,9 +12,10 @@ import {
   verifyWebHookRequest,
 } from "~/services/discourseWebHooks.server";
 import { transformPost } from "~/services/transformDiscourseDataZod.server";
-import { getCommentKey } from "~/services/redisKeys.server";
+import { getCommentKey, getPostStreamKey } from "~/services/redisKeys.server";
 import { discourseEnv } from "~/services/config.server";
 import { getRedisClient } from "~/services/redisClient.server";
+import { db } from "~/services/db.server";
 
 export const action = async ({ request }: ActionFunctionArgs) => {
   const { baseUrl } = discourseEnv();
@@ -28,15 +29,32 @@ export const action = async ({ request }: ActionFunctionArgs) => {
       return json({ message: "Unknown validation error" }, 422);
     }
 
-    // TODO: only cache the post if the topic exists!
+    const savedTopicId = await db.discourseTopic.findUnique({
+      where: { externalId: postWebHookJson.topic_id },
+      select: {
+        externalId: true,
+      },
+    });
+
+    if (!savedTopicId) {
+      return json(
+        {
+          message: `Topic with id ${postWebHookJson.topic_id} does not exist on the site`,
+        },
+        422
+      );
+    }
+
     const parsedPost = transformPost(postWebHookJson, baseUrl);
-    console.log(getCommentKey(parsedPost.topicId, parsedPost.id));
-    console.log(JSON.stringify(parsedPost, null, 2));
     const client = await getRedisClient();
     await client.set(
       getCommentKey(parsedPost.topicId, parsedPost.id),
       JSON.stringify(parsedPost)
     );
+    console.log(
+      `${getPostStreamKey(parsedPost.topicId)}, new postId: ${parsedPost.id}`
+    );
+    await client.sadd(getPostStreamKey(parsedPost.topicId), parsedPost.id);
   } catch (error) {
     let errorMessage = "Invalid webhook request";
     let statusCode = 403;
