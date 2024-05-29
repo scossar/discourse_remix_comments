@@ -3,6 +3,7 @@
 ## Vim
 
 delete unnamed buffers:
+
 - :buffers (to get the buffer number)
 - :bd <n> or :bd! <n> if you're feeling brave
 
@@ -14,3 +15,10 @@ that have relations. It allows types to be generated for the return type of spec
 ## Clear search
 
 <ctrl-l>
+
+## the app
+
+where is the postStream list used?
+
+- api.cachedTopicCommentsForPage
+-

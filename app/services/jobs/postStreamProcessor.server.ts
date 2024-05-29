@@ -31,10 +31,11 @@ export async function postStreamProcessor(topicId: number) {
 async function fetchPostStream(topicId: number, config: DiscourseRawEnv) {
   const { apiKey, baseUrl } = config;
 
-  const headers = new Headers();
-  headers.append("Content-Type", "application/json");
-  headers.append("Api-Key", apiKey);
-  headers.append("Api-Username", "system");
+  const headers = new Headers({
+    "Content-Type": "application/json",
+    "Api-Key": apiKey,
+    "Api-Username": "system",
+  });
 
   const postStreamUrl = `${baseUrl}/t/-/${topicId}.json`;
 
@@ -54,7 +55,7 @@ async function savePostStreamToRedis(redisKey: string, stream: number[]) {
   try {
     const client = await getRedisClient();
     await client.del(redisKey);
-    await client.rpush(redisKey, ...stream);
+    await client.sadd(redisKey, ...stream);
   } catch (error) {
     throw new RedisError("Error obtaining Redis client");
   }

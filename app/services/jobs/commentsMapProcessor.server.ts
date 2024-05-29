@@ -75,7 +75,7 @@ export async function commentsMapProcessor(topicId: number, username?: string) {
 
     const streamKey = getPostStreamKey(topicId);
     await client.del(streamKey);
-    await client.rpush(streamKey, ...stream);
+    await client.sadd(streamKey, ...stream);
 
     await client.set(
       getCommentsMapKey(topicId),
