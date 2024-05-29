@@ -26,7 +26,7 @@ import type { ParsedDiscourseCommentsMap } from "~/types/parsedDiscourse";
 import PageContextProvider from "~/components/PageContextProvider";
 import Topic from "~/components/Topic";
 import { getOrQueueCommentsMapCache } from "~/services/getOrQueueCommentsMapCache.server";
-import { addTopicPermissionsRequest} from "~/services/jobs/rateLimitedApiWorker.server";
+import { addTopicPermissionsRequest } from "~/services/jobs/rateLimitedApiWorker.server";
 import CommentsMap from "~/components/CommentsMap";
 import Comments from "~/components/Comments";
 
@@ -150,11 +150,15 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
   }
 
   if (currentUser.username) {
-    await addTopicPermissionsRequest({topicId, username: currentUser.username});
+    await addTopicPermissionsRequest({
+      topicId,
+      username: currentUser.username,
+    });
   }
 
   let commentsMapData;
   try {
+    // TODO: the getOrQueueCommentsMapCache function is currently always queueing the job
     commentsMapData = await getOrQueueCommentsMapCache(topicId);
   } catch (error) {
     throw new Response(null, {

@@ -20,5 +20,4 @@ that have relations. It allows types to be generated for the return type of spec
 
 where is the postStream list used?
 
-- api.cachedTopicCommentsForPage
--
+## api.cachedTopicCommentsForPage

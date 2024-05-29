@@ -14,6 +14,10 @@ import {
 } from "~/schemas/discourseApiResponse.server";
 import type { Redis } from "ioredis";
 
+/**
+ * This processor's job ("cacheTopicComments") is currently being queued after the "cacheCommentsMap" job has run
+ * It's used to cache all comments for a topic. Should only be run as a last resort.
+ */
 export async function topicCommentsProcessor(
   topicId: number,
   page: number,
@@ -35,12 +39,13 @@ export async function topicCommentsProcessor(
   }
 
   const start = page * chunkSize;
-  const end = start + chunkSize - 1;
+  const end = start + chunkSize;
 
   let nextPostIds;
   try {
-    const streamKey = getPostStreamKey(topicId);
-    nextPostIds = await client.lrange(streamKey, start, end);
+    const postStream = await client.smembers(getPostStreamKey(topicId));
+    const sortedPostStream = postStream.map(Number).sort((a, b) => a - b);
+    nextPostIds = sortedPostStream.slice(start, end);
   } catch (error) {
     throw new QueueError("Error obtaining post stream for page");
   }
