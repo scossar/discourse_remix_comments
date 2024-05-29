@@ -1,8 +1,8 @@
 import { discourseEnv } from "~/services/config.server";
 import QueueError from "~/services/errors/queueError.server";
 import { validateDiscourseApiReplyPosts } from "~/schemas/discourseApiResponse.server";
-import { getRedisClient } from "~/services/redisClient.server";
-import { getPostRepliesKey } from "~/services/redisKeys.server";
+import { getRedisClient } from "~/services/redis/redisClient.server";
+import { getPostRepliesKey } from "~/services/redis/redisKeys.server";
 import type { ParsedDiscourseCommentReplies } from "~/types/parsedDiscourse";
 import { transformReplyPost } from "../transformDiscourseDataZod.server";
 

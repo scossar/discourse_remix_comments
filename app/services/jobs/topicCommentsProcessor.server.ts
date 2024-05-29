@@ -5,8 +5,8 @@ import {
   getCommentKey,
   getCommentReplyKey,
   getPostStreamKey,
-} from "~/services/redisKeys.server";
-import { getRedisClient } from "~/services/redisClient.server";
+} from "~/services/redis/redisKeys.server";
+import { getRedisClient } from "~/services/redis/redisClient.server";
 import QueueError from "~/services/errors/queueError.server";
 import {
   type DiscourseApiTopicPostsOnly,

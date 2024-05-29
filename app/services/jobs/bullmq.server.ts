@@ -1,5 +1,5 @@
 import { Queue } from "bullmq";
-import { connection } from "~/services/redisClient.server";
+import { connection } from "~/services/redis/redisClient.server";
 
 export const apiRequestQueue = new Queue("api-request", {
   defaultJobOptions: {

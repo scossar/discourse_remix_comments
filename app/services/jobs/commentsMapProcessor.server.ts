@@ -10,11 +10,11 @@ import {
   transformUser,
 } from "~/services/transformDiscourseDataZod.server";
 import { discourseEnv } from "~/services/config.server";
-import { getRedisClient } from "~/services/redisClient.server";
+import { getRedisClient } from "~/services/redis/redisClient.server";
 import {
   getCommentsMapKey,
   getPostStreamKey,
-} from "~/services/redisKeys.server";
+} from "~/services/redis/redisKeys.server";
 
 export async function commentsMapProcessor(topicId: number, username?: string) {
   const { apiKey, baseUrl } = discourseEnv();

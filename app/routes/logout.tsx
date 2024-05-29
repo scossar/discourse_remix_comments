@@ -1,7 +1,7 @@
 import type { LoaderFunctionArgs } from "@remix-run/node";
 import { redirect } from "@remix-run/node";
 
-import { discourseSessionStorage } from "~/services/session.server";
+import { discourseSessionStorage } from "~/services/auth/session.server";
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   const session = await discourseSessionStorage.getSession(

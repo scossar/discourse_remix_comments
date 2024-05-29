@@ -1,6 +1,6 @@
 import { Job, Worker } from "bullmq";
 import { apiRequestQueue } from "~/services/jobs/bullmq.server";
-import { connection } from "~/services/redisClient.server";
+import { connection } from "~/services/redis/redisClient.server";
 import { postStreamProcessor } from "~/services/jobs/postStreamProcessor.server";
 import { topicCommentsProcessor } from "~/services/jobs/topicCommentsProcessor.server";
 import { commentsMapProcessor } from "~/services/jobs/commentsMapProcessor.server";

@@ -1,5 +1,5 @@
-import { db } from "~/services/db.server";
-import createCategory from "~/services/createCategory.server";
+import { db } from "~/services/prisma/db.server";
+import createCategory from "~/services/prisma/createCategory.server";
 import type { DiscourseApiWebHookTopicPayload } from "~/schemas/discourseApiResponse.server";
 import {
   ApiError,

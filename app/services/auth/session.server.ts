@@ -1,5 +1,5 @@
 import { createCookieSessionStorage } from "@remix-run/node";
-import { discourseEnv } from "./config.server";
+import { discourseEnv } from "~/services/config.server";
 
 const { nonceSecret, sessionSecret } = discourseEnv();
 

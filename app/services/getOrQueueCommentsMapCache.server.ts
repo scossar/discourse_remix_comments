@@ -1,5 +1,5 @@
-import { getRedisClient } from "~/services/redisClient.server";
-import { getCommentsMapKey } from "~/services/redisKeys.server";
+import { getRedisClient } from "~/services/redis/redisClient.server";
+import { getCommentsMapKey } from "~/services/redis/redisKeys.server";
 import { addCommentsMapRequest } from "~/services/jobs/rateLimitedApiWorker.server";
 import RedisError from "~/services/errors/redisError.server";
 

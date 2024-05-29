@@ -1,4 +1,4 @@
-import { db } from "~/services/db.server";
+import { db } from "~/services/prisma/db.server";
 import { type DiscourseRawEnv, discourseEnv } from "~/services/config.server";
 import { ApiError, PrismaError } from "~/services/errors/appErrors.server";
 import { ZodError } from "zod";

@@ -1,7 +1,7 @@
-import { db } from "~/services/db.server";
-import createOrUpdateTopic from "~/services/createOrUpdateTopic.server";
-import findOrCreateTags from "~/services/findOrCreateTags.server";
-import createTopicTags from "~/services/createTopicTags.server";
+import { db } from "~/services/prisma/db.server";
+import createOrUpdateTopic from "~/services/prisma/createOrUpdateTopic.server";
+import findOrCreateTags from "~/services/prisma/findOrCreateTags.server";
+import createTopicTags from "~/services/prisma/createTopicTags.server";
 import type { DiscourseApiWebHookTopicPayload } from "~/schemas/discourseApiResponse.server";
 import { JobError, PrismaError } from "~/services/errors/appErrors.server";
 

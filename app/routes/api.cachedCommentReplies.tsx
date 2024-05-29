@@ -1,10 +1,13 @@
 import type { LoaderFunctionArgs } from "@remix-run/node";
-import { getRedisClient } from "~/services/redisClient.server";
+import { getRedisClient } from "~/services/redis/redisClient.server";
 import type {
   ParsedDiscourseCommentReplies,
   ParsedDiscoursePost,
 } from "~/types/parsedDiscourse";
-import { getCommentKey, getCommentReplyKey } from "~/services/redisKeys.server";
+import {
+  getCommentKey,
+  getCommentReplyKey,
+} from "~/services/redis/redisKeys.server";
 import type { Redis } from "ioredis";
 
 export async function loader({ request }: LoaderFunctionArgs) {

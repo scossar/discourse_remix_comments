@@ -1,6 +1,6 @@
 import { fromError } from "zod-validation-error";
 import { ZodError } from "zod";
-import { db } from "~/services/db.server";
+import { db } from "~/services/prisma/db.server";
 import { type DiscourseRawEnv, discourseEnv } from "~/services/config.server";
 import {
   type DiscourseApiBasicCategory,

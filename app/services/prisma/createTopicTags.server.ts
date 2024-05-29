@@ -1,4 +1,4 @@
-import { db } from "~/services/db.server";
+import { db } from "~/services/prisma/db.server";
 import { throwPrismaError } from "~/services/errors/handlePrismaError.server";
 
 export default async function createTopicTags(

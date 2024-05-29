@@ -1,4 +1,4 @@
-import { db } from "./db.server";
+import { db } from "~/services/prisma/db.server";
 import type { DiscourseAPiWebHookTopic } from "~/schemas/discourseApiResponse.server";
 import { throwPrismaError } from "~/services/errors/handlePrismaError.server";
 import { generateAvatarUrl } from "~/services/transformDiscourseDataZod.server";

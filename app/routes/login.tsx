@@ -7,7 +7,7 @@ import { discourseEnv } from "~/services/config.server";
 import {
   nonceStorage,
   discourseSessionStorage,
-} from "~/services/session.server";
+} from "~/services/auth/session.server";
 
 type DiscourseUserParamKeys =
   | "name"

@@ -14,14 +14,13 @@ import {
 import { JSDOM } from "jsdom";
 import DOMPurify from "dompurify";
 
-import { db } from "~/services/db.server";
+import { db } from "~/services/prisma/db.server";
 import { discourseEnv } from "~/services/config.server";
-import { discourseSessionStorage } from "~/services/session.server";
+import { discourseSessionStorage } from "~/services/auth/session.server";
 import { getSessionData, validateSession } from "~/schemas/currentUser.server";
-import { transformPost } from "~/services/transformDiscourseData.server";
+import { transformPost } from "~/services/transformDiscourseDataZod.server";
 import type { RouteError } from "~/types/errorTypes";
-// TODO: use zod type:
-import type { ApiDiscoursePost } from "~/types/apiDiscourse";
+import type { DiscourseApiBasicPost } from "~/schemas/discourseApiResponse.server";
 import type { ParsedDiscourseCommentsMap } from "~/types/parsedDiscourse";
 import PageContextProvider from "~/components/PageContextProvider";
 import Topic from "~/components/Topic";
@@ -101,7 +100,7 @@ export async function action({ request, params }: ActionFunctionArgs) {
     throw new Error("Bad response returned from Discourse");
   }
 
-  const apiDiscoursePost: ApiDiscoursePost = await response.json();
+  const apiDiscoursePost: DiscourseApiBasicPost = await response.json();
 
   const newComment = transformPost(apiDiscoursePost, baseUrl);
 

@@ -12,10 +12,13 @@ import {
   verifyWebHookRequest,
 } from "~/services/discourseWebHooks.server";
 import { transformPost } from "~/services/transformDiscourseDataZod.server";
-import { getCommentKey, getPostStreamKey } from "~/services/redisKeys.server";
+import {
+  getCommentKey,
+  getPostStreamKey,
+} from "~/services/redis/redisKeys.server";
 import { discourseEnv } from "~/services/config.server";
-import { getRedisClient } from "~/services/redisClient.server";
-import { db } from "~/services/db.server";
+import { getRedisClient } from "~/services/redis/redisClient.server";
+import { db } from "~/services/prisma/db.server";
 
 export const action = async ({ request }: ActionFunctionArgs) => {
   const { baseUrl } = discourseEnv();

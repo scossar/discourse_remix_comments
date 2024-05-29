@@ -1,10 +1,13 @@
 import type { LoaderFunctionArgs } from "@remix-run/node";
-import { getRedisClient } from "~/services/redisClient.server";
+import { getRedisClient } from "~/services/redis/redisClient.server";
 import type {
   ParsedDiscoursePost,
   ParsedDiscourseTopicComments,
 } from "~/types/parsedDiscourse";
-import { getPostStreamKey, getCommentKey } from "~/services/redisKeys.server";
+import {
+  getPostStreamKey,
+  getCommentKey,
+} from "~/services/redis/redisKeys.server";
 import { addTopicStreamRequest } from "~/services/jobs/rateLimitedApiWorker.server";
 import type { Redis } from "ioredis";
 

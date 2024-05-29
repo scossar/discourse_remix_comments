@@ -2,9 +2,9 @@ import type { LoaderFunctionArgs, MetaFunction } from "@remix-run/node";
 import { json } from "@remix-run/node";
 import { Link, useLoaderData } from "@remix-run/react";
 
-import { discourseSessionStorage } from "~/services/session.server";
+import { discourseSessionStorage } from "~/services/auth/session.server";
 import { getSessionData, validateSession } from "~/schemas/currentUser.server";
-import { db } from "~/services/db.server";
+import { db } from "~/services/prisma/db.server";
 
 export const meta: MetaFunction = () => {
   return [

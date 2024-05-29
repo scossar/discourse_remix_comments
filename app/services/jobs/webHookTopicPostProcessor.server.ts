@@ -1,6 +1,6 @@
-import { db } from "~/services/db.server";
+import { db } from "~/services/prisma/db.server";
 import { DiscourseTopic } from "@prisma/client";
-import createOrUpdateOp from "~/services/createOrUpdateOp.server";
+import createOrUpdateOp from "~/services/prisma/createOrUpdateOp.server";
 import {
   ApiError,
   JobError,

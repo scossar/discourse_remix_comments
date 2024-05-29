@@ -1,8 +1,8 @@
 import { ZodError } from "zod";
 import { type DiscourseRawEnv, discourseEnv } from "~/services/config.server";
-import { getPostStreamKey } from "~/services/redisKeys.server";
+import { getPostStreamKey } from "~/services/redis/redisKeys.server";
 import { validateDiscourseApiPostStream } from "~/schemas/discourseApiResponse.server";
-import { getRedisClient } from "~/services/redisClient.server";
+import { getRedisClient } from "~/services/redis/redisClient.server";
 import { RedisError, ApiError } from "~/services/errors/appErrors.server";
 
 export async function postStreamProcessor(topicId: number) {

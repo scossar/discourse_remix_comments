@@ -1,6 +1,6 @@
 import type { LoaderFunctionArgs } from "@remix-run/node";
-import { getRedisClient } from "~/services/redisClient.server";
-import { getCommentsMapKey } from "~/services/redisKeys.server";
+import { getRedisClient } from "~/services/redis/redisClient.server";
+import { getCommentsMapKey } from "~/services/redis/redisKeys.server";
 import RedisError from "~/services/errors/redisError.server";
 
 export async function loader({ request }: LoaderFunctionArgs) {
