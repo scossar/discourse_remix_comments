@@ -1,5 +1,5 @@
 import { discourseEnv } from "~/services/config.server";
-import { transformPost } from "~/services/transformDiscourseDataZod.server";
+import { transformPost } from "~/services/transformDiscourseData.server";
 import type { ParsedDiscoursePost } from "~/types/parsedDiscourse";
 import {
   getCommentKey,

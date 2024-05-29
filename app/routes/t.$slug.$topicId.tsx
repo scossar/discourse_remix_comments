@@ -18,7 +18,7 @@ import { db } from "~/services/prisma/db.server";
 import { discourseEnv } from "~/services/config.server";
 import { discourseSessionStorage } from "~/services/auth/session.server";
 import { getSessionData, validateSession } from "~/schemas/currentUser.server";
-import { transformPost } from "~/services/transformDiscourseDataZod.server";
+import { transformPost } from "~/services/transformDiscourseData.server";
 import type { RouteError } from "~/types/errorTypes";
 import type { DiscourseApiBasicPost } from "~/schemas/discourseApiResponse.server";
 import type { ParsedDiscourseCommentsMap } from "~/types/parsedDiscourse";

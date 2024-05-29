@@ -8,7 +8,7 @@ import { fromError } from "zod-validation-error";
 import {
   transformParticipant,
   transformUser,
-} from "~/services/transformDiscourseDataZod.server";
+} from "~/services/transformDiscourseData.server";
 import { discourseEnv } from "~/services/config.server";
 import { getRedisClient } from "~/services/redis/redisClient.server";
 import {

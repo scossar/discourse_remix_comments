@@ -1,7 +1,7 @@
 import { db } from "~/services/prisma/db.server";
 import type { DiscourseAPiWebHookTopic } from "~/schemas/discourseApiResponse.server";
 import { throwPrismaError } from "~/services/errors/handlePrismaError.server";
-import { generateAvatarUrl } from "~/services/transformDiscourseDataZod.server";
+import { generateAvatarUrl } from "~/services/transformDiscourseData.server";
 import { discourseEnv } from "~/services/config.server";
 import { DiscourseTopic, Prisma } from "@prisma/client";
 

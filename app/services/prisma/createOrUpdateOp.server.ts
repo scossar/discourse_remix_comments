@@ -9,7 +9,7 @@ import {
   type DiscourseApiBasicPost,
   validateDiscourseApiBasicPost,
 } from "~/schemas/discourseApiResponse.server";
-import { generateAvatarUrl } from "~/services/transformDiscourseDataZod.server";
+import { generateAvatarUrl } from "~/services/transformDiscourseData.server";
 
 export default async function createOrUpdateOp(topicId: number) {
   try {

@@ -4,7 +4,7 @@ import { discourseEnv } from "~/services/config.server";
 
 import { validateDiscourseApiReplyPosts } from "~/schemas/discourseApiResponse.server";
 import type { ParsedDiscourseCommentReplies } from "~/types/parsedDiscourse";
-import { transformReplyPost } from "~/services/transformDiscourseDataZod.server";
+import { transformReplyPost } from "~/services/transformDiscourseData.server";
 
 export async function loader({
   request,

@@ -4,7 +4,7 @@ import { validateDiscourseApiReplyPosts } from "~/schemas/discourseApiResponse.s
 import { getRedisClient } from "~/services/redis/redisClient.server";
 import { getPostRepliesKey } from "~/services/redis/redisKeys.server";
 import type { ParsedDiscourseCommentReplies } from "~/types/parsedDiscourse";
-import { transformReplyPost } from "../transformDiscourseDataZod.server";
+import { transformReplyPost } from "../transformDiscourseData.server";
 
 export async function commentRepliesProcessor(
   postId: number,

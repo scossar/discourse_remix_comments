@@ -11,7 +11,7 @@ import {
   discourseWebHookHeaders,
   verifyWebHookRequest,
 } from "~/services/discourseWebHooks.server";
-import { transformPost } from "~/services/transformDiscourseDataZod.server";
+import { transformPost } from "~/services/transformDiscourseData.server";
 import {
   getCommentKey,
   getPostStreamKey,
