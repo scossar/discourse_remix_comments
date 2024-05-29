@@ -3,7 +3,6 @@ import { ZodError } from "zod";
 import { fromError } from "zod-validation-error";
 import { WebHookError } from "~/services/errors/appErrors.server";
 import type { ApiDiscourseWebHookHeaders } from "~/types/apiDiscourse";
-import { addCommentRequest } from "~/services/jobs/rateLimitedApiWorker.server";
 import {
   validateDiscourseApiCommentPost,
   type DiscourseApiWebHookPost,
@@ -12,8 +11,13 @@ import {
   discourseWebHookHeaders,
   verifyWebHookRequest,
 } from "~/services/discourseWebHooks.server";
+import { transformPost } from "~/services/transformDiscourseDataZod.server";
+import { getCommentKey } from "~/services/redisKeys.server";
+import { discourseEnv } from "~/services/config.server";
+import { getRedisClient } from "~/services/redisClient.server";
 
 export const action = async ({ request }: ActionFunctionArgs) => {
+  const { baseUrl } = discourseEnv();
   const receivedHeaders: Headers = request.headers;
   const discourseHeaders = discourseWebHookHeaders(receivedHeaders);
 
@@ -23,7 +27,16 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     if (!postWebHookJson) {
       return json({ message: "Unknown validation error" }, 422);
     }
-    await addCommentRequest({ commentJson: postWebHookJson });
+
+    // TODO: only cache the post if the topic exists!
+    const parsedPost = transformPost(postWebHookJson, baseUrl);
+    console.log(getCommentKey(parsedPost.topicId, parsedPost.id));
+    console.log(JSON.stringify(parsedPost, null, 2));
+    const client = await getRedisClient();
+    await client.set(
+      getCommentKey(parsedPost.topicId, parsedPost.id),
+      JSON.stringify(parsedPost)
+    );
   } catch (error) {
     let errorMessage = "Invalid webhook request";
     let statusCode = 403;
