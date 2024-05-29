@@ -51,9 +51,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
       getCommentKey(parsedPost.topicId, parsedPost.id),
       JSON.stringify(parsedPost)
     );
-    console.log(
-      `${getPostStreamKey(parsedPost.topicId)}, new postId: ${parsedPost.id}`
-    );
+
     await client.sadd(getPostStreamKey(parsedPost.topicId), parsedPost.id);
   } catch (error) {
     let errorMessage = "Invalid webhook request";
