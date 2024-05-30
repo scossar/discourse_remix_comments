@@ -25,3 +25,7 @@ export function getCommentReplyKey(topicId: number, postNumber: number) {
 export function getTopicPermissionsKey(topicId: number, username: string) {
   return `topicPermissions:${topicId}:${username}`;
 }
+
+export function getCommentLikesKey(postId: number) {
+  return `commentLikes:${postId}`;
+}

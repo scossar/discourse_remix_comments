@@ -12,7 +12,10 @@ import { confirmTopicExists } from "~/services/prisma/confirmTopicExists.server"
 import { transformPost } from "~/services/transformDiscourseData.server";
 import { discourseEnv } from "~/services/config.server";
 import { getRedisClient } from "~/services/redis/redisClient.server";
-import { getCommentKey } from "~/services/redis/redisKeys.server";
+import {
+  getCommentKey,
+  getCommentLikesKey,
+} from "~/services/redis/redisKeys.server";
 
 export const action = async ({ request }: ActionFunctionArgs) => {
   const receivedHeaders: Headers = request.headers;
@@ -40,6 +43,12 @@ export const action = async ({ request }: ActionFunctionArgs) => {
       getCommentKey(parsedPost.topicId, parsedPost.id),
       JSON.stringify(parsedPost)
     );
+
+    await client.sadd(
+      getCommentLikesKey(parsedPost.id),
+      likeWebHookJson.like.user.id
+    );
+
     return json({ message: "success" }, 200);
   } catch (error) {
     let errorMessage = "Unknown validation error";
