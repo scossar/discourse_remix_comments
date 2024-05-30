@@ -18,7 +18,7 @@ import {
 } from "~/services/redis/redisKeys.server";
 import { discourseEnv } from "~/services/config.server";
 import { getRedisClient } from "~/services/redis/redisClient.server";
-import { db } from "~/services/prisma/db.server";
+import { confirmTopicExists } from "~/services/prisma/confirmTopicExists.server";
 
 export const action = async ({ request }: ActionFunctionArgs) => {
   const { baseUrl } = discourseEnv();
@@ -32,14 +32,9 @@ export const action = async ({ request }: ActionFunctionArgs) => {
       return json({ message: "Unknown validation error" }, 422);
     }
 
-    const savedTopicId = await db.discourseTopic.findUnique({
-      where: { externalId: postWebHookJson.topic_id },
-      select: {
-        externalId: true,
-      },
-    });
+    const topicExists = await confirmTopicExists(postWebHookJson.topic_id);
 
-    if (!savedTopicId) {
+    if (!topicExists) {
       return json(
         {
           message: `Topic with id ${postWebHookJson.topic_id} does not exist on the site`,
