@@ -33,7 +33,6 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     }
 
     const topicExists = await confirmTopicExists(postWebHookJson.topic_id);
-
     if (!topicExists) {
       return json(
         {

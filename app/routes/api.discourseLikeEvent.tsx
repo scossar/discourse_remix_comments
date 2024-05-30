@@ -8,15 +8,38 @@ import {
 import { validateDiscourseApiWebHookLikePayload } from "~/schemas/discourseApiResponse.server";
 import { ZodError } from "zod";
 import { fromError } from "zod-validation-error";
+import { confirmTopicExists } from "~/services/prisma/confirmTopicExists.server";
+import { transformPost } from "~/services/transformDiscourseData.server";
+import { discourseEnv } from "~/services/config.server";
+import { getRedisClient } from "~/services/redis/redisClient.server";
+import { getCommentKey } from "~/services/redis/redisKeys.server";
 
 export const action = async ({ request }: ActionFunctionArgs) => {
   const receivedHeaders: Headers = request.headers;
   const discourseHeaders = discourseWebHookHeaders(receivedHeaders);
+  const { baseUrl } = discourseEnv();
   let likeWebHookJson;
   try {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     likeWebHookJson = await validateLikeEventWebHook(request, discourseHeaders);
+    const postJson = likeWebHookJson.like.post;
 
+    const topicExists = await confirmTopicExists(postJson.topic_id);
+    if (!topicExists) {
+      return json(
+        {
+          message: `Topic with id ${postJson.topic_id} does not exist on the site`,
+        },
+        422
+      );
+    }
+
+    const parsedPost = transformPost(postJson, baseUrl);
+    const client = await getRedisClient();
+    await client.set(
+      getCommentKey(parsedPost.topicId, parsedPost.id),
+      JSON.stringify(parsedPost)
+    );
     return json({ message: "success" }, 200);
   } catch (error) {
     let errorMessage = "Unknown validation error";
