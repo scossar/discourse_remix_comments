@@ -23,7 +23,6 @@ export const action = async ({ request }: ActionFunctionArgs) => {
   const { baseUrl } = discourseEnv();
   let likeWebHookJson;
   try {
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     likeWebHookJson = await validateLikeEventWebHook(request, discourseHeaders);
     const postJson = likeWebHookJson.like.post;
 

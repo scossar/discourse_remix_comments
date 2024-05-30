@@ -42,8 +42,21 @@ export const action = async ({ request }: ActionFunctionArgs) => {
       );
     }
 
-    const parsedPost = transformPost(postWebHookJson, baseUrl);
     const client = await getRedisClient();
+
+    if (discourseHeaders["X-Discourse-Event"] === "post_destroyed") {
+      await client.del(
+        getCommentKey(postWebHookJson.topic_id, postWebHookJson.id)
+      );
+      await client.srem(
+        getPostStreamKey(postWebHookJson.topic_id),
+        postWebHookJson.id
+      );
+
+      return json({ message: "success" }, 200);
+    }
+
+    const parsedPost = transformPost(postWebHookJson, baseUrl);
     await client.set(
       getCommentKey(parsedPost.topicId, parsedPost.id),
       JSON.stringify(parsedPost)
@@ -72,12 +85,16 @@ async function validatePostEventWebHook(
     throw new WebHookError("Invalid request method", 403);
   }
 
+  const eventType = discourseHeaders["X-Discourse-Event-Type"];
+  const event = discourseHeaders["X-Discourse-Event"];
+
   if (
-    discourseHeaders["X-Discourse-Event-Type"] !== "post" ||
-    (discourseHeaders["X-Discourse-Event"] !== "post_created" &&
-      discourseHeaders["X-Discourse-Event"] !== "post_edited")
+    eventType !== "post" ||
+    (event !== "post_created" &&
+      event !== "post_edited" &&
+      event !== "post_destroyed")
   ) {
-    const errorMessage = `Webhook Error: route not configured to handle ${discourseHeaders["X-Discourse-Event-Type"]} ${discourseHeaders["X-Discourse-Event"]}`;
+    const errorMessage = `Webhook Error: route not configured to handle ${eventType} ${event}`;
     throw new WebHookError(errorMessage, 403);
   }
 
