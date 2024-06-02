@@ -16,12 +16,9 @@ import { JSDOM } from "jsdom";
 import DOMPurify from "dompurify";
 
 import { db } from "~/services/prisma/db.server";
-import { discourseEnv } from "~/services/config.server";
 import { discourseSessionStorage } from "~/services/auth/session.server";
 import { getSessionData, validateSession } from "~/schemas/currentUser.server";
-import { transformPost } from "~/services/transformDiscourseData.server";
 import type { RouteError } from "~/types/errorTypes";
-import type { DiscourseApiBasicPost } from "~/schemas/discourseApiResponse.server";
 import type { ParsedDiscourseCommentsMap } from "~/types/parsedDiscourse";
 import PageContextProvider from "~/components/PageContextProvider";
 import Topic from "~/components/Topic";
@@ -58,20 +55,11 @@ export async function action({ request, params }: ActionFunctionArgs) {
 
   const formData = await request.formData();
 
-  const unsanitizedMarkdown = String(formData.get("markdown")) || "";
+  const unsanitizedRaw = String(formData.get("markdown")) || "";
   const replyToPostNumber = Number(formData.get("replyToPostNumber")) || null;
 
-  let cleaned;
-  try {
-    const window = new JSDOM("").window;
-    const purify = DOMPurify(window);
-    // this works, but is it needed?
-    cleaned = purify.sanitize(unsanitizedMarkdown, { ALLOWED_TAGS: [] });
-  } catch (error) {
-    throw new Error("couldn't sanitize rawMarkdown");
-  }
-
-  if (!cleaned) {
+  // TODO: throw responses instead of errors. Handle them in the UI
+  if (!unsanitizedRaw) {
     throw new Error(
       "Don't actually throw an error here, return an error message to the user"
     );
@@ -80,14 +68,16 @@ export async function action({ request, params }: ActionFunctionArgs) {
   const commentArgs = {
     topicId,
     replyToPostNumber,
-    raw: cleaned,
+    unsanitizedRaw,
     username: currentUser.username,
   };
 
   try {
-    addPostCommentRequest(commentArgs);
+    // hand processing of the comment off to the BullMQ queu
+    const job = await addPostCommentRequest(commentArgs);
 
-    return null;
+    // this needs to return something for the user
+    return json({ job });
   } catch (error) {
     throw new Response("Something went wrong", { status: 500 });
   }

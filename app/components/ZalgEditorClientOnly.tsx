@@ -11,6 +11,11 @@ export default function ZalgEditorClientOnly({
   replyToPostNumber?: string;
 }) {
   const submitFetcher = useFetcher({ key: "submit" });
+  if (submitFetcher.data) {
+    console.log(
+      `submitFetcher.data: ${JSON.stringify(submitFetcher.data, null, 2)}`
+    );
+  }
   return (
     <ClientOnly
       fallback={

@@ -2,11 +2,13 @@
 import type { PostCommentQueueArgs } from "~/services/jobs/rateLimitedApiWorker.server";
 import { discourseEnv } from "~/services/config.server";
 import { ApiError } from "~/services/errors/appErrors.server";
+import { JSDOM } from "jsdom";
+import DOMPurify from "dompurify";
 
 export async function postCommentProcessor({
   topicId,
   replyToPostNumber,
-  raw,
+  unsanitizedRaw,
   username,
 }: PostCommentQueueArgs) {
   const { apiKey, baseUrl } = discourseEnv();
@@ -15,25 +17,34 @@ export async function postCommentProcessor({
     "Api-Key": apiKey,
     "Api-Username": username,
   });
-
   const url = `${baseUrl}/posts.json`;
-  const data = {
-    raw,
-    topic_id: topicId,
-    reply_to_post_number: replyToPostNumber,
-  };
 
-  const response = await fetch(url, {
-    method: "Post",
-    headers,
-    body: JSON.stringify(data),
-  });
+  try {
+    const window = new JSDOM("").window;
+    const purify = DOMPurify(window);
+    const raw = purify.sanitize(unsanitizedRaw, { ALLOWED_TAGS: [] });
 
-  if (!response.ok) {
-    throw new ApiError("Error posting comment to Discourse", response.status);
+    const data = {
+      raw,
+      topic_id: topicId,
+      reply_to_post_number: replyToPostNumber,
+    };
+
+    const response = await fetch(url, {
+      method: "Post",
+      headers,
+      body: JSON.stringify(data),
+    });
+
+    if (!response.ok) {
+      throw new ApiError("Error posting comment to Discourse", response.status);
+    }
+
+    const json = await response.json();
+
+    return json;
+  } catch (error) {
+    // TODO: improve this
+    throw new ApiError("Unknown error");
   }
-
-  const json = await response.json();
-
-  return json;
 }

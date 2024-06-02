@@ -58,7 +58,7 @@ type TopicPermissionsQueueArgs = {
 export type PostCommentQueueArgs = {
   topicId: number;
   replyToPostNumber: number | null;
-  raw: string;
+  unsanitizedRaw: string;
   username: string;
 };
 
@@ -167,7 +167,10 @@ export const rateLimitedApiWorker = new Worker(
     if (job.name === "postComment") {
       const processorArgs = job.data;
       try {
+        // this works withoug issues, the unsanitizedRaw content is
+        // cleaned and posted to the Discourse API.
         const response = await postCommentProcessor(processorArgs);
+        // I'd like to get details related to this response to the user
         return response;
       } catch (error) {
         console.error(`Failed to process postComment job: ${error}`);
@@ -279,16 +282,16 @@ export async function addTopicPermissionsRequest({
 export async function addPostCommentRequest({
   topicId,
   replyToPostNumber,
-  raw,
+  unsanitizedRaw,
   username,
 }: PostCommentQueueArgs) {
-  // TODO: this isn't guaranteed to be unique
-  const jobId = `postComment-${topicId}-${username}`;
-  await apiRequestQueue.add(
-    "postComment",
-    { topicId, replyToPostNumber, raw, username },
-    { jobId }
-  );
+  const job = await apiRequestQueue.add("postComment", {
+    topicId,
+    replyToPostNumber,
+    unsanitizedRaw,
+    username,
+  });
+  return job;
 }
 
 rateLimitedApiWorker.on("completed", async (job: Job) => {
