@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { Job, Worker } from "bullmq";
 import { apiRequestQueue } from "~/services/jobs/bullmq.server";
 import { connection } from "~/services/redis/redisClient.server";
@@ -9,6 +10,7 @@ import { webHookTopicCategoryProcessor } from "~/services/jobs/webHookTopicCateg
 import { webHookTopicProcessor } from "~/services/jobs/webHookTopicProcessor.server";
 import { webHookTopicPostProcessor } from "~/services/jobs/webHookTopicPostProcessor.server";
 import { topicPermissionsProcessor } from "~/services/jobs/topicPermissionsProcessor.server";
+import { postCommentProcessor } from "~/services/jobs/postCommentProcessor.server";
 import { JobError } from "~/services/errors/appErrors.server";
 import type { DiscourseApiWebHookTopicPayload } from "~/schemas/discourseApiResponse.server";
 import { DiscourseTopic } from "@prisma/client";
@@ -50,6 +52,13 @@ type WebHookTopicPostQueuArgs = {
 
 type TopicPermissionsQueueArgs = {
   topicId: number;
+  username: string;
+};
+
+export type PostCommentQueueArgs = {
+  topicId: number;
+  replyToPostNumber: number | null;
+  raw: string;
   username: string;
 };
 
@@ -155,6 +164,19 @@ export const rateLimitedApiWorker = new Worker(
         throw new JobError("Failed to process setTopicPermissionsForUser job");
       }
     }
+    if (job.name === "postComment") {
+      const processorArgs = job.data;
+      try {
+        const response = await postCommentProcessor(processorArgs);
+        console.log(
+          `response from postComment job: ${JSON.stringify(response, null, 2)}`
+        );
+        return response;
+      } catch (error) {
+        console.error(`Failed to process postComment job: ${error}`);
+        throw new JobError("Failed to process postComment job");
+      }
+    }
   },
   { connection, limiter: { max: 1, duration: 1000 } }
 );
@@ -253,6 +275,21 @@ export async function addTopicPermissionsRequest({
   await apiRequestQueue.add(
     "setTopicPermissionsForUser",
     { topicId, username },
+    { jobId }
+  );
+}
+
+export async function addPostCommentRequest({
+  topicId,
+  replyToPostNumber,
+  raw,
+  username,
+}: PostCommentQueueArgs) {
+  // TODO: this isn't guaranteed to be unique
+  const jobId = `postComment-${topicId}-${username}`;
+  await apiRequestQueue.add(
+    "postComment",
+    { topicId, replyToPostNumber, raw, username },
     { jobId }
   );
 }

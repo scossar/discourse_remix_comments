@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { useEffect, useRef, useState } from "react";
 import type {
   ActionFunctionArgs,
@@ -25,7 +26,10 @@ import type { ParsedDiscourseCommentsMap } from "~/types/parsedDiscourse";
 import PageContextProvider from "~/components/PageContextProvider";
 import Topic from "~/components/Topic";
 import { getOrQueueCommentsMapCache } from "~/services/getOrQueueCommentsMapCache.server";
-import { addTopicPermissionsRequest } from "~/services/jobs/rateLimitedApiWorker.server";
+import {
+  addPostCommentRequest,
+  addTopicPermissionsRequest,
+} from "~/services/jobs/rateLimitedApiWorker.server";
 import CommentsMap from "~/components/CommentsMap";
 import Comments from "~/components/Comments";
 
@@ -53,10 +57,6 @@ export async function action({ request, params }: ActionFunctionArgs) {
   }
 
   const formData = await request.formData();
-  /* const raw = String(formData.get("raw"));
-  if (!raw || raw.length < 2) {
-    throw new Error("Todo: all these errors need to be handled");
-  }*/
 
   const unsanitizedMarkdown = String(formData.get("markdown")) || "";
   const replyToPostNumber = Number(formData.get("replyToPostNumber")) || null;
@@ -77,34 +77,18 @@ export async function action({ request, params }: ActionFunctionArgs) {
     );
   }
 
-  const { apiKey, baseUrl } = discourseEnv();
-  const headers = new Headers();
-  headers.append("Content-Type", "application/json");
-  headers.append("Api-Key", apiKey);
-  headers.append("Api-Username", currentUser.username);
-
-  const postsUrl = `${baseUrl}/posts.json`;
-  const data = {
+  const commentArgs = {
+    topicId,
+    replyToPostNumber,
     raw: cleaned,
-    topic_id: topicId,
-    reply_to_post_number: replyToPostNumber,
+    username: currentUser.username,
   };
 
-  const response = await fetch(postsUrl, {
-    method: "POST",
-    headers,
-    body: JSON.stringify(data),
-  });
-
-  if (!response.ok) {
-    throw new Error("Bad response returned from Discourse");
+  try {
+    addPostCommentRequest(commentArgs);
+  } catch (error) {
+    throw new Response("Something went wrong", { status: 500 });
   }
-
-  const apiDiscoursePost: DiscourseApiBasicPost = await response.json();
-
-  const newComment = transformPost(apiDiscoursePost, baseUrl);
-
-  return json({ newComment });
 }
 
 export async function loader({ request, params }: LoaderFunctionArgs) {
