@@ -34,6 +34,6 @@ export async function postCommentProcessor({
   }
 
   const json = await response.json();
-  console.log(`commentResponse: ${JSON.stringify(json, null, 2)}`);
+
   return json;
 }

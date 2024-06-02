@@ -86,6 +86,8 @@ export async function action({ request, params }: ActionFunctionArgs) {
 
   try {
     addPostCommentRequest(commentArgs);
+
+    return null;
   } catch (error) {
     throw new Response("Something went wrong", { status: 500 });
   }

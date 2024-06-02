@@ -168,9 +168,6 @@ export const rateLimitedApiWorker = new Worker(
       const processorArgs = job.data;
       try {
         const response = await postCommentProcessor(processorArgs);
-        console.log(
-          `response from postComment job: ${JSON.stringify(response, null, 2)}`
-        );
         return response;
       } catch (error) {
         console.error(`Failed to process postComment job: ${error}`);
