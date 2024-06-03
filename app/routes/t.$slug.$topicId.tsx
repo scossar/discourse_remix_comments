@@ -18,7 +18,6 @@ import { discourseSessionStorage } from "~/services/auth/session.server";
 import { getSessionData, validateSession } from "~/schemas/currentUser.server";
 import type { RouteError } from "~/types/errorTypes";
 import type { ParsedDiscourseCommentsMap } from "~/types/parsedDiscourse";
-import PageContextProvider from "~/components/PageContextProvider";
 import Topic from "~/components/Topic";
 import { getOrQueueCommentsMapCache } from "~/services/getOrQueueCommentsMapCache.server";
 import {
@@ -199,11 +198,9 @@ export default function TopicForSlugAndId() {
       <Topic topic={topic} />
       {retriesMessage && <div>{retriesMessage}</div>}
       {liveCommentsMapData && commentsCount !== null && (
-        <PageContextProvider value={{ page, setPage }}>
-          <CommentsMap commentsMapData={liveCommentsMapData}>
-            <Comments topicId={topicId} commentsCount={commentsCount} />
-          </CommentsMap>
-        </PageContextProvider>
+        <CommentsMap commentsMapData={liveCommentsMapData}>
+          <Comments topicId={topicId} commentsCount={commentsCount} />
+        </CommentsMap>
       )}
     </div>
   );

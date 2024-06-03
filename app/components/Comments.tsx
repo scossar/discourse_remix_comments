@@ -1,7 +1,6 @@
 import { useFetcher } from "@remix-run/react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useInView } from "react-intersection-observer";
-import { usePageContext } from "~/hooks/usePageContext";
 import type {
   ParsedDiscoursePost,
   ParsedPagedDiscoursePosts,
@@ -28,7 +27,7 @@ export default function Comments({ topicId, commentsCount }: CommentsProps) {
   const commentFetcher = useFetcher<CommentFetcherData>({
     key: "commentFetcher",
   });
-  const { page, setPage } = usePageContext();
+  const [page, setPage] = useState<number | null>(0);
   const [loadedPages, setLoadedPages] = useState<LoadedPages>({});
   const [nextRef] = useInView({
     threshold: 0,
