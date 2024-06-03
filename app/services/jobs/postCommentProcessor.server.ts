@@ -37,6 +37,14 @@ export async function postCommentProcessor({
     });
 
     if (!response.ok) {
+      const errorResponse = await response.json();
+      console.log(
+        `handling error in postCommentProcessor: ${JSON.stringify(
+          errorResponse,
+          null,
+          2
+        )}`
+      );
       throw new ApiError("Error posting comment to Discourse", response.status);
     }
 

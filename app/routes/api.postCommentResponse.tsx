@@ -1,11 +1,11 @@
 import { LoaderFunctionArgs, json } from "@remix-run/node";
 import { getRedisClient } from "~/services/redis/redisClient.server";
 import { getApiResponseKey } from "~/services/redis/redisKeys.server";
+import { validateDiscourseApiBasicPost } from "~/schemas/discourseApiResponse.server";
 
 export async function loader({ request }: LoaderFunctionArgs) {
   const url = new URL(request.url);
   const jobId = url.searchParams.get("jobId");
-  console.log(`in api.getCommentResponse loader, jobId: ${jobId}`);
 
   if (!jobId) {
     throw new Response("jobId parameter is required", { status: 400 });
@@ -19,8 +19,14 @@ export async function loader({ request }: LoaderFunctionArgs) {
     if (apiResponse) {
       await client.del(apiResponseKey);
       const jsonResponse = JSON.parse(apiResponse);
-      console.log(JSON.stringify(jsonResponse, null, 2));
-      return json({ message: "success" });
+      // TODO: this is just a proof of concept
+      // try to validate against all possible return types
+      try {
+        validateDiscourseApiBasicPost(jsonResponse);
+        return json({ message: "success" });
+      } catch {
+        return json({ message: "enqueued" });
+      }
     } else {
       return json({ message: "pending" });
     }

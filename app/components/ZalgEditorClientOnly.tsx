@@ -53,6 +53,7 @@ export default function ZalgEditorClientOnly({
   useEffect(() => {
     if (responseFetcher.data && responseFetcher.data.message) {
       setResult(responseFetcher.data.message);
+      console.log(`responseFetcher message: ${responseFetcher.data.message}`);
     }
   }, [result, responseFetcher]);
 

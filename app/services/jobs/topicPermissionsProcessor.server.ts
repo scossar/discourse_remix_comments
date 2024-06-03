@@ -39,6 +39,9 @@ async function fetchTopicDetails(
   const url = `${baseUrl}/t/-/${topicId}.json`;
   const response = await fetch(url, { headers });
 
+  // TODO: this and all other response.ok checks need to handle errors better
+  // for example, a 404 response here might indicate that the user doesn't have permission to view the
+  // topic
   if (!response.ok) {
     throw new ApiError(
       `Failed to fetch data from topic route. topicId: ${topicId}`,
