@@ -12,8 +12,6 @@ import {
   useLoaderData,
   useRouteError,
 } from "@remix-run/react";
-import { JSDOM } from "jsdom";
-import DOMPurify from "dompurify";
 
 import { db } from "~/services/prisma/db.server";
 import { discourseSessionStorage } from "~/services/auth/session.server";
