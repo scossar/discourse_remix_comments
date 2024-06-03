@@ -1,7 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { useFetcher } from "@remix-run/react";
-import { useEffect, useRef, useState } from "react";
-import { ClientOnly } from "~/components/ClientOnly";
+import { useEffect, useState } from "react";
 import Composer from "~/components/ZalgEditor/Composer";
 import { CustomFetcher } from "~/components/ZalgEditor/plugins/SubmitPlugin";
 
@@ -13,7 +12,7 @@ type ApiResponse = {
   message: string;
 };
 
-export default function ZalgEditorClientOnly({
+export default function ZalgComposer({
   toggleOpenState,
   replyToPostNumber,
 }: {
