@@ -12,13 +12,17 @@ type ApiResponse = {
   message: string;
 };
 
+type ZalgComposerProps = {
+  toggleOpenState: () => void;
+  handleComposerMessage: (message: string) => void;
+  replyToPostNumber?: string;
+};
+
 export default function ZalgComposer({
   toggleOpenState,
+  handleComposerMessage,
   replyToPostNumber,
-}: {
-  toggleOpenState: () => void;
-  replyToPostNumber?: string;
-}) {
+}: ZalgComposerProps) {
   const submitFetcher = useFetcher<JobData>({ key: "submit" });
   const responseFetcher = useFetcher<ApiResponse>({ key: "commentResponse" });
   const [jobId, setJobId] = useState<string | null>(null);
@@ -31,7 +35,6 @@ export default function ZalgComposer({
       submitFetcher.data.job !== jobId
     ) {
       setJobId(submitFetcher.data.job);
-      console.log(`setting jobId to ${submitFetcher.data.job}`);
     }
   }, [submitFetcher.data, jobId]);
 
@@ -52,9 +55,10 @@ export default function ZalgComposer({
   useEffect(() => {
     if (responseFetcher.data && responseFetcher.data.message) {
       setResult(responseFetcher.data.message);
+      handleComposerMessage(responseFetcher.data.message);
       console.log(`responseFetcher message: ${responseFetcher.data.message}`);
     }
-  }, [result, responseFetcher]);
+  }, [result, responseFetcher, handleComposerMessage]);
 
   return (
     <Composer

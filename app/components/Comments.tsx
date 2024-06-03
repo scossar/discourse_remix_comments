@@ -36,6 +36,7 @@ export default function Comments({ topicId, commentsCount }: CommentsProps) {
   });
   const [posts, setPosts] = useState<ParsedPagedDiscoursePosts | null>(null);
   const [editorOpen, setEditorOpen] = useState(false);
+  const [composerMessage, setComposerMessage] = useState<string | null>(null);
   const [replyToPostNumber, setReplyToPostNumber] = useState("");
   const [scrollToPost, setScrollToPost] = useState<number | null>(null);
   const scrollToRef = useRef<HTMLDivElement | null>(null);
@@ -45,6 +46,10 @@ export default function Comments({ topicId, commentsCount }: CommentsProps) {
     commentFetcher.load(
       `/api/cachedTopicCommentsForPage?topicId=${topicId}&page=${pageParam}`
     );
+  }
+
+  function handleComposerMessage(message: string) {
+    setComposerMessage(message);
   }
 
   function handleLastPostInView(
@@ -205,6 +210,11 @@ export default function Comments({ topicId, commentsCount }: CommentsProps) {
       </div>
 
       <div className={`${editorOpen && "pb-96"}`}>
+        {composerMessage && (
+          <div className="bg-cyan-200 text-red-700 w-full my-3 p-3 rounded-sm">
+            Proof of concept: {composerMessage}
+          </div>
+        )}
         {renderComments}
         <div
           className={`w-full ${
@@ -226,6 +236,7 @@ export default function Comments({ topicId, commentsCount }: CommentsProps) {
         >
           <ZalgComposer
             toggleOpenState={toggleEditorOpen}
+            handleComposerMessage={handleComposerMessage}
             replyToPostNumber={replyToPostNumber}
           />
         </div>
