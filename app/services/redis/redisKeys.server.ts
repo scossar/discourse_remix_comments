@@ -18,6 +18,10 @@ export function getCommentKey(topicId: number, postId: number): string {
   return `comment:${topicId}:${postId}`;
 }
 
+export function getApiResponseKey(jobId: string) {
+  return `apiResponse:${jobId}`;
+}
+
 export function getCommentReplyKey(topicId: number, postNumber: number) {
   return `replyIds:${topicId}:${postNumber}`;
 }

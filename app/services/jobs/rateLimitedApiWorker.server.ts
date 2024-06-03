@@ -1,7 +1,10 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { Job, Worker } from "bullmq";
 import { apiRequestQueue } from "~/services/jobs/bullmq.server";
-import { connection } from "~/services/redis/redisClient.server";
+import {
+  connection,
+  getRedisClient,
+} from "~/services/redis/redisClient.server";
 import { postStreamProcessor } from "~/services/jobs/postStreamProcessor.server";
 import { topicCommentsProcessor } from "~/services/jobs/topicCommentsProcessor.server";
 import { commentsMapProcessor } from "~/services/jobs/commentsMapProcessor.server";
@@ -14,6 +17,7 @@ import { postCommentProcessor } from "~/services/jobs/postCommentProcessor.serve
 import { JobError } from "~/services/errors/appErrors.server";
 import type { DiscourseApiWebHookTopicPayload } from "~/schemas/discourseApiResponse.server";
 import { DiscourseTopic } from "@prisma/client";
+import { getApiResponseKey } from "~/services/redis/redisKeys.server";
 
 type TopicStreamQueueArgs = {
   topicId: number;
@@ -291,9 +295,10 @@ export async function addPostCommentRequest({
     unsanitizedRaw,
     username,
   });
-  return job;
+  return job.id;
 }
 
+// TODO: use try...catch blocks for queueing jobs, etc
 rateLimitedApiWorker.on("completed", async (job: Job) => {
   if (job.name === "cacheCommentsMap") {
     const { topicId, stream } = job.returnvalue;
@@ -326,6 +331,22 @@ rateLimitedApiWorker.on("completed", async (job: Job) => {
     const topic = job.returnvalue;
     if (topic) {
       await addWebHookTopicPostRequest({ topic });
+    }
+  }
+
+  if (job.name === "postComment") {
+    const jobId = job.id;
+    if (jobId) {
+      try {
+        const returnValue = job.returnvalue;
+        const apiResponseKey = getApiResponseKey(jobId);
+        const client = await getRedisClient();
+        await client.set(apiResponseKey, JSON.stringify(returnValue));
+      } catch (error) {
+        throw new JobError(
+          `There was an error handling "completed" event for jobId: ${jobId}`
+        );
+      }
     }
   }
 });
