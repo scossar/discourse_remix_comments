@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import { useFetcher } from "@remix-run/react";
 import { useEffect, useState } from "react";
 import Composer from "~/components/ZalgEditor/Composer";
@@ -26,7 +25,7 @@ export default function ZalgComposer({
   const submitFetcher = useFetcher<JobData>({ key: "submit" });
   const responseFetcher = useFetcher<ApiResponse>({ key: "commentResponse" });
   const [jobId, setJobId] = useState<string | null>(null);
-  const [result, setResult] = useState<string | null>(null);
+  const [messageSent, setMessageSent] = useState(false);
 
   useEffect(() => {
     if (
@@ -40,7 +39,7 @@ export default function ZalgComposer({
 
   useEffect(() => {
     let intervalId: ReturnType<typeof setInterval>;
-    if (jobId && !result) {
+    if (jobId && !messageSent) {
       intervalId = setInterval(async () => {
         const url = `/api/postCommentResponse?jobId=${jobId}`;
         responseFetcher.load(url);
@@ -50,15 +49,14 @@ export default function ZalgComposer({
     return () => {
       if (intervalId) clearInterval(intervalId);
     };
-  }, [jobId, result, responseFetcher]);
+  }, [jobId, messageSent, responseFetcher]);
 
   useEffect(() => {
     if (responseFetcher.data && responseFetcher.data.message) {
-      setResult(responseFetcher.data.message);
+      setMessageSent(true);
       handleComposerMessage(responseFetcher.data.message);
-      console.log(`responseFetcher message: ${responseFetcher.data.message}`);
     }
-  }, [result, responseFetcher, handleComposerMessage]);
+  }, [messageSent, responseFetcher, handleComposerMessage]);
 
   return (
     <Composer
